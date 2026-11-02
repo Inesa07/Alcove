@@ -1,0 +1,14 @@
+{
+  "name": "Planner",
+  "short_name": "Planner",
+  "description": "A cozy room that is your planner and diary.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#24203A",
+  "theme_color": "#24203A",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
