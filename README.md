@@ -58,3 +58,16 @@ sw.js                   offline support and opening the calendar from a reminder
 - Everything is saved only in this browser. Sign-in and sync between phone and computer come next (Supabase).
 - Reminders work while the app is open. Reminders when it is closed need a server (push notifications).
 - The quick field understands simple English phrases. Later an AI model will understand any sentence.
+
+
+## Sync between devices (Supabase)
+
+Everything is saved on the device first, so the app also works offline. To keep the phone and the computer the same:
+
+1. Create a free project at supabase.com.
+2. In **SQL Editor**, run `supabase/setup.sql` once. It creates one table, and each person can only read and write their own rows.
+3. In **Authentication → Sign In / Providers → Email**, you can turn off "Confirm email" so new accounts work right away.
+4. Copy **Project URL** and the **anon public key** (Project Settings → API) into `js/config.js`.
+
+Then tap **Sync** at the top of the menu, create an account on one device and sign in with it on the others.
+Each piece of data (`state`, every diary page `bp:N`, every book cover `cover:<id>`) is one row; when the same piece changed on two devices, the newer change wins.

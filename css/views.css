@@ -580,3 +580,7 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .flip-face .page-copy { box-shadow: 0 4px 16px rgba(20, 10, 40, .12); }
 .flip-leaf.from-right .front .page-copy, .flip-leaf.from-left .back .page-copy { border-radius: 2px 6px 6px 2px; }
 .flip-leaf.from-left .front .page-copy, .flip-leaf.from-right .back .page-copy { border-radius: 6px 2px 2px 6px; }
+
+/* Page turn on a phone: each sheet folds away at its left edge */
+.flip-sheet { position: absolute; z-index: 20; pointer-events: none; transform-origin: 0 50%; will-change: transform; }
+.flip-sheet .page-copy { box-shadow: 0 4px 16px rgba(20, 10, 40, .14); }

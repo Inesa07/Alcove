@@ -27,8 +27,10 @@ function run(mode, fn) {
 }
 
 export const get = (key) => run('readonly', (s) => s.get(key)).catch(() => undefined)
-export const set = (key, value) => run('readwrite', (s) => s.put(value, key))
-export const del = (key) => run('readwrite', (s) => s.delete(key))
+const changed = (key) => window.dispatchEvent(new CustomEvent('planner:change', { detail: key }))
+// fromCloud: the change came from sync, so it is not sent back
+export const set = (key, value, fromCloud = false) => run('readwrite', (s) => s.put(value, key)).then((r) => { if (!fromCloud) changed(key); return r })
+export const del = (key, fromCloud = false) => run('readwrite', (s) => s.delete(key)).then((r) => { if (!fromCloud) changed(key); return r })
 export const keys = (prefix = '') => run('readonly', (s) => s.getAllKeys()).then((all) => (all || []).filter((k) => String(k).startsWith(prefix))).catch(() => [])
 
 // Shrinks a photo so the diary stays light: longest side at most `max` pixels, saved as JPEG.

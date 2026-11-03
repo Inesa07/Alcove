@@ -118,7 +118,7 @@ function painter() {
       out.push(`<polygon points="${fmt([a[L], a[R], b[R], b[L]])}" fill="${front}"/>`)
       out.push(`<polygon points="${fmt(b)}" fill="${top}"/>`)
     },
-    shadow(x0, y0, x1, y1, op = 0.16) { d.poly([[x0, y0, 0.01], [x1, y0, 0.01], [x1, y1, 0.01], [x0, y1, 0.01]], '#5B4536', ` opacity="${op}"`) },
+    shadow(x0, y0, x1, y1, op = 0.16) { d.poly([[x0, y0, 0.01], [x1, y0, 0.01], [x1, y1, 0.01], [x0, y1, 0.01]], '#4A3428', ` opacity="${op * 1.4}" filter="url(#soft)"`) },
   }
   return d
 }
@@ -178,12 +178,25 @@ export function drawRoom(o) {
     <linearGradient id="wallR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${wall.r[0]}"/><stop offset="1" stop-color="${wall.r[1]}"/></linearGradient>
     <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${floor.a}"/><stop offset="1" stop-color="${floor.b}"/></linearGradient>
     <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE3A8" stop-opacity=".55"/><stop offset="1" stop-color="#FFE3A8" stop-opacity="0"/></radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6"/></filter>
+    <radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE7B0" stop-opacity=".7"/><stop offset="1" stop-color="#FFE7B0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sunwash" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF4DC" stop-opacity="${sky.beam ? 0.5 : 0.18}"/><stop offset="1" stop-color="#FFF4DC" stop-opacity="0"/></radialGradient>
+    <linearGradient id="slabL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(floor.b, -0.12)}"/><stop offset="1" stop-color="${shade(floor.b, -0.28)}"/></linearGradient>
+    <linearGradient id="slabR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(floor.b, -0.2)}"/><stop offset="1" stop-color="${shade(floor.b, -0.36)}"/></linearGradient>
     <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6DD" stop-opacity="${sky.beam}"/><stop offset="1" stop-color="#FFF6DD" stop-opacity="0"/></linearGradient>
   </defs>`)
 
   /* walls and floor */
   const W = 10, D = 10, H = 9
+  // the room sits on a thick base, like a little diorama, and the walls have thickness
+  const T = 0.32, B = 0.55
+  d.raw(`<ellipse cx="${P(W / 2, D / 2, 0)[0].toFixed(1)}" cy="${(P(W, D, -B)[1] - 4).toFixed(1)}" rx="120" ry="9" fill="#000" opacity=".25" filter="url(#soft)"/>`)
+  d.poly([[-T, D, 0], [W, D, 0], [W, D, -B], [-T, D, -B]], 'url(#slabL)')
+  d.poly([[W, -T, 0], [W, D, 0], [W, D, -B], [W, -T, -B]], 'url(#slabR)')
   G('walls')
+  d.poly([[-T, -T, H], [-T, D, H], [0, D, H], [0, 0, H], [W, 0, H], [W, -T, H]], shade(wall.l[0], 0.35))
+  d.poly([[-T, D, 0], [0, D, 0], [0, D, H], [-T, D, H]], shade(wall.l[1], -0.12))
+  d.poly([[W, -T, 0], [W, 0, 0], [W, 0, H], [W, -T, H]], shade(wall.r[1], -0.08))
   d.poly([[0, 0, 0], [0, D, 0], [0, D, H], [0, 0, H]], 'url(#wallL)')
   d.poly([[0, 0, 0], [W, 0, 0], [W, 0, H], [0, 0, H]], 'url(#wallR)')
   E()
@@ -217,6 +230,8 @@ export function drawRoom(o) {
   d.box(5.82, 0.08, 5.14, 0.24, 0.38, 0.5, '#7FA3C8')
 
   const wx0 = 6.6, wx1 = 9.2, wz0 = 4.0, wz1 = 7.5
+  const wash = P(7.9, 0, 5.6)
+  d.raw(`<clipPath id="rwall"><polygon points="${pts([[0, 0, 0], [W, 0, 0], [W, 0, H], [0, 0, H]])}"/></clipPath><ellipse clip-path="url(#rwall)" cx="${wash[0].toFixed(1)}" cy="${wash[1].toFixed(1)}" rx="70" ry="60" fill="url(#sunwash)"/>`)
   d.poly([[wx0 - 0.15, 0.01, wz0 - 0.15], [wx1 + 0.15, 0.01, wz0 - 0.15], [wx1 + 0.15, 0.01, wz1 + 0.15], [wx0 - 0.15, 0.01, wz1 + 0.15]], '#FBF8FD')
   d.poly([[wx0, 0.02, wz0], [wx1, 0.02, wz0], [wx1, 0.02, wz1], [wx0, 0.02, wz1]], 'url(#sky)')
   const orb = P(8.4, 0.03, sky.orbZ)
@@ -248,6 +263,7 @@ export function drawRoom(o) {
   const bulbs = ['#FFE29A', '#FFC9D6', '#C9E6FF']
   lights.slice(1, -1).forEach((l, i) => {
     const p = P(...l)
+    if (sky.lights) d.raw(`<circle cx="${p[0].toFixed(1)}" cy="${(p[1] + 2).toFixed(1)}" r="9" fill="url(#halo)"/>`)
     d.raw(`<circle class="twinkle" style="animation-delay:${((i % 5) * 0.35).toFixed(2)}s" cx="${p[0].toFixed(1)}" cy="${(p[1] + 2).toFixed(1)}" r="2.4" fill="${bulbs[i % 3]}" opacity="${sky.lights ? 1 : 0.55}"/>`)
   })
 
@@ -275,6 +291,7 @@ export function drawRoom(o) {
     d.ring(5.4, 6.0, 0.02, 2.15, shade(rug, -0.06))
     d.ring(5.4, 6.0, 0.03, 1.6, rug)
     d.ring(5.4, 6.0, 0.04, 0.9, shade(rug, -0.06))
+    for (let i = 0; i < 48; i++) { const a = (Math.PI * 2 * i) / 48; d.line([[5.4 + 2.7 * Math.cos(a), 6.0 + 2.7 * Math.sin(a), 0.01], [5.4 + 2.92 * Math.cos(a), 6.0 + 2.92 * Math.sin(a), 0.01]], shade(rug, -0.04), 0.8) }
   }
   E()
 
@@ -360,6 +377,11 @@ export function drawRoom(o) {
   d.box(7.3, 1.25, 1.8, 0.9, 0.5, 0.42, shade(blanket, 0.35))
   d.box(5.85, 2.3, 1.0, 3.9, 2.95, 0.88, blanket)
   for (let i = 1; i < 4; i++) d.line([[5.85, 2.3 + i * 0.75, 1.89], [9.75, 2.3 + i * 0.75, 1.89]], shade(blanket, -0.1), 1.2)
+  // a soft throw folded over the foot of the bed
+  const throwC = shade(blanket, 0.45)
+  d.poly([[5.82, 4.55, 1.9], [9.78, 4.55, 1.9], [9.78, 5.27, 1.9], [5.82, 5.27, 1.9]], throwC)
+  d.poly([[5.82, 5.27, 1.9], [9.78, 5.27, 1.9], [9.78, 5.27, 0.9], [5.82, 5.27, 0.9]], shade(throwC, -0.06))
+  for (let i = 0; i < 16; i++) { const x = 6.0 + i * 0.24; d.line([[x, 5.28, 0.9], [x, 5.28, 0.72]], shade(throwC, -0.12), 1) }
   // open diary on the blanket
   d.poly([[6.5, 3.0, 1.9], [7.4, 3.0, 1.9], [7.4, 4.3, 1.9], [6.5, 4.3, 1.9]], '#FFFDF8')
   d.poly([[7.4, 3.0, 1.9], [8.3, 3.0, 1.9], [8.3, 4.3, 1.9], [7.4, 4.3, 1.9]], '#FBF6EC')
@@ -392,6 +414,14 @@ export function drawRoom(o) {
   }
   spots.bed = bounds([[5.9, 0, 0], [9.7, 0, canopy ? 7.7 : 3.3], [9.7, 5.2, 0], [5.9, 5.2, 0], [5.9, 0, canopy ? 7.7 : 3.3]], 0)
   E()
+
+  /* a little stack of books on the floor by the shelf */
+  d.shadow(3.9, 8.6, 5.1, 9.8, 0.12)
+  d.box(4.0, 8.7, 0, 1.0, 1.0, 0.22, '#7FA3C8')
+  d.box(4.05, 8.75, 0.22, 0.9, 0.85, 0.2, '#E9C46A')
+  d.box(3.98, 8.8, 0.42, 0.95, 0.9, 0.2, '#C9788C')
+  d.cylinder(4.45, 9.2, 0.62, 0.18, 0.3, '#FBF3E6')
+  if (sky.lights) { const c = P(4.45, 9.2, 1.05); d.raw(`<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="1" ry="1.9" fill="#F6C46B"/><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="12" fill="url(#halo)"/>`) }
 
   /* pouf on the rug */
   d.ring(6.6, 8.0, 0.02, 0.85, '#5B4536', ' opacity=".14"')

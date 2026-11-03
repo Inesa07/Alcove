@@ -242,7 +242,40 @@ export function mount(el) {
     busy = true
     closePop()
 
-    if (reduceMotion() || stacked()) {
+    // On a phone the two pages sit one above the other: each page lifts away to the left like a notebook sheet
+    // (going on), or the earlier sheets come back from the left over the current ones (going back).
+    if (!reduceMotion() && stacked()) {
+      const bookBox = book.getBoundingClientRect()
+      const next = await readSpread(target)
+      const goingOn = dir > 0
+      const make = (pageEl) => {
+        const r = pageEl.getBoundingClientRect()
+        const el = document.createElement('div')
+        el.className = 'flip-sheet'
+        el.appendChild(snapshot(pageEl))
+        Object.assign(el.style, { left: r.left - bookBox.left + 'px', top: r.top - bookBox.top + 'px', width: r.width + 'px', height: r.height + 'px' })
+        return el
+      }
+      const olds = [...pageEls].map(make)          // pictures of the pages you are leaving
+      book.append(...olds)
+      await openSpread(target, next)
+      let sheets = olds
+      if (!goingOn) {                          // the earlier pages come back from the left, over the old ones
+        sheets = [...pageEls].map((pe) => { const el = make(pe); el.style.transform = 'rotateY(-90deg)'; return el })
+        book.append(...sheets)
+      }
+      await imagesReady(...olds, ...sheets)
+      await new Promise(requestAnimationFrame)
+      await new Promise(requestAnimationFrame)
+      const frames = goingOn ? [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-90deg)' }] : [{ transform: 'rotateY(-90deg)' }, { transform: 'rotateY(0deg)' }]
+      const easing = goingOn ? 'cubic-bezier(.5, 0, .75, .4)' : 'cubic-bezier(.25, .6, .5, 1)'
+      await Promise.all(sheets.map((el, i) => el.animate(frames, { duration: 900, delay: i * 110, easing, fill: 'forwards' }).finished)).catch(() => {})
+      olds.concat(sheets).forEach((el) => el.remove())
+      busy = false
+      return
+    }
+
+    if (reduceMotion()) {
       book.classList.add('fade-out')
       await wait(reduceMotion() ? 0 : 180)
       await openSpread(target)

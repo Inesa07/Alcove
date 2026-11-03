@@ -7,6 +7,7 @@ import * as diaryView from './views/diary.js'
 import * as booksView from './views/books.js'
 import * as notesView from './views/notes.js'
 import * as calendarView from './views/calendar.js'
+import { setupAccount } from './account.js'
 
 const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView }
 const GREETING = { morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night' }
@@ -70,5 +71,15 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   navigator.serviceWorker.register('sw.js').catch(() => {})
 }
 
+// New things arrived from another device: draw the page again (unless you are typing right now).
+window.addEventListener('planner:synced', () => {
+  renderSide()
+  const a = document.activeElement
+  if (a && $('#view').contains(a) && (a.isContentEditable || /INPUT|TEXTAREA/.test(a.tagName))) return
+  current = null
+  show()
+})
+
+setupAccount()
 renderSide()
 show()

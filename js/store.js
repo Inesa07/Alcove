@@ -45,9 +45,18 @@ function migrate(v1) {
   return s
 }
 
-function save() {
+function save(fromCloud = false) {
   try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* storage full or blocked */ }
+  if (!fromCloud) window.dispatchEvent(new CustomEvent('planner:change', { detail: 'state' }))
   listeners.forEach((fn) => fn(state))
+}
+
+// Used by sync: the version from the cloud replaces this one.
+export function replaceState(next) {
+  state = { ...empty(), ...next }
+  state.room = { ...DEFAULT_ROOM, ...state.room }
+  state.diaryBook = { ...empty().diaryBook, ...state.diaryBook, spread: state.diaryBook?.spread ?? 0 }
+  save(true)
 }
 
 export const NOTE_COLORS = ['#FBE7A6', '#F7CFD9', '#CFE4F5', '#D8EBD9', '#E6DCF5']
