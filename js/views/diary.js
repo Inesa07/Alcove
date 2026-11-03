@@ -195,12 +195,22 @@ export function mount(el) {
     }[tool]
   }
 
-  async function openSpread(s) {
+  // Neighbouring pages are read ahead of time, so a page turn can start the moment you click.
+  const ahead = new Map()
+  const readSpread = (s) => {
+    if (!ahead.has(s)) ahead.set(s, Promise.all([loadPage(s * 2), loadPage(s * 2 + 1)]))
+    return ahead.get(s)
+  }
+
+  async function openSpread(s, loaded) {
     spread = s
     selected = null
-    pages = [await loadPage(num(0)), await loadPage(num(1))]
+    pages = loaded || await readSpread(s)
+    ahead.clear()
     setDiaryBook({ spread })
     render()
+    if (s > 0) readSpread(s - 1)
+    readSpread(s + 1)
   }
 
   // A picture of a page at this moment: a copy of its HTML, with typed text and drawings carried over.
@@ -252,44 +262,48 @@ export function mount(el) {
     }
     const gap = pageEls[1].getBoundingClientRect().left - pageEls[0].getBoundingClientRect().right
 
-    // 1. Lay pictures of the current pages exactly on top of them, so nothing visibly changes yet.
+    const next = await readSpread(target) // usually ready already
+
+    // 1. Pictures of the current pages go exactly on top of them, so nothing visibly changes yet.
     const cover = document.createElement('div')
     cover.className = 'turn-under'
     cover.appendChild(snapshot(staying))
     place(cover, staying)
-
-    // The leaf in two halves: first the page lifts up to standing straight, then the other side comes down.
     const up = document.createElement('div')
     up.className = 'turn-half ' + (goingOn ? 'from-right' : 'from-left')
     up.appendChild(snapshot(turning))
     place(up, turning)
     up.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
-    await imagesReady(cover, up)
     book.append(cover, up)
 
-    // 2. Now load the next pages underneath. The pictures hide the change.
-    await openSpread(target)
+    // 2. The next pages are put in place underneath; the pictures hide the change.
+    await openSpread(target, next)
     const down = document.createElement('div')
     down.className = 'turn-half ' + (goingOn ? 'from-left' : 'from-right')
     down.appendChild(snapshot(pageEls[goingOn ? 0 : 1]))
     place(down, staying)
     down.style.transformOrigin = goingOn ? `calc(100% + ${gap / 2}px) 50%` : `${-gap / 2}px 50%`
-    down.style.visibility = 'hidden'
-    await imagesReady(down)
+    down.style.opacity = '0'
     book.append(down)
+    await imagesReady(cover, up, down)
 
-    // 3. Turn: lift…
-    const p = 'perspective(2200px)'
-    const half = 400
-    const a = goingOn ? -90 : 90
-    await up.animate([{ transform: `${p} rotateY(0deg)` }, { transform: `${p} rotateY(${a}deg)` }],
-      { duration: half, easing: 'cubic-bezier(.4, 0, .9, .6)', fill: 'forwards' }).finished.catch(() => {})
-    up.remove()
-    // …and lay down on the other side.
-    down.style.visibility = ''
-    await down.animate([{ transform: `${p} rotateY(${-a}deg)` }, { transform: `${p} rotateY(0deg)` }],
-      { duration: half + 60, easing: 'cubic-bezier(.1, .4, .3, 1)', fill: 'forwards' }).finished.catch(() => {})
-    cover.remove(); down.remove()
+    // 3. One continuous turn on one smooth curve: the page rises to standing, and in the same motion
+    //    the other side comes down. Both halves share the clock, so there is no pause in the middle.
+    const sign = goingOn ? -1 : 1
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+    const steps = 24
+    const upFrames = [], downFrames = []
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      const deg = 180 * ease(t)               // how far the leaf has turned, 0…180
+      const first = deg <= 90
+      upFrames.push({ offset: t, transform: `perspective(2200px) rotateY(${sign * Math.min(deg, 90)}deg)`, opacity: first ? 1 : 0 })
+      downFrames.push({ offset: t, transform: `perspective(2200px) rotateY(${-sign * Math.max(180 - deg, 0) * (first ? 0 : 1) + (first ? -sign * 90 : 0)}deg)`, opacity: first ? 0 : 1 })
+    }
+    const timing = { duration: 900, easing: 'linear', fill: 'forwards' }
+    await new Promise(requestAnimationFrame)
+    await Promise.all([up.animate(upFrames, timing).finished, down.animate(downFrames, timing).finished]).catch(() => {})
+    cover.remove(); up.remove(); down.remove()
     busy = false
   }
 
