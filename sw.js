@@ -1,5 +1,5 @@
 // Lets the app open without internet once it has been visited.
-const CACHE = 'planner-v7'
+const CACHE = 'planner-v8'
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'css/views.css',
   'js/app.js', 'js/store.js', 'js/db.js', 'js/ui.js', 'js/room.js', 'js/classify.js', 'js/reminders.js', 'js/stickers.js', 'js/templates.js',

@@ -240,12 +240,7 @@ export function mount(el) {
 
     const goingOn = dir > 0
     const turning = pageEls[goingOn ? 1 : 0]   // the page that lifts
-    const staying = pageEls[goingOn ? 0 : 1]   // the page under the other half until the leaf lands
-    const front = snapshot(turning)
-    const under = snapshot(staying)
-
-    await openSpread(target)
-    const back = snapshot(pageEls[goingOn ? 0 : 1]) // what is printed on the back of the leaf
+    const staying = pageEls[goingOn ? 0 : 1]   // the other half, which keeps showing until the leaf lands on it
 
     const bookBox = book.getBoundingClientRect()
     const place = (el, ref) => {
@@ -254,36 +249,49 @@ export function mount(el) {
     }
     const gap = pageEls[1].getBoundingClientRect().left - pageEls[0].getBoundingClientRect().right
 
+    // 1. Lay pictures of the current pages exactly on top of them, so nothing visibly changes yet.
     const cover = document.createElement('div')
     cover.className = 'turn-under'
-    cover.appendChild(under)
+    cover.appendChild(snapshot(staying))
     place(cover, staying)
 
     const leaf = document.createElement('div')
     leaf.className = 'leaf ' + (goingOn ? 'leaf-next' : 'leaf-prev')
     leaf.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
-    const f = document.createElement('div'); f.className = 'leaf-face leaf-front'; f.appendChild(front)
-    const b = document.createElement('div'); b.className = 'leaf-face leaf-back'; b.appendChild(back)
+    const f = document.createElement('div'); f.className = 'leaf-face leaf-front'
+    const fDim = document.createElement('div'); fDim.className = 'leaf-dim'
+    f.append(snapshot(turning), fDim)
+    const b = document.createElement('div'); b.className = 'leaf-face leaf-back'
+    const bDim = document.createElement('div'); bDim.className = 'leaf-dim'
     leaf.append(f, b)
     place(leaf, turning)
 
     const shade = document.createElement('div')
     shade.className = 'turn-shade ' + (goingOn ? 'on-right' : 'on-left')
-    place(shade, pageEls[goingOn ? 1 : 0])
-
+    shade.style.opacity = '0'
+    place(shade, turning)
     book.append(cover, shade, leaf)
+
+    // 2. Now load the next pages underneath. The pictures hide the change.
+    await openSpread(target)
+    b.append(snapshot(pageEls[goingOn ? 0 : 1]), bDim)
+
+    // 3. Turn the leaf: it lifts gently, curves over the spine and settles on the other side.
+    await new Promise(requestAnimationFrame)
     const angle = goingOn ? -180 : 180
-    const ease = 'cubic-bezier(.45, .05, .25, 1)'
-    const time = 820
+    const time = 950
+    const ease = 'cubic-bezier(.42, 0, .2, 1)'
+    const opts = { duration: time, easing: ease, fill: 'forwards' }
     const anim = leaf.animate([
-      { transform: 'rotateY(0deg)' },
-      { transform: `rotateY(${angle * 0.12}deg) translateZ(2px)`, offset: 0.12 },
-      { transform: `rotateY(${angle * 0.5}deg) translateZ(30px)`, offset: 0.5 },
-      { transform: `rotateY(${angle}deg)` },
-    ], { duration: time, easing: ease, fill: 'forwards' })
-    f.animate([{ '--dim': 0 }, { '--dim': 0.35, offset: 0.5 }, { '--dim': 0.5 }], { duration: time, easing: ease, fill: 'forwards' })
-    shade.animate([{ opacity: 0 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: time, easing: ease, fill: 'forwards' })
-    cover.animate([{ opacity: 1 }, { opacity: 1, offset: 0.5 }, { opacity: 1, offset: 0.98 }, { opacity: 0 }], { duration: time, fill: 'forwards' })
+      { transform: 'rotateY(0deg) translateZ(0)' },
+      { transform: `rotateY(${angle * 0.08}deg) translateZ(6px)`, offset: 0.15 },
+      { transform: `rotateY(${angle * 0.5}deg) translateZ(40px)`, offset: 0.55 },
+      { transform: `rotateY(${angle * 0.97}deg) translateZ(4px)`, offset: 0.9 },
+      { transform: `rotateY(${angle}deg) translateZ(0)` },
+    ], opts)
+    fDim.animate([{ opacity: 0 }, { opacity: 0.5, offset: 0.55 }, { opacity: 0.7 }], opts)
+    bDim.animate([{ opacity: 0.6 }, { opacity: 0.3, offset: 0.45 }, { opacity: 0 }], opts)
+    shade.animate([{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0.4, offset: 0.7 }, { opacity: 0 }], opts)
     await anim.finished.catch(() => {})
     cover.remove(); leaf.remove(); shade.remove()
     busy = false

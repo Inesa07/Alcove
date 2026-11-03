@@ -540,23 +540,22 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .lc-reading { background: repeating-linear-gradient(#fff 0 4px, #e2dcea 4px 5px) 4px 8px / 36px 26px no-repeat, linear-gradient(#fbe7a6, #fbe7a6) 4px 38px / 17px 14px no-repeat, linear-gradient(#dcc8ee, #dcc8ee) 23px 38px / 17px 14px no-repeat, #fff; }
 
 /* ---------- a real page turn ---------- */
-@property --dim { syntax: '<number>'; inherits: true; initial-value: 0; }
 .book { position: relative; }
 .page-copy { position: absolute !important; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; pointer-events: none; }
 .turn-under, .leaf, .turn-shade { position: absolute; z-index: 20; pointer-events: none; }
-.leaf { transform-style: preserve-3d; will-change: transform; }
+.leaf { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; will-change: transform; }
+.leaf .page-copy, .turn-under .page-copy { transform-style: flat; }
 .leaf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
 .leaf-next .leaf-front { border-radius: 2px 6px 6px 2px; box-shadow: 0 10px 30px rgba(20, 10, 40, .25); }
 .leaf-next .leaf-back { border-radius: 6px 2px 2px 6px; transform: rotateY(180deg); }
 .leaf-prev .leaf-front { border-radius: 6px 2px 2px 6px; box-shadow: 0 10px 30px rgba(20, 10, 40, .25); }
 .leaf-prev .leaf-back { border-radius: 2px 6px 6px 2px; transform: rotateY(180deg); }
-/* light falls off as the leaf rises; the back is shaded near the spine */
-.leaf-front::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 30;
-  background: linear-gradient(to right, rgba(40, 25, 70, calc(var(--dim) * .9)), rgba(40, 25, 70, calc(var(--dim) * .35)) 40%, rgba(255, 255, 255, calc(var(--dim) * .25))); }
-.leaf-prev .leaf-front::after { background: linear-gradient(to left, rgba(40, 25, 70, calc(var(--dim) * .9)), rgba(40, 25, 70, calc(var(--dim) * .35)) 40%, rgba(255, 255, 255, calc(var(--dim) * .25))); }
-.leaf-back::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 30; }
-.leaf-next .leaf-back::after { background: linear-gradient(to left, rgba(40, 25, 70, .18), transparent 30%); }
-.leaf-prev .leaf-back::after { background: linear-gradient(to right, rgba(40, 25, 70, .18), transparent 30%); }
+/* shading on the leaf while it turns */
+.leaf-dim { position: absolute; inset: 0; z-index: 30; pointer-events: none; opacity: 0; }
+.leaf-next .leaf-front .leaf-dim { background: linear-gradient(to right, rgba(40, 25, 70, .55), rgba(40, 25, 70, .15) 45%, rgba(255, 255, 255, .2)); }
+.leaf-prev .leaf-front .leaf-dim { background: linear-gradient(to left, rgba(40, 25, 70, .55), rgba(40, 25, 70, .15) 45%, rgba(255, 255, 255, .2)); }
+.leaf-next .leaf-back .leaf-dim { background: linear-gradient(to left, rgba(40, 25, 70, .45), rgba(40, 25, 70, .1) 40%, transparent); }
+.leaf-prev .leaf-back .leaf-dim { background: linear-gradient(to right, rgba(40, 25, 70, .45), rgba(40, 25, 70, .1) 40%, transparent); }
 /* the shadow the lifting leaf throws on the page below */
 .turn-shade.on-right { background: linear-gradient(to right, rgba(30, 15, 60, .35), rgba(30, 15, 60, .08) 45%, transparent 75%); border-radius: 2px 6px 6px 2px; }
 .turn-shade.on-left { background: linear-gradient(to left, rgba(30, 15, 60, .35), rgba(30, 15, 60, .08) 45%, transparent 75%); border-radius: 6px 2px 2px 6px; }
