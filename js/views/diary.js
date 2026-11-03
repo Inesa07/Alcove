@@ -297,11 +297,17 @@ export function mount(el) {
     await new Promise(requestAnimationFrame)
 
     const end = goingOn ? -180 : 180
+    const duration = 1100
     const anim = leaf.animate(
       [{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${end}deg)` }],
-      { duration: 1000, easing: 'cubic-bezier(.45, .05, .25, 1)', fill: 'forwards' }
+      { duration, easing: 'cubic-bezier(.42, 0, .22, 1)', fill: 'forwards' }
     )
-    await anim.finished.catch(() => {})
+    // The old page on the landing side fades away as the leaf comes over it, so its text never lingers.
+    const fade = cover.animate(
+      [{ opacity: 1 }, { opacity: 1, offset: 0.12 }, { opacity: 0, offset: 0.55 }, { opacity: 0 }],
+      { duration, easing: 'ease-in-out', fill: 'forwards' }
+    )
+    await Promise.all([anim.finished, fade.finished]).catch(() => {})
     stage.remove()
     busy = false
   }

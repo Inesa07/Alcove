@@ -572,11 +572,11 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .turn-half.from-left .page-copy { border-radius: 6px 2px 2px 6px; }
 
 /* Page turn: one two-sided leaf turning around the spine */
-.flip-stage { position: absolute; inset: 0; z-index: 20; pointer-events: none; perspective: 3200px; -webkit-perspective: 3200px; }
+.flip-stage { position: absolute; inset: 0; z-index: 20; pointer-events: none; perspective: 7000px; -webkit-perspective: 7000px; }
 .flip-cover, .flip-leaf { position: absolute; }
 .flip-leaf { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; will-change: transform; }
 .flip-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(.1px); }
 .flip-face.back { transform: rotateY(180deg) translateZ(.1px); }
-.flip-face .page-copy { box-shadow: 0 6px 18px rgba(20, 10, 40, .14); }
+.flip-face .page-copy { box-shadow: 0 4px 16px rgba(20, 10, 40, .12); }
 .flip-leaf.from-right .front .page-copy, .flip-leaf.from-left .back .page-copy { border-radius: 2px 6px 6px 2px; }
 .flip-leaf.from-left .front .page-copy, .flip-leaf.from-right .back .page-copy { border-radius: 6px 2px 2px 6px; }
