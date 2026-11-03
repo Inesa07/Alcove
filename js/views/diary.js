@@ -217,6 +217,9 @@ export function mount(el) {
     return copy
   }
 
+  // Pictures inside a copy need a moment to be ready; wait so they do not blink.
+  const imagesReady = (...els) => Promise.all(els.flatMap((el) => [...el.querySelectorAll('img')].map((i) => i.decode?.().catch(() => {}))))
+
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const stacked = () => getComputedStyle(book).gridTemplateColumns.split(' ').length < 3
 
@@ -255,30 +258,38 @@ export function mount(el) {
     cover.appendChild(snapshot(staying))
     place(cover, staying)
 
-    const leaf = document.createElement('div')
-    leaf.className = 'leaf ' + (goingOn ? 'leaf-next' : 'leaf-prev')
-    leaf.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
-    const f = document.createElement('div'); f.className = 'leaf-face leaf-front'
-    f.append(snapshot(turning))
-    const b = document.createElement('div'); b.className = 'leaf-face leaf-back'
-    leaf.append(f, b)
-    place(leaf, turning)
-
-    book.append(cover, leaf)
+    // The leaf in two halves: first the page lifts up to standing straight, then the other side comes down.
+    const up = document.createElement('div')
+    up.className = 'turn-half ' + (goingOn ? 'from-right' : 'from-left')
+    up.appendChild(snapshot(turning))
+    place(up, turning)
+    up.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
+    await imagesReady(cover, up)
+    book.append(cover, up)
 
     // 2. Now load the next pages underneath. The pictures hide the change.
     await openSpread(target)
-    b.append(snapshot(pageEls[goingOn ? 0 : 1]))
+    const down = document.createElement('div')
+    down.className = 'turn-half ' + (goingOn ? 'from-left' : 'from-right')
+    down.appendChild(snapshot(pageEls[goingOn ? 0 : 1]))
+    place(down, staying)
+    down.style.transformOrigin = goingOn ? `calc(100% + ${gap / 2}px) 50%` : `${-gap / 2}px 50%`
+    down.style.visibility = 'hidden'
+    await imagesReady(down)
+    book.append(down)
 
-    // 3. Turn the leaf: it lifts gently, curves over the spine and settles on the other side.
-    await new Promise(requestAnimationFrame)
-    const angle = goingOn ? -180 : 180
-    const anim = leaf.animate(
-      [{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${angle}deg)` }],
-      { duration: 800, easing: 'cubic-bezier(.45, 0, .25, 1)', fill: 'forwards' },
-    )
-    await anim.finished.catch(() => {})
-    cover.remove(); leaf.remove()
+    // 3. Turn: lift…
+    const p = 'perspective(2200px)'
+    const half = 400
+    const a = goingOn ? -90 : 90
+    await up.animate([{ transform: `${p} rotateY(0deg)` }, { transform: `${p} rotateY(${a}deg)` }],
+      { duration: half, easing: 'cubic-bezier(.4, 0, .9, .6)', fill: 'forwards' }).finished.catch(() => {})
+    up.remove()
+    // …and lay down on the other side.
+    down.style.visibility = ''
+    await down.animate([{ transform: `${p} rotateY(${-a}deg)` }, { transform: `${p} rotateY(0deg)` }],
+      { duration: half + 60, easing: 'cubic-bezier(.1, .4, .3, 1)', fill: 'forwards' }).finished.catch(() => {})
+    cover.remove(); down.remove()
     busy = false
   }
 

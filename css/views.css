@@ -562,3 +562,11 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .book .page { transition: opacity .18s ease; }
 .book.fade-out .page { opacity: 0; }
 .edge .curl { transition: width .3s cubic-bezier(.3, 1.4, .5, 1), height .3s cubic-bezier(.3, 1.4, .5, 1); }
+
+/* the page turn, in two flat halves (no 3D two-sided leaf, which flickers in Safari) */
+.book { perspective: none; }
+.book .page { transform-style: flat; }
+.turn-half { position: absolute; z-index: 21; pointer-events: none; will-change: transform; }
+.turn-half .page-copy { box-shadow: 0 4px 14px rgba(20, 10, 40, .16); }
+.turn-half.from-right .page-copy { border-radius: 2px 6px 6px 2px; }
+.turn-half.from-left .page-copy { border-radius: 6px 2px 2px 6px; }
