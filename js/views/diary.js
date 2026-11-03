@@ -203,22 +203,89 @@ export function mount(el) {
     render()
   }
 
+  // A picture of a page at this moment: a copy of its HTML, with typed text and drawings carried over.
+  function snapshot(pageEl) {
+    pageEl.querySelectorAll('input').forEach((i) => i.setAttribute('value', i.value))
+    pageEl.querySelectorAll('textarea').forEach((t) => { t.textContent = t.value })
+    const copy = pageEl.cloneNode(true)
+    const from = pageEl.querySelectorAll('canvas'), to = copy.querySelectorAll('canvas')
+    from.forEach((c, i) => to[i].getContext('2d').drawImage(c, 0, 0))
+    copy.querySelectorAll('.edge').forEach((e) => e.remove())
+    copy.removeAttribute('data-side')
+    copy.classList.add('page-copy')
+    copy.inert = true
+    return copy
+  }
+
+  const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const stacked = () => getComputedStyle(book).gridTemplateColumns.split(' ').length < 3
+
+  // Turning a page: the leaf lifts, curves through the spine with a soft shadow and lands on the other side.
   async function turn(dir) {
     if (busy) return
     const target = spread + dir
     if (target < 0) return
-    if (dir > 0 && target * 2 >= count()) {
-      setDiaryBook({ count: count() + 2 })
-    }
+    if (dir > 0 && target * 2 >= count()) setDiaryBook({ count: count() + 2 })
     busy = true
     closePop()
-    book.classList.add(dir > 0 ? 'fold-next' : 'fold-prev')
-    await wait(240)
+
+    if (reduceMotion() || stacked()) {
+      book.classList.add('fade-out')
+      await wait(reduceMotion() ? 0 : 180)
+      await openSpread(target)
+      book.classList.remove('fade-out')
+      busy = false
+      return
+    }
+
+    const goingOn = dir > 0
+    const turning = pageEls[goingOn ? 1 : 0]   // the page that lifts
+    const staying = pageEls[goingOn ? 0 : 1]   // the page under the other half until the leaf lands
+    const front = snapshot(turning)
+    const under = snapshot(staying)
+
     await openSpread(target)
-    book.classList.remove('fold-next', 'fold-prev')
-    book.classList.add(dir > 0 ? 'open-next' : 'open-prev')
-    await wait(260)
-    book.classList.remove('open-next', 'open-prev')
+    const back = snapshot(pageEls[goingOn ? 0 : 1]) // what is printed on the back of the leaf
+
+    const bookBox = book.getBoundingClientRect()
+    const place = (el, ref) => {
+      const r = ref.getBoundingClientRect()
+      Object.assign(el.style, { left: r.left - bookBox.left + 'px', top: r.top - bookBox.top + 'px', width: r.width + 'px', height: r.height + 'px' })
+    }
+    const gap = pageEls[1].getBoundingClientRect().left - pageEls[0].getBoundingClientRect().right
+
+    const cover = document.createElement('div')
+    cover.className = 'turn-under'
+    cover.appendChild(under)
+    place(cover, staying)
+
+    const leaf = document.createElement('div')
+    leaf.className = 'leaf ' + (goingOn ? 'leaf-next' : 'leaf-prev')
+    leaf.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
+    const f = document.createElement('div'); f.className = 'leaf-face leaf-front'; f.appendChild(front)
+    const b = document.createElement('div'); b.className = 'leaf-face leaf-back'; b.appendChild(back)
+    leaf.append(f, b)
+    place(leaf, turning)
+
+    const shade = document.createElement('div')
+    shade.className = 'turn-shade ' + (goingOn ? 'on-right' : 'on-left')
+    place(shade, pageEls[goingOn ? 1 : 0])
+
+    book.append(cover, shade, leaf)
+    const angle = goingOn ? -180 : 180
+    const ease = 'cubic-bezier(.45, .05, .25, 1)'
+    const time = 820
+    const anim = leaf.animate([
+      { transform: 'rotateY(0deg)' },
+      { transform: `rotateY(${angle * 0.12}deg) translateZ(2px)`, offset: 0.12 },
+      { transform: `rotateY(${angle * 0.5}deg) translateZ(30px)`, offset: 0.5 },
+      { transform: `rotateY(${angle}deg)` },
+    ], { duration: time, easing: ease, fill: 'forwards' })
+    f.animate([{ '--dim': 0 }, { '--dim': 0.35, offset: 0.5 }, { '--dim': 0.5 }], { duration: time, easing: ease, fill: 'forwards' })
+    shade.animate([{ opacity: 0 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: time, easing: ease, fill: 'forwards' })
+    cover.animate([{ opacity: 1 }, { opacity: 1, offset: 0.5 }, { opacity: 1, offset: 0.98 }, { opacity: 0 }], { duration: time, fill: 'forwards' })
+    await anim.finished.catch(() => {})
+    cover.remove(); leaf.remove(); shade.remove()
     busy = false
   }
 
