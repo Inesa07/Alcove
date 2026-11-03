@@ -253,7 +253,7 @@ export function mount(el) {
 
     const goingOn = dir > 0
     const turning = pageEls[goingOn ? 1 : 0]   // the page that lifts
-    const staying = pageEls[goingOn ? 0 : 1]   // the other half, which keeps showing until the leaf lands on it
+    const staying = pageEls[goingOn ? 0 : 1]   // the other side, where the leaf lands
 
     const bookBox = book.getBoundingClientRect()
     const place = (el, ref) => {
@@ -264,46 +264,45 @@ export function mount(el) {
 
     const next = await readSpread(target) // usually ready already
 
-    // 1. Pictures of the current pages go exactly on top of them, so nothing visibly changes yet.
-    const cover = document.createElement('div')
-    cover.className = 'turn-under'
+    // A real two-sided leaf, like paper: the front is the page you are turning,
+    // the back is the page that lands on the other side. It turns around the spine in 3D,
+    // and only its transform moves, so the browser can do it on the graphics card.
+    const stage = document.createElement('div')
+    stage.className = 'flip-stage'
+    const cover = document.createElement('div')       // keeps the old page on the landing side until the leaf covers it
+    cover.className = 'flip-cover'
     cover.appendChild(snapshot(staying))
     place(cover, staying)
-    const up = document.createElement('div')
-    up.className = 'turn-half ' + (goingOn ? 'from-right' : 'from-left')
-    up.appendChild(snapshot(turning))
-    place(up, turning)
-    up.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
-    book.append(cover, up)
+    const leaf = document.createElement('div')
+    leaf.className = 'flip-leaf ' + (goingOn ? 'from-right' : 'from-left')
+    const front = document.createElement('div')
+    front.className = 'flip-face front'
+    front.appendChild(snapshot(turning))
+    leaf.appendChild(front)
+    place(leaf, turning)
+    leaf.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
+    stage.append(cover, leaf)
+    book.append(stage)
 
-    // 2. The next pages are put in place underneath; the pictures hide the change.
+    // The new pages go in place underneath; the leaf and cover hide the change.
     await openSpread(target, next)
-    const down = document.createElement('div')
-    down.className = 'turn-half ' + (goingOn ? 'from-left' : 'from-right')
-    down.appendChild(snapshot(pageEls[goingOn ? 0 : 1]))
-    place(down, staying)
-    down.style.transformOrigin = goingOn ? `calc(100% + ${gap / 2}px) 50%` : `${-gap / 2}px 50%`
-    down.style.opacity = '0'
-    book.append(down)
-    await imagesReady(cover, up, down)
+    const back = document.createElement('div')
+    back.className = 'flip-face back'
+    back.appendChild(snapshot(pageEls[goingOn ? 0 : 1]))
+    leaf.appendChild(back)
+    await imagesReady(stage)
 
-    // 3. One continuous turn on one smooth curve: the page rises to standing, and in the same motion
-    //    the other side comes down. Both halves share the clock, so there is no pause in the middle.
-    const sign = goingOn ? -1 : 1
-    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
-    const steps = 24
-    const upFrames = [], downFrames = []
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps
-      const deg = 180 * ease(t)               // how far the leaf has turned, 0…180
-      const first = deg <= 90
-      upFrames.push({ offset: t, transform: `perspective(2200px) rotateY(${sign * Math.min(deg, 90)}deg)`, opacity: first ? 1 : 0 })
-      downFrames.push({ offset: t, transform: `perspective(2200px) rotateY(${-sign * Math.max(180 - deg, 0) * (first ? 0 : 1) + (first ? -sign * 90 : 0)}deg)`, opacity: first ? 0 : 1 })
-    }
-    const timing = { duration: 900, easing: 'linear', fill: 'forwards' }
+    // Let the browser prepare the layers before moving, so the first frame is not late.
     await new Promise(requestAnimationFrame)
-    await Promise.all([up.animate(upFrames, timing).finished, down.animate(downFrames, timing).finished]).catch(() => {})
-    cover.remove(); up.remove(); down.remove()
+    await new Promise(requestAnimationFrame)
+
+    const end = goingOn ? -180 : 180
+    const anim = leaf.animate(
+      [{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${end}deg)` }],
+      { duration: 1000, easing: 'cubic-bezier(.45, .05, .25, 1)', fill: 'forwards' }
+    )
+    await anim.finished.catch(() => {})
+    stage.remove()
     busy = false
   }
 
