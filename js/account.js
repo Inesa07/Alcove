@@ -170,8 +170,6 @@ export async function setupAccount() {
 
   const fromLink = /access_token|error_description/.test(location.hash)
   if (!hasSession() && !fromLink) openGate('in')            // not signed in on this device: welcome screen right away
-  else if (fromLink) document.documentElement.classList.add('locked')
-
   const r = await sync.start()
   if (r.type === 'recovery') { openGate('newpass'); return }
   if (r.user) { closeGate(); if (r.type === 'signup') toast('Your email is confirmed. Welcome!'); return }

@@ -19,12 +19,10 @@
       href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Vibur&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Figtree:wght@400;500;600;700&display=swap"
     />
     <script>
-      // Before anything is drawn: if nobody is signed in on this device, keep the app hidden
-      // until the welcome screen is ready, so it never flashes on the screen.
-      try {
-        var signed = Object.keys(localStorage).some(function (k) { return k.indexOf('sb-') === 0 && /-auth-token$/.test(k) })
-        if (!signed || /access_token|error_description/.test(location.hash)) document.documentElement.classList.add('locked')
-      } catch (e) {}
+      // Before anything is drawn the app stays hidden until we know who is signed in,
+      // so it never flashes before the welcome screen. (If something fails, it shows after 8 s anyway.)
+      document.documentElement.classList.add('locked')
+      setTimeout(function () { if (!document.querySelector('.auth')) document.documentElement.classList.remove('locked') }, 8000)
     </script>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/views.css" />
