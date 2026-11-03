@@ -2,7 +2,7 @@
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS } from '../store.js'
-import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES } from '../room.js'
+import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS } from '../room.js'
 import { classify } from '../classify.js'
 import { appendDiaryText } from './diary.js'
 import { $, esc, toast } from '../ui.js'
@@ -12,19 +12,19 @@ const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['not
 
 // Decorate mode: what you can change on each part of the room.
 const PARTS = {
-  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket and curtains', 'blanket', FABRICS]] },
+  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket and curtains', 'blanket', FABRICS], ['Pet on the bed', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS]] },
   shelf: { name: 'Bookshelf', options: [['Style', 'shelfStyle', 'styles'], ['Colour', 'shelfWood', WOODS]] },
   desk: { name: 'Desk', options: [['Style', 'deskStyle', 'styles'], ['Colour', 'deskWood', WOODS]] },
   chair: { name: 'Chair', options: [['Style', 'chairStyle', 'styles'], ['Colour', 'chairColor', FABRICS]] },
   rug: { name: 'Rug', options: [['Colour', 'rug', RUGS]] },
-  walls: { name: 'Walls', options: [['Colour', 'wall', WALLS]] },
-  floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS]] },
+  walls: { name: 'Walls', options: [['Colour', 'wall', WALLS], ['Texture', 'wallStyle', 'styles']] },
+  floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS], ['Pattern', 'floorStyle', 'styles']] },
 }
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
 const DECOR_ORDER = ['rug', 'desk', 'chair', 'shelf', 'bed']
 
 const DONE = { event: 'Added to your calendar', book: 'Added to your bookshelf', diary: 'Written in your diary', note: 'Pinned to your notes' }
-const swatchColor = (v) => v.c ?? v.l?.[0] ?? v.a ?? null
+const swatchColor = (v) => v.c ?? v.l?.[0] ?? v.a ?? v.base ?? null
 
 export function mount(el) {
   el.innerHTML = `
