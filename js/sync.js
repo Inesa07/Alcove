@@ -34,7 +34,7 @@ const synced = (key) => SYNCED_PREFIXES.some((p) => key.startsWith(p)) || key ==
 async function getClient() {
   if (client) return client
   if (window.__plannerSupabase) return (client = window.__plannerSupabase) // used by tests
-  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm')
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm')
   client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: false } })
   return client
 }
