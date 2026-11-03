@@ -584,3 +584,16 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 /* Page turn on a phone: each sheet folds away at its left edge */
 .flip-sheet { position: absolute; z-index: 20; pointer-events: none; transform-origin: 0 50%; will-change: transform; }
 .flip-sheet .page-copy { box-shadow: 0 4px 16px rgba(20, 10, 40, .14); }
+
+/* Room styles in the decorate panel */
+.themes { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.theme-card {
+  display: grid; grid-template-columns: 92px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left;
+  padding: 8px 12px 8px 8px; border-radius: 16px; border: 1.5px solid rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .04); color: #fff; cursor: pointer; font: inherit;
+}
+.theme-card img { grid-row: 1 / 3; width: 92px; height: 88px; object-fit: contain; }
+.theme-card b { font-size: 15px; font-weight: 600; align-self: end; }
+.theme-card span { font-size: 12.5px; color: var(--lilac-text); align-self: start; }
+.theme-card:hover { background: rgba(255, 255, 255, .08); }
+.theme-card.on { border-color: var(--honey); box-shadow: 0 0 0 3px rgba(242, 201, 76, .25); }
+@media (max-width: 860px) { .themes { grid-template-columns: repeat(3, minmax(150px, 1fr)); overflow-x: auto; } .theme-card { grid-template-columns: 1fr; text-align: center; } .theme-card img { grid-row: auto; width: 100%; height: 80px; } }

@@ -2,7 +2,7 @@
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS } from '../store.js'
-import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS } from '../room.js'
+import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
 import { classify } from '../classify.js'
 import { appendDiaryText } from './diary.js'
 import { $, esc, toast } from '../ui.js'
@@ -12,6 +12,7 @@ const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['not
 
 // Decorate mode: what you can change on each part of the room.
 const PARTS = {
+  theme: { name: 'Room style', options: [['Choose a room', 'theme', 'themes']] },
   bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket and curtains', 'blanket', FABRICS], ['Pet on the bed', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS]] },
   shelf: { name: 'Bookshelf', options: [['Style', 'shelfStyle', 'styles'], ['Colour', 'shelfWood', WOODS]] },
   desk: { name: 'Desk', options: [['Style', 'deskStyle', 'styles'], ['Colour', 'deskWood', WOODS]] },
@@ -101,7 +102,7 @@ export function mount(el) {
   function renderTop() {
     $('#room-hint', el).textContent = decorating ? 'Tap the bed, bookshelf, desk, chair, rug, walls or floor to change it' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
-      ? `<button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
+      ? `<button class="ghost-dark theme-btn" data-part="theme">Room style</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-decorate>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3l2 2-9 9-3 1 1-3z"/><path d="M5 13c-2 0-3 2-3 4 0 1.5-1 2.5-1 2.5S3 21 5 21c3 0 4-2 4-4 0-2-2-4-4-4z"/></svg>
           Decorate
@@ -119,6 +120,14 @@ export function mount(el) {
     if (!decorating || !part) { panel.hidden = true; return }
     const r = draft
     const rows = PARTS[part].options.map(([label, key, list]) => {
+      if (list === 'themes') {
+        return `<section><div class="themes">${Object.entries(THEMES).map(([id, t]) => {
+          const look = drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id }, tod: 'day', books: 7, notes: 3, leaves: 6 }).svg
+          const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(look.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
+          return `<button class="theme-card ${(r.theme || 'cozy') === id ? 'on' : ''}" data-theme="${id}" aria-pressed="${(r.theme || 'cozy') === id}">
+            <img src="${src}" alt=""><b>${esc(t.name)}</b><span>${esc(t.note)}</span></button>`
+        }).join('')}</div></section>`
+      }
       if (list === 'styles') {
         return `<section><h3>${label}</h3><div class="chips">${Object.entries(STYLES[key]).map(([id, name]) =>
           `<button class="chip ${r[key] === id ? 'on' : ''}" data-set="${key}" data-val="${id}" aria-pressed="${r[key] === id}">${esc(name)}</button>`).join('')}</div></section>`
@@ -151,6 +160,8 @@ export function mount(el) {
     const p = t.closest('[data-part]')
     if (p) { part = p.dataset.part; return render() }
     if (t.closest('[data-done]')) { part = null; return render() }
+    const th = t.closest('[data-theme]')
+    if (th && decorating) { draft = { ...draft, ...THEME_PRESETS[th.dataset.theme], theme: th.dataset.theme }; renderRoom(); renderPanel(); return }
     const opt = t.closest('[data-set]')
     if (opt && decorating) { draft = { ...draft, [opt.dataset.set]: opt.dataset.val }; renderRoom(); renderPanel() }
   })

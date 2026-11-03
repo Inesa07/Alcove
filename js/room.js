@@ -67,7 +67,20 @@ export const STYLES = {
   floorStyle: { planks: 'Planks', herringbone: 'Herringbone', tiles: 'Tiles', carpet: 'Soft carpet' },
 }
 
+// Whole-room looks. Choosing one also sets matching colours, which can still be changed one by one.
+export const THEMES = {
+  cozy: { name: 'Cozy room', note: 'Lavender, light wood, fairy lights' },
+  attic: { name: 'Attic studio', note: 'Round window, wooden beams, plushies' },
+  city: { name: 'Rainy city night', note: 'Big window, city lights, rain' },
+}
+export const THEME_PRESETS = {
+  cozy: { wall: 'lavender', wallStyle: 'plain', floor: 'oak', floorStyle: 'planks', rug: 'pink', blanket: 'lilac', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', chairStyle: 'classic' },
+  attic: { wall: 'peach', wallStyle: 'panels', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'rose', shelfWood: 'white', deskWood: 'white', bedWood: 'oak', chairColor: 'cream', chairStyle: 'armchair' },
+  city: { wall: 'night', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'blue', blanket: 'blue', shelfWood: 'walnut', deskWood: 'walnut', bedWood: 'walnut', chairColor: 'blue', chairStyle: 'classic', pet: 'cat', petColor: 'black' },
+}
+
 export const DEFAULT_ROOM = {
+  theme: 'cozy',
   wall: 'lavender', floor: 'oak', rug: 'pink',
   shelfStyle: 'tall', shelfWood: 'oak',
   deskStyle: 'drawers', deskWood: 'oak',
@@ -249,6 +262,117 @@ function plant(d, x, y, leaves) {
   })
 }
 
+
+/* ---------- room styles: windows and details ---------- */
+
+const ring = (cx, cz, r, n = 48) => Array.from({ length: n }, (_, i) => [cx + r * Math.cos((2 * Math.PI * i) / n), 0.02, cz + r * Math.sin((2 * Math.PI * i) / n)])
+
+function roundWindow(d, sky, blanket) {
+  const cx = 7.9, cz = 5.7, r = 1.75
+  const wood = '#7A5A44'
+  d.poly(ring(cx, cz, r + 0.32), wood)
+  d.poly(ring(cx, cz, r + 0.12), shade(wood, 0.18))
+  d.raw(`<clipPath id="roundw"><polygon points="${pts(ring(cx, cz, r))}"/></clipPath><g clip-path="url(#roundw)">`)
+  d.poly(ring(cx, cz, r), 'url(#sky)')
+  const orb = P(8.6, 0.03, cz + 0.9)
+  d.raw(`<circle cx="${orb[0].toFixed(1)}" cy="${orb[1].toFixed(1)}" r="10" fill="${sky.orb}" opacity=".25"/><circle cx="${orb[0].toFixed(1)}" cy="${orb[1].toFixed(1)}" r="5" fill="${sky.orb}"/>`)
+  d.poly([[cx - r, 0.03, cz - r], [cx - r, 0.03, cz - 0.6], [cx - 0.8, 0.03, cz - 0.2], [cx, 0.03, cz - 0.7], [cx + 0.9, 0.03, cz - 0.1], [cx + r, 0.03, cz - 0.5], [cx + r, 0.03, cz - r]], sky.hills, ' opacity=".7"')
+  d.raw('</g>')
+  d.poly([[cx - 0.07, 0.04, cz - r], [cx + 0.07, 0.04, cz - r], [cx + 0.07, 0.04, cz + r], [cx - 0.07, 0.04, cz + r]], wood)
+  d.poly([[cx - r, 0.04, cz - 0.07], [cx + r, 0.04, cz - 0.07], [cx + r, 0.04, cz + 0.07], [cx - r, 0.04, cz + 0.07]], wood)
+  // one soft curtain tied to the side
+  const c = shade(blanket, 0.6)
+  d.poly([[9.75, 0.25, 8.3], [9.95, 0.25, 8.3], [9.95, 0.25, 2.6], [9.3, 0.25, 2.6], [9.6, 0.25, 4.6]], c)
+  d.line([[9.45, 0.26, 4.6], [9.95, 0.26, 4.6]], shade(c, -0.15), 1.6)
+}
+
+let seed = 7
+const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280
+function cityWindow(d, sky, blanket) {
+  const x0 = 6.0, x1 = 9.6, z0 = 3.2, z1 = 8.0
+  const frame = '#3A3350'
+  d.poly([[x0 - 0.18, 0.01, z0 - 0.18], [x1 + 0.18, 0.01, z0 - 0.18], [x1 + 0.18, 0.01, z1 + 0.18], [x0 - 0.18, 0.01, z1 + 0.18]], frame)
+  d.raw(`<clipPath id="cityw"><polygon points="${pts([[x0, 0.02, z0], [x1, 0.02, z0], [x1, 0.02, z1], [x0, 0.02, z1]])}"/></clipPath><g clip-path="url(#cityw)">`)
+  d.poly([[x0, 0.02, z0], [x1, 0.02, z0], [x1, 0.02, z1], [x0, 0.02, z1]], 'url(#sky)')
+  const moon = P(9.0, 0.03, 7.3)
+  d.raw(`<circle cx="${moon[0].toFixed(1)}" cy="${moon[1].toFixed(1)}" r="9" fill="#E9ECF7" opacity=".18"/><circle cx="${moon[0].toFixed(1)}" cy="${moon[1].toFixed(1)}" r="4" fill="#E9ECF7"/>`)
+  seed = 7
+  // far buildings, then near ones with lit windows
+  ;[['#283062', 0.6, 1.4], ['#1A2048', 0.0, 1.0]].forEach(([col, lift, lit]) => {
+    let x = x0
+    while (x < x1) {
+      const w = 0.35 + rnd() * 0.35, h = 1.0 + rnd() * 2.6 + lift
+      d.poly([[x, 0.03, z0], [x + w, 0.03, z0], [x + w, 0.03, z0 + h], [x, 0.03, z0 + h]], col)
+      for (let wz = z0 + 0.2; wz < z0 + h - 0.2; wz += 0.28) for (let wx = x + 0.07; wx < x + w - 0.1; wx += 0.16) {
+        if (rnd() < 0.32 * lit) d.poly([[wx, 0.04, wz], [wx + 0.07, 0.04, wz], [wx + 0.07, 0.04, wz + 0.1], [wx, 0.04, wz + 0.1]], rnd() < 0.7 ? '#F6C46B' : '#FBE3B4', ' opacity=".9"')
+      }
+      x += w + 0.04
+    }
+  })
+  // rain: thin lines falling down the glass
+  const a = P(x0, 0.03, z1), b = P(x1, 0.03, z0)
+  let rain = ''
+  for (let i = 0; i < 46; i++) {
+    const rx = a[0] + rnd() * (b[0] - a[0] + 30) - 10, ry = a[1] - 40 + rnd() * (b[1] - a[1] + 60)
+    rain += `<path d="M${rx.toFixed(1)},${ry.toFixed(1)} l-1.2,6" />`
+  }
+  d.raw(`<g class="rain" stroke="#BFD0FF" stroke-width=".6" opacity=".55" stroke-linecap="round">${rain}</g>`)
+  d.raw(`<g class="rain rain2" stroke="#BFD0FF" stroke-width=".6" opacity=".55" stroke-linecap="round">${rain}</g>`)
+  d.raw('</g>')
+  const mid = (x0 + x1) / 2
+  d.poly([[mid - 0.07, 0.04, z0], [mid + 0.07, 0.04, z0], [mid + 0.07, 0.04, z1], [mid - 0.07, 0.04, z1]], frame)
+  d.poly([[x0, 0.04, 6.3], [x1, 0.04, 6.3], [x1, 0.04, 6.42], [x0, 0.04, 6.42]], frame)
+  d.box(x0 - 0.3, 0, z0 - 0.32, x1 - x0 + 0.6, 0.55, 0.16, [shade(frame, 0.3), frame, shade(frame, -0.1)])
+}
+
+function atticDetails(d) {
+  // dark wooden beams under the roof and in the corner
+  const beam = '#6E4F3A'
+  d.box(0, 0, 8.45, 0.35, 10, 0.4, [shade(beam, 0.15), beam, shade(beam, -0.1)])
+  d.box(0, 0, 8.45, 10, 0.35, 0.4, [shade(beam, 0.15), beam, shade(beam, -0.1)])
+  d.box(0, 0, 0, 0.3, 0.3, 8.45, [shade(beam, 0.15), beam, shade(beam, -0.12)])
+  // paper clouds and little stars on the left wall
+  const cloud = (y, z, k) => {
+    const c = P(0.04, y, z)
+    d.raw(`<path transform="translate(${c[0].toFixed(1)} ${c[1].toFixed(1)}) skewY(-30) scale(${k})" d="M-12,4 a6,6 0 0 1 4,-9 a8,8 0 0 1 14,-2 a6,6 0 0 1 8,7 a4,4 0 0 1 -2,4 z" fill="#FFFDF8" stroke="#E7DCCF" stroke-width="1"/>`)
+  }
+  cloud(6.6, 7.7, 0.9); cloud(8.6, 7.0, 0.75)
+  ;[[7.6, 7.6], [9.2, 7.8], [6.4, 6.8], [8.0, 6.4]].forEach(([y, z]) => {
+    const c = P(0.04, y, z)
+    d.raw(`<path transform="translate(${c[0].toFixed(1)} ${c[1].toFixed(1)}) skewY(-30)" d="M0,-3.4 L1,-1 L3.4,-1 L1.5,.6 L2.2,3 L0,1.6 L-2.2,3 L-1.5,.6 L-3.4,-1 L-1,-1 Z" fill="#F2CF7A"/>`)
+  })
+  // warm lights hanging down in the corner
+  ;[0.9, 1.6].forEach((y, j) => {
+    for (let i = 0; i < 6; i++) {
+      const p = P(0.3, y, 8.2 - i * 0.75 - j * 0.3)
+      d.raw(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" fill="url(#halo)"/><circle class="twinkle" style="animation-delay:${(i * 0.3).toFixed(1)}s" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.5" fill="#FFE7B0"/>`)
+    }
+    d.line([[0.3, y, 8.45], [0.3, y, 8.2 - 5 * 0.75 - j * 0.3]], '#8C7A66', 0.5)
+  })
+}
+
+function flowers(d, x, y, z) {
+  d.cylinder(x, y, z, 0.22, 0.55, '#E9E2EF')
+  const c = P(x, y, z + 0.55)
+  ;[[-6, -5, '#F2B5C6'], [-1, -9, '#F7CFD9'], [5, -6, '#E99AAE'], [-4, -12, '#FFFFFF'], [3, -12, '#F2B5C6'], [8, -10, '#F7CFD9'], [-8, -9, '#E99AAE']].forEach(([dx, dy, col]) => {
+    d.raw(`<path d="M${c[0].toFixed(1)},${c[1].toFixed(1)} L${(c[0] + dx * 0.6).toFixed(1)},${(c[1] + dy * 0.6).toFixed(1)}" stroke="#6FA287" stroke-width=".7"/>`)
+    d.raw(`<circle cx="${(c[0] + dx).toFixed(1)}" cy="${(c[1] + dy).toFixed(1)}" r="2.6" fill="${col}"/><circle cx="${(c[0] + dx).toFixed(1)}" cy="${(c[1] + dy).toFixed(1)}" r=".9" fill="#F6D27A"/>`)
+  })
+  ;[[-9, -3], [8, -3], [0, -4]].forEach(([dx, dy]) => d.raw(`<ellipse cx="${(c[0] + dx).toFixed(1)}" cy="${(c[1] + dy).toFixed(1)}" rx="2.8" ry="1.4" fill="#7FB495"/>`))
+}
+
+function plush(d, x, y, z, col) {
+  const c = P(x, y, z)
+  d.raw(`<g transform="translate(${c[0].toFixed(1)} ${(c[1] - 7).toFixed(1)})">
+    <ellipse cx="0" cy="7" rx="9" ry="2.5" fill="#000" opacity=".15"/>
+    <path d="M-6,-6 l-1,-6 l5,4 M6,-6 l1,-6 l-5,4" fill="${col}"/>
+    <ellipse cx="0" cy="0" rx="9" ry="8" fill="${col}"/>
+    <ellipse cx="-2" cy="-3" rx="5" ry="3" fill="#fff" opacity=".25"/>
+    <path d="M-4,0 q1.2,1 2.4,0 M1.6,0 q1.2,1 2.4,0" stroke="#4A4260" stroke-width=".8" fill="none" stroke-linecap="round"/>
+    <circle cx="-5.5" cy="2.5" r="1.4" fill="#F4A3B4" opacity=".7"/><circle cx="5.5" cy="2.5" r="1.4" fill="#F4A3B4" opacity=".7"/>
+  </g>`)
+}
+
 /* ---------- textures for walls and floor, drawn on the isometric grid ---------- */
 
 const C = COS * K
@@ -277,7 +401,10 @@ export function drawRoom(o) {
   const { room, tod = timeOfDay(), books = 0, notes = 0, events = 0, diaryToday = false, leaves = 3 } = o
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
-  const sky = SKIES[tod]
+  const theme = THEMES[room.theme] ? room.theme : 'cozy'
+  const sky = theme === 'city' ? SKIES.night : SKIES[tod]
+  const glows = []   // lamp lights, drawn again on top in the night room
+  const glow = (x, y, r) => { glows.push([x, y, r]); d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#glow)"/>`) }
   const blanket = (FABRICS[room.blanket] || FABRICS.lilac).c
   const shelfWood = (WOODS[room.shelfWood] || WOODS.oak).c
   const deskWood = (WOODS[room.deskWood] || WOODS.oak).c
@@ -365,7 +492,7 @@ export function drawRoom(o) {
   d.cylinder(4.55, 0.3, 5.14, 0.17, 0.5, '#FBF3E6')
   const flame = P(4.55, 0.3, 5.75)
   d.raw(`<ellipse cx="${flame[0].toFixed(1)}" cy="${flame[1].toFixed(1)}" rx="1.3" ry="2.4" fill="#F6C46B" opacity="${sky.lights ? 1 : 0.5}"/>`)
-  if (sky.lights) d.raw(`<circle cx="${flame[0].toFixed(1)}" cy="${flame[1].toFixed(1)}" r="11" fill="url(#glow)"/>`)
+  if (sky.lights) glow(flame[0], flame[1], 11)
   d.cylinder(5.15, 0.3, 5.14, 0.22, 0.32, '#D98F72')
   const cac = P(5.15, 0.3, 5.46)
   d.raw(`<path d="M${(cac[0] - 2.5).toFixed(1)},${cac[1].toFixed(1)} q2.5,-9 5,0 z" fill="#7FAF8E"/>`)
@@ -375,27 +502,31 @@ export function drawRoom(o) {
   const wx0 = 6.6, wx1 = 9.2, wz0 = 4.0, wz1 = 7.5
   const wash = P(7.9, 0, 5.6)
   d.raw(`<clipPath id="rwall"><polygon points="${pts([[0, 0, 0], [W, 0, 0], [W, 0, H], [0, 0, H]])}"/></clipPath><ellipse clip-path="url(#rwall)" cx="${wash[0].toFixed(1)}" cy="${wash[1].toFixed(1)}" rx="70" ry="60" fill="url(#sunwash)"/>`)
-  d.poly([[wx0 - 0.15, 0.01, wz0 - 0.15], [wx1 + 0.15, 0.01, wz0 - 0.15], [wx1 + 0.15, 0.01, wz1 + 0.15], [wx0 - 0.15, 0.01, wz1 + 0.15]], '#FBF8FD')
-  d.poly([[wx0, 0.02, wz0], [wx1, 0.02, wz0], [wx1, 0.02, wz1], [wx0, 0.02, wz1]], 'url(#sky)')
-  const orb = P(8.4, 0.03, sky.orbZ)
-  d.raw(`<circle cx="${orb[0].toFixed(1)}" cy="${orb[1].toFixed(1)}" r="11" fill="${sky.orb}" opacity=".2"/><circle cx="${orb[0].toFixed(1)}" cy="${orb[1].toFixed(1)}" r="5.5" fill="${sky.orb}"/>`)
-  if (sky.stars) {
-    ;[[7.0, 7.1, 0], [7.5, 6.6, 1.2], [9.0, 7.2, 0.6], [7.2, 6.0, 1.8], [8.0, 7.3, 0.9]].forEach(([x, z, delay]) => {
-      const s = P(x, 0.03, z)
-      d.raw(`<circle class="twinkle" style="animation-delay:${delay}s" cx="${s[0].toFixed(1)}" cy="${s[1].toFixed(1)}" r="1.1" fill="#FFF"/>`)
+  if (theme === 'attic') roundWindow(d, sky, blanket)
+  else if (theme === 'city') cityWindow(d, sky, blanket)
+  else {
+    d.poly([[wx0 - 0.15, 0.01, wz0 - 0.15], [wx1 + 0.15, 0.01, wz0 - 0.15], [wx1 + 0.15, 0.01, wz1 + 0.15], [wx0 - 0.15, 0.01, wz1 + 0.15]], '#FBF8FD')
+    d.poly([[wx0, 0.02, wz0], [wx1, 0.02, wz0], [wx1, 0.02, wz1], [wx0, 0.02, wz1]], 'url(#sky)')
+    const orb = P(8.4, 0.03, sky.orbZ)
+    d.raw(`<circle cx="${orb[0].toFixed(1)}" cy="${orb[1].toFixed(1)}" r="11" fill="${sky.orb}" opacity=".2"/><circle cx="${orb[0].toFixed(1)}" cy="${orb[1].toFixed(1)}" r="5.5" fill="${sky.orb}"/>`)
+    if (sky.stars) {
+      ;[[7.0, 7.1, 0], [7.5, 6.6, 1.2], [9.0, 7.2, 0.6], [7.2, 6.0, 1.8], [8.0, 7.3, 0.9]].forEach(([x, z, delay]) => {
+        const s = P(x, 0.03, z)
+        d.raw(`<circle class="twinkle" style="animation-delay:${delay}s" cx="${s[0].toFixed(1)}" cy="${s[1].toFixed(1)}" r="1.1" fill="#FFF"/>`)
+      })
+    }
+    d.poly([[wx0, 0.03, wz0], [7.0, 0.03, 4.6], [7.7, 0.03, 4.35], [8.4, 0.03, 4.8], [wx1, 0.03, 4.4], [wx1, 0.03, wz0]], sky.hills, ' opacity=".6"')
+    const mid = (wx0 + wx1) / 2
+    d.poly([[mid - 0.06, 0.04, wz0], [mid + 0.06, 0.04, wz0], [mid + 0.06, 0.04, wz1], [mid - 0.06, 0.04, wz1]], '#FBF8FD')
+    d.poly([[wx0, 0.04, 5.75], [wx1, 0.04, 5.75], [wx1, 0.04, 5.87], [wx0, 0.04, 5.87]], '#FBF8FD')
+    d.box(wx0 - 0.3, 0, wz0 - 0.32, wx1 - wx0 + 0.6, 0.45, 0.14, ['#FFFFFF', '#EEE8F2', '#E4DCEB'])
+    const curtain = shade(blanket, 0.62)
+    ;[wx0 - 0.75, wx1 + 0.15].forEach((cx0) => {
+      d.poly([[cx0, 0.25, 3.0], [cx0 + 0.6, 0.25, 3.0], [cx0 + 0.6, 0.25, 8.0], [cx0, 0.25, 8.0]], curtain)
+      d.poly([[cx0 + 0.2, 0.26, 3.0], [cx0 + 0.32, 0.26, 3.0], [cx0 + 0.32, 0.26, 8.0], [cx0 + 0.2, 0.26, 8.0]], shade(curtain, -0.06))
     })
+    d.line([[wx0 - 1.0, 0.28, 8.05], [wx1 + 1.0, 0.28, 8.05]], '#B9A3C9', 2, ' stroke-linecap="round"')
   }
-  d.poly([[wx0, 0.03, wz0], [7.0, 0.03, 4.6], [7.7, 0.03, 4.35], [8.4, 0.03, 4.8], [wx1, 0.03, 4.4], [wx1, 0.03, wz0]], sky.hills, ' opacity=".6"')
-  const mid = (wx0 + wx1) / 2
-  d.poly([[mid - 0.06, 0.04, wz0], [mid + 0.06, 0.04, wz0], [mid + 0.06, 0.04, wz1], [mid - 0.06, 0.04, wz1]], '#FBF8FD')
-  d.poly([[wx0, 0.04, 5.75], [wx1, 0.04, 5.75], [wx1, 0.04, 5.87], [wx0, 0.04, 5.87]], '#FBF8FD')
-  d.box(wx0 - 0.3, 0, wz0 - 0.32, wx1 - wx0 + 0.6, 0.45, 0.14, ['#FFFFFF', '#EEE8F2', '#E4DCEB'])
-  const curtain = shade(blanket, 0.62)
-  ;[wx0 - 0.75, wx1 + 0.15].forEach((cx0) => {
-    d.poly([[cx0, 0.25, 3.0], [cx0 + 0.6, 0.25, 3.0], [cx0 + 0.6, 0.25, 8.0], [cx0, 0.25, 8.0]], curtain)
-    d.poly([[cx0 + 0.2, 0.26, 3.0], [cx0 + 0.32, 0.26, 3.0], [cx0 + 0.32, 0.26, 8.0], [cx0 + 0.2, 0.26, 8.0]], shade(curtain, -0.06))
-  })
-  d.line([[wx0 - 1.0, 0.28, 8.05], [wx1 + 1.0, 0.28, 8.05]], '#B9A3C9', 2, ' stroke-linecap="round"')
 
   const lights = []
   for (let i = 0; i < 13; i++) {
@@ -422,6 +553,7 @@ export function drawRoom(o) {
     d.raw(`<circle cx="${pin[0].toFixed(1)}" cy="${pin[1].toFixed(1)}" r="1.6" fill="${i % 2 ? '#3F6B9A' : '#C2556B'}"/>`)
   })
   spots.board = bounds([[0, 1.6, 4.5], [0, 5.4, 4.5], [0, 5.4, 7.1], [0, 1.6, 7.1]], 3)
+  if (theme === 'attic') atticDetails(d)
 
   /* light from the window on the floor */
   if (sky.beam) d.poly([[6.6, 0.2, 0.02], [9.2, 0.2, 0.02], [8.0, 5.2, 0.02], [5.4, 5.2, 0.02]], 'url(#beam)')
@@ -479,6 +611,7 @@ export function drawRoom(o) {
     const dot = P(1.92, 4.2, 3.4)
     d.raw(`<circle cx="${dot[0].toFixed(1)}" cy="${dot[1].toFixed(1)}" r="3.2" fill="#E07A8F" stroke="#FFF" stroke-width="1"/>`)
   }
+  if (theme === 'attic') flowers(d, 1.25, 2.0, 2.62)
   // mug and lamp
   d.cylinder(1.85, 5.25, 2.62, 0.2, 0.42, '#E9A3B4')
   const mug = P(1.85, 5.25, 3.1)
@@ -486,7 +619,7 @@ export function drawRoom(o) {
   const lb = P(0.6, 5.0, 2.62), lt = P(0.6, 5.0, 4.5)
   d.raw(`<ellipse cx="${lb[0].toFixed(1)}" cy="${lb[1].toFixed(1)}" rx="6" ry="3" fill="#4A4260"/><path d="M${lb[0].toFixed(1)},${lb[1].toFixed(1)} L${lt[0].toFixed(1)},${lt[1].toFixed(1)}" stroke="#4A4260" stroke-width="2"/>`)
   d.raw(`<path d="M${(lt[0] - 6).toFixed(1)},${lt[1].toFixed(1)} L${(lt[0] + 6).toFixed(1)},${lt[1].toFixed(1)} L${(lt[0] + 9).toFixed(1)},${(lt[1] + 9).toFixed(1)} L${(lt[0] - 9).toFixed(1)},${(lt[1] + 9).toFixed(1)} Z" fill="${sky.lights ? '#F6C46B' : '#E3C48A'}"/>`)
-  if (sky.lights) d.raw(`<circle cx="${(lt[0] + 6).toFixed(1)}" cy="${(lt[1] + 22).toFixed(1)}" r="70" fill="url(#glow)"/>`)
+  if (sky.lights) glow(lt[0] + 6, lt[1] + 22, 70)
   spots.desk = bounds([[0, 1.6, 0], [2.5, 1.6, 0], [2.5, 5.7, 0], [0, 5.7, 0], [0, 1.6, 4.0], [0, 5.7, 4.6]], 2)
   E()
 
@@ -545,7 +678,7 @@ export function drawRoom(o) {
   d.box(5.16, 0.71, 0.08, 0.08, 0.08, 4.0, '#4A4260')
   const fl = P(5.2, 0.75, 4.25)
   d.raw(`<path d="M${(fl[0] - 7).toFixed(1)},${(fl[1] - 6).toFixed(1)} L${(fl[0] + 7).toFixed(1)},${(fl[1] - 6).toFixed(1)} L${(fl[0] + 11).toFixed(1)},${(fl[1] + 8).toFixed(1)} L${(fl[0] - 11).toFixed(1)},${(fl[1] + 8).toFixed(1)} Z" fill="${sky.lights ? '#FBE3B4' : '#F3E6D2'}"/>`)
-  if (sky.lights) d.raw(`<circle cx="${fl[0].toFixed(1)}" cy="${(fl[1] + 14).toFixed(1)}" r="46" fill="url(#glow)"/>`)
+  if (sky.lights) glow(fl[0], fl[1] + 14, 46)
 
   /* ================= bed ================= */
   G('bed')
@@ -692,7 +825,10 @@ export function drawRoom(o) {
     d.box(0, sy0 + sdy - 0.12, 0, sx, 0.12, sh + 0.14, sw)
     d.box(0, sy0, sh, sx, sdy, 0.14, shade(sw, 0.1))
   }
-  if (ss !== 'ladder') {
+  if (ss !== 'ladder' && theme === 'attic') {
+    plush(d, 0.7, sy0 + 0.75, sh + 0.14, '#B9A3E0')
+    plush(d, 0.75, sy0 + 1.7, sh + 0.14, '#F2B5C6')
+  } else if (ss !== 'ladder') {
     // little things on top
     d.cylinder(0.65, sy0 + 0.7, sh + 0.14, 0.26, 0.4, '#E9E2EF')
     const pp = P(0.65, sy0 + 0.7, sh + 0.54)
@@ -707,6 +843,13 @@ export function drawRoom(o) {
   /* ================= a big potted plant: grows with your diary streak ================= */
   plant(d, 8.9, 7.3, leaves)
 
+  if (theme === 'city') {
+    // the room is dark; only the lamps and the window light it
+    d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, H]], '#0E1338', ' opacity=".34" pointer-events="none"')
+    glows.forEach(([x, y, r]) => d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 0.75}" fill="url(#glow)" opacity=".55" pointer-events="none"/>`))
+    const wl = P(7.8, 2.5, 0)
+    d.raw(`<ellipse cx="${wl[0].toFixed(1)}" cy="${wl[1].toFixed(1)}" rx="60" ry="24" fill="#8FB0FF" opacity=".08" pointer-events="none"/>`)
+  }
   const svg = `<svg role="img" aria-label="Your room" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet">${d.out.join('')}</svg>`
   // walls and floor are not boxes, so they get exact outlines (in percent) for clicking
   const outline = (ps) => ps.map((c) => { const [x, y] = P(...c); return `${(((x - VB.x) / VB.w) * 100).toFixed(2)}% ${(((y - VB.y) / VB.h) * 100).toFixed(2)}%` }).join(', ')
