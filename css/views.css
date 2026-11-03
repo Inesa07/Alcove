@@ -545,11 +545,11 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .turn-under, .leaf, .turn-shade { position: absolute; z-index: 20; pointer-events: none; }
 .leaf { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; will-change: transform; }
 .leaf .page-copy, .turn-under .page-copy { transform-style: flat; }
-.leaf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
-.leaf-next .leaf-front { border-radius: 2px 6px 6px 2px; box-shadow: 0 10px 30px rgba(20, 10, 40, .25); }
-.leaf-next .leaf-back { border-radius: 6px 2px 2px 6px; transform: rotateY(180deg); }
-.leaf-prev .leaf-front { border-radius: 6px 2px 2px 6px; box-shadow: 0 10px 30px rgba(20, 10, 40, .25); }
-.leaf-prev .leaf-back { border-radius: 2px 6px 6px 2px; transform: rotateY(180deg); }
+.leaf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; transform: translateZ(1px); }
+.leaf-next .leaf-front { border-radius: 2px 6px 6px 2px; box-shadow: 0 6px 18px rgba(20, 10, 40, .18); }
+.leaf-next .leaf-back { border-radius: 6px 2px 2px 6px; transform: rotateY(180deg) translateZ(1px); }
+.leaf-prev .leaf-front { border-radius: 6px 2px 2px 6px; box-shadow: 0 6px 18px rgba(20, 10, 40, .18); }
+.leaf-prev .leaf-back { border-radius: 2px 6px 6px 2px; transform: rotateY(180deg) translateZ(1px); }
 /* shading on the leaf while it turns */
 .leaf-dim { position: absolute; inset: 0; z-index: 30; pointer-events: none; opacity: 0; }
 .leaf-next .leaf-front .leaf-dim { background: linear-gradient(to right, rgba(40, 25, 70, .55), rgba(40, 25, 70, .15) 45%, rgba(255, 255, 255, .2)); }

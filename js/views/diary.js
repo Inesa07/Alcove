@@ -259,41 +259,26 @@ export function mount(el) {
     leaf.className = 'leaf ' + (goingOn ? 'leaf-next' : 'leaf-prev')
     leaf.style.transformOrigin = goingOn ? `${-gap / 2}px 50%` : `calc(100% + ${gap / 2}px) 50%`
     const f = document.createElement('div'); f.className = 'leaf-face leaf-front'
-    const fDim = document.createElement('div'); fDim.className = 'leaf-dim'
-    f.append(snapshot(turning), fDim)
+    f.append(snapshot(turning))
     const b = document.createElement('div'); b.className = 'leaf-face leaf-back'
-    const bDim = document.createElement('div'); bDim.className = 'leaf-dim'
     leaf.append(f, b)
     place(leaf, turning)
 
-    const shade = document.createElement('div')
-    shade.className = 'turn-shade ' + (goingOn ? 'on-right' : 'on-left')
-    shade.style.opacity = '0'
-    place(shade, turning)
-    book.append(cover, shade, leaf)
+    book.append(cover, leaf)
 
     // 2. Now load the next pages underneath. The pictures hide the change.
     await openSpread(target)
-    b.append(snapshot(pageEls[goingOn ? 0 : 1]), bDim)
+    b.append(snapshot(pageEls[goingOn ? 0 : 1]))
 
     // 3. Turn the leaf: it lifts gently, curves over the spine and settles on the other side.
     await new Promise(requestAnimationFrame)
     const angle = goingOn ? -180 : 180
-    const time = 950
-    const ease = 'cubic-bezier(.42, 0, .2, 1)'
-    const opts = { duration: time, easing: ease, fill: 'forwards' }
-    const anim = leaf.animate([
-      { transform: 'rotateY(0deg) translateZ(0)' },
-      { transform: `rotateY(${angle * 0.08}deg) translateZ(6px)`, offset: 0.15 },
-      { transform: `rotateY(${angle * 0.5}deg) translateZ(40px)`, offset: 0.55 },
-      { transform: `rotateY(${angle * 0.97}deg) translateZ(4px)`, offset: 0.9 },
-      { transform: `rotateY(${angle}deg) translateZ(0)` },
-    ], opts)
-    fDim.animate([{ opacity: 0 }, { opacity: 0.5, offset: 0.55 }, { opacity: 0.7 }], opts)
-    bDim.animate([{ opacity: 0.6 }, { opacity: 0.3, offset: 0.45 }, { opacity: 0 }], opts)
-    shade.animate([{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0.4, offset: 0.7 }, { opacity: 0 }], opts)
+    const anim = leaf.animate(
+      [{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${angle}deg)` }],
+      { duration: 800, easing: 'cubic-bezier(.45, 0, .25, 1)', fill: 'forwards' },
+    )
     await anim.finished.catch(() => {})
-    cover.remove(); leaf.remove(); shade.remove()
+    cover.remove(); leaf.remove()
     busy = false
   }
 
