@@ -1,5 +1,5 @@
 // Lets the app open without internet once it has been visited.
-const CACHE = 'planner-v19'
+const CACHE = 'planner-v20'
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'css/views.css',
   'js/app.js', 'js/store.js', 'js/db.js', 'js/ui.js', 'js/room.js', 'js/classify.js', 'js/reminders.js', 'js/stickers.js', 'js/templates.js', 'js/config.js', 'js/sync.js', 'js/account.js',
@@ -21,7 +21,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-cache' }) // always ask the server for the newest version
       .then((res) => {
         const copy = res.clone()
         caches.open(CACHE).then((c) => c.put(e.request, copy))
