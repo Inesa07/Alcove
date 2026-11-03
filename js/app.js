@@ -80,6 +80,6 @@ window.addEventListener('planner:synced', () => {
   show()
 })
 
-setupAccount()
 renderSide()
+setupAccount()
 show()

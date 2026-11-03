@@ -117,32 +117,89 @@ setInterval(() => { if (user && document.visibilityState === 'visible' && status
 
 /* ---------- account ---------- */
 
+const here = () => location.origin + location.pathname
+// supabase keeps the session in localStorage; seeing it lets the app open offline
+const storedSession = () => Object.keys(localStorage).some((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+export const signedIn = () => !!user
+export const nameOf = () => user?.user_metadata?.name || ''
+
+// Links from emails (confirm the account, reset the password) come back with the session in the address.
+async function fromEmailLink() {
+  const h = new URLSearchParams(location.hash.slice(1))
+  if (h.get('error_description')) {
+    history.replaceState(null, '', here() + '#room')
+    return { error: h.get('error_description').replace(/\+/g, ' ') }
+  }
+  if (!h.get('access_token')) return {}
+  const c = await getClient()
+  const { data, error } = await c.auth.setSession({ access_token: h.get('access_token'), refresh_token: h.get('refresh_token') })
+  history.replaceState(null, '', here() + '#room')
+  if (error) return { error: error.message }
+  return { user: data.user, type: h.get('type') }
+}
+
+// Returns { user, type, error, offline } once we know whether someone is signed in.
 export async function start() {
-  if (!configured()) return
+  if (!configured()) return { off: true }
   try {
+    const link = await fromEmailLink()
     const c = await getClient()
     const { data } = await c.auth.getSession()
     user = data?.session?.user || null
     setStatus(user ? 'ok' : 'signed-out')
     if (user) syncNow()
-  } catch (e) { setStatus('error', e?.message || 'Could not reach the cloud') }
+    return { user, type: link.type, error: link.error }
+  } catch (e) {
+    // no internet: if you were signed in before, keep working on this device
+    if (storedSession()) { user = { email: '', offline: true }; setStatus('error', 'Offline'); return { user, offline: true } }
+    setStatus('error', e?.message || 'Could not reach the cloud')
+    return { error: 'No internet connection. Connect and try again.' }
+  }
 }
 
-export async function signIn(email, password, create = false) {
+export async function signUp(name, email, password) {
   const c = await getClient()
-  const { data, error } = create ? await c.auth.signUp({ email, password }) : await c.auth.signInWithPassword({ email, password })
+  const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: here() } })
   if (error) throw error
-  user = data.user && data.session ? data.user : null
-  if (!user) return 'check-email'   // the project asks people to confirm their email first
+  if (!data.session) return 'check-email'   // the project asks people to confirm their email first
+  return begin(data.user)
+}
+
+export async function signIn(email, password) {
+  const c = await getClient()
+  const { data, error } = await c.auth.signInWithPassword({ email, password })
+  if (error) throw error
+  return begin(data.user)
+}
+
+async function begin(u) {
+  user = u
   localStorage.removeItem(SYNCED)    // first sync on this device: the cloud copy wins
   setStatus('ok')
   await syncNow()
   return 'ok'
 }
 
+export async function sendReset(email) {
+  const c = await getClient()
+  const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: here() })
+  if (error) throw error
+}
+
+export async function setPassword(password) {
+  const c = await getClient()
+  const { error } = await c.auth.updateUser({ password })
+  if (error) throw error
+}
+
+// Signing out sends the last changes, then empties this device, so the next person starts clean.
 export async function signOut() {
+  if (user && !user.offline) await syncNow()
+  if (status === 'error') throw new Error('Your last changes are not in the cloud yet. Connect to the internet first.')
   const c = await getClient()
   await c.auth.signOut()
   user = null
+  for (const k of [...(await db.keys('bp:')), ...(await db.keys('cover:')), ...(await db.keys('page:'))]) await db.del(k, true)
+  ;['planner.v2', 'planner.v1', STAMPS, SYNCED].forEach((k) => localStorage.removeItem(k))
   setStatus('signed-out')
 }

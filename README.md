@@ -66,8 +66,8 @@ Everything is saved on the device first, so the app also works offline. To keep 
 
 1. Create a free project at supabase.com.
 2. In **SQL Editor**, run `supabase/setup.sql` once. It creates one table, and each person can only read and write their own rows.
-3. In **Authentication → Sign In / Providers → Email**, you can turn off "Confirm email" so new accounts work right away.
+3. In **Authentication → URL Configuration**, set **Site URL** to the address of the app (for example `https://inesa07.github.io/Planner/`) and add it to **Redirect URLs**, so the links in emails (confirm account, reset password) open the app.
 4. Copy **Project URL** and the **anon public key** (Project Settings → API) into `js/config.js`.
 
-Then tap **Sync** at the top of the menu, create an account on one device and sign in with it on the others.
+The app opens with a welcome screen: create an account once, then sign in with it on any device. Signing out sends the last changes to the cloud and empties the device.
 Each piece of data (`state`, every diary page `bp:N`, every book cover `cover:<id>`) is one row; when the same piece changed on two devices, the newer change wins.
