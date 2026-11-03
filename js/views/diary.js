@@ -5,6 +5,7 @@
 
 import { getState, setDiaryBook, markDiaryDay, todayISO, uid } from '../store.js'
 import * as db from '../db.js'
+import { BIN_SVG, binKeys, throwAway, getBinned, forget, crumpleInto } from '../bin.js'
 import { STICKERS, sticker } from '../stickers.js'
 import { LAYOUTS, blockHTML } from '../templates.js'
 import { $, $$, esc, debounce, toast } from '../ui.js'
@@ -126,7 +127,11 @@ export function mount(el) {
         <div class="spine" aria-hidden="true"></div>
         <div class="page" data-side="1"></div>
       </div>
-      <p class="diary-tip" id="d-tip"></p>
+      <div class="diary-under">
+        <p class="diary-tip" id="d-tip"></p>
+        <button class="bin" id="d-bin" aria-label="Recycle bin">${BIN_SVG}<b class="bin-count" id="d-bin-count" hidden></b></button>
+      </div>
+      <dialog class="sheet-dialog bin-dialog" id="d-bin-dialog" aria-labelledby="bin-title"></dialog>
     </section>`
 
   const book = $('#book', el)
@@ -172,6 +177,7 @@ export function mount(el) {
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
       <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
+      ${hasContent(page) || page.items.some((i) => i.type === 'block' && Object.keys(i.data || {}).length) ? `<button class="page-trash" data-trash="${side}" aria-label="Throw page ${n + 1} in the bin" title="Throw this page in the bin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>` : ''}
       ${side === 0
         ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
         : `<button class="edge edge-next" data-turn="1" aria-label="${lastSpread ? 'New page' : 'Next page'}"><span class="curl" aria-hidden="true"></span></button>`}`
@@ -424,8 +430,98 @@ export function mount(el) {
     pop.hidden = false
   }
 
+  /* ---------- the recycle bin ---------- */
+
+  const binBtn = $('#d-bin', el)
+  const binDlg = $('#d-bin-dialog', el)
+  async function paintBinCount() {
+    const k = (await binKeys()).length
+    const c = $('#d-bin-count', el)
+    if (!c) return
+    c.hidden = !k
+    c.textContent = k
+  }
+  paintBinCount()
+
+  async function trashPage(side) {
+    if (busy) return
+    busy = true
+    closePop()
+    const n = num(side)
+    const copy = snapshot(pageEls[side])
+    copy.querySelector('.page-trash')?.remove()
+    const old = pages[side]
+    await throwAway(n, old)
+    pages[side] = { ...blankPage(), paper: old.paper === 'plain' && old.layout !== 'plain' ? 'lined' : old.paper, layout: old.paper === 'plain' && old.layout !== 'plain' ? 'lined' : old.paper, tint: old.tint }
+    selected = null
+    const anim = crumpleInto(copy, pageEls[side], binBtn)
+    await new Promise((r) => setTimeout(r, 60))
+    render()
+    await savePage(n, pages[side])
+    await anim
+    paintBinCount()
+    busy = false
+  }
+
+  const preview = (p) => {
+    const words = []
+    p.items.forEach((i) => {
+      if (i.type === 'text' && i.text) words.push(i.text)
+      if (i.type === 'block' && i.data) Object.values(i.data).forEach((v) => typeof v === 'string' && v.length > 1 && words.push(v))
+    })
+    const txt = words.join(' · ').replace(/\s+/g, ' ').trim()
+    const extras = [p.ink ? 'a drawing' : '', p.items.some((i) => i.type === 'photo') ? 'photos' : '', p.items.some((i) => i.type === 'sticker') ? 'stickers' : ''].filter(Boolean)
+    return (txt ? txt.slice(0, 140) + (txt.length > 140 ? '…' : '') : '') + (extras.length ? `${txt ? ' — ' : ''}with ${extras.join(', ')}` : '') || 'An empty page'
+  }
+
+  async function openBin() {
+    const ks = await binKeys()
+    const list = await Promise.all(ks.map(async (k) => ({ k, v: await getBinned(k) })))
+    const when = (t) => new Date(t).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    binDlg.innerHTML = `<div class="book-form">
+      <h3 id="bin-title">Recycle bin</h3>
+      ${list.length ? `<ul class="bin-list">${list.map(({ k, v }) => v ? `<li>
+          <div><b>Page ${v.n + 1}</b><span>Thrown away ${esc(when(v.at))}</span><p>${esc(preview(v.page))}</p></div>
+          <div class="bin-actions"><button class="ghost" data-restore="${k}">Put back</button><button class="ghost danger" data-forget="${k}" aria-label="Delete forever">Delete forever</button></div>
+        </li>` : '').join('')}</ul>` : '<p class="bin-empty">The bin is empty. Pages you throw away wait here, so you can put them back.</p>'}
+      <div class="bf-actions">${list.length ? '<button type="button" class="ghost danger" data-empty-bin>Empty the bin</button>' : ''}<span class="grow"></span><button type="button" class="primary" data-close-bin>Done</button></div>
+    </div>`
+    if (!binDlg.open) binDlg.showModal()
+  }
+
+  async function restore(k) {
+    const v = await getBinned(k)
+    if (!v) return
+    let n = v.n
+    if (n >= count() || hasContent(await loadPage(n))) {
+      // the old place is used now: the page goes after the last page of the book
+      n = count()
+      setDiaryBook({ count: count() + 2 })
+    }
+    await savePage(n, v.page)
+    await forget(k)
+    binDlg.close()
+    paintBinCount()
+    ahead.clear()
+    await openSpread(Math.floor(n / 2))
+    toast(`Page ${n + 1} is back`)
+  }
+
+  binBtn.addEventListener('click', openBin)
+  binDlg.addEventListener('click', async (e) => {
+    const t = e.target
+    if (t === binDlg || t.closest('[data-close-bin]')) return binDlg.close()
+    const r = t.closest('[data-restore]')
+    if (r) return restore(r.dataset.restore)
+    const f = t.closest('[data-forget]')
+    if (f) { await forget(f.dataset.forget); paintBinCount(); return openBin() }
+    if (t.closest('[data-empty-bin]')) { for (const k of await binKeys()) await forget(k); paintBinCount(); return openBin() }
+  })
+
   el.addEventListener('click', (e) => {
     const t = e.target
+    const trash = t.closest('[data-trash]')
+    if (trash) return trashPage(Number(trash.dataset.trash))
     const turnBtn = t.closest('[data-turn]')
     if (turnBtn) return turn(Number(turnBtn.dataset.turn))
     const toolBtn = t.closest('[data-tool]')
