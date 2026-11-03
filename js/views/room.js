@@ -17,11 +17,12 @@ const PARTS = {
   desk: { name: 'Desk', options: [['Style', 'deskStyle', 'styles'], ['Colour', 'deskWood', WOODS]] },
   chair: { name: 'Chair', options: [['Style', 'chairStyle', 'styles'], ['Colour', 'chairColor', FABRICS]] },
   rug: { name: 'Rug', options: [['Colour', 'rug', RUGS]] },
+  art: { name: 'Picture', options: [['Picture on the wall', 'art', 'styles']] },
   walls: { name: 'Walls', options: [['Colour', 'wall', WALLS], ['Texture', 'wallStyle', 'styles']] },
   floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS], ['Pattern', 'floorStyle', 'styles']] },
 }
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
-const DECOR_ORDER = ['rug', 'desk', 'chair', 'shelf', 'bed']
+const DECOR_ORDER = ['art', 'rug', 'desk', 'chair', 'shelf', 'bed']
 
 const DONE = { event: 'Added to your calendar', book: 'Added to your bookshelf', diary: 'Written in your diary', note: 'Pinned to your notes' }
 const swatchColor = (v) => v.c ?? v.l?.[0] ?? v.a ?? v.base ?? null
@@ -90,7 +91,7 @@ export function mount(el) {
         const b = spots[id]
         return `<a class="spot ${flash === id ? 'flash' : ''}" href="#${view}" aria-label="Open ${label}"
           style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%">
-          <span class="tag">${label}${counts[id] ? `<b>${counts[id]}</b>` : ''}</span>
+          <span class="tag" style="${b.tx != null ? `left:${b.tx}%;top:${b.ty}%` : ''}">${label}${counts[id] ? `<b>${counts[id]}</b>` : ''}</span>
         </a>`
       }).join('')
     }
@@ -100,7 +101,7 @@ export function mount(el) {
   /* ---------- top bar ---------- */
 
   function renderTop() {
-    $('#room-hint', el).textContent = decorating ? 'Tap the bed, bookshelf, desk, chair, rug, walls or floor to change it' : 'Tap something in your room'
+    $('#room-hint', el).textContent = decorating ? 'Tap the bed, bookshelf, desk, chair, picture, rug, walls or floor to change it' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-gallery>
@@ -123,7 +124,8 @@ export function mount(el) {
     page.classList.toggle('has-part', !!(decorating && part))
     if (!decorating || !part) { panel.hidden = true; return }
     const r = draft
-    const rows = PARTS[part].options.map(([label, key, list]) => {
+    const own = (draft.theme || 'cozy') !== 'cozy' // furniture in the other rooms has its own design
+    const rows = PARTS[part].options.filter(([, key]) => !(own && /Style$/.test(key) && key !== 'wallStyle' && key !== 'floorStyle')).map(([label, key, list]) => {
       if (list === 'styles') {
         return `<section><h3>${label}</h3><div class="chips">${Object.entries(STYLES[key]).map(([id, name]) =>
           `<button class="chip ${r[key] === id ? 'on' : ''}" data-set="${key}" data-val="${id}" aria-pressed="${r[key] === id}">${esc(name)}</button>`).join('')}</div></section>`
