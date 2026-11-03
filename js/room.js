@@ -168,6 +168,9 @@ export function drawRoom(o) {
   const dark = room.wall === 'night'
   const d = painter()
   const spots = {}
+  // each piece is a group, so the one being decorated can glow
+  const G = (id) => d.raw(`<g class="part part-${id}${o.selected === id ? ' sel' : ''}">`)
+  const E = () => d.raw('</g>')
 
   d.raw(`<defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky.stops[0]}"/><stop offset=".55" stop-color="${sky.stops[1]}"/><stop offset="1" stop-color="${sky.stops[2]}"/></linearGradient>
@@ -180,11 +183,15 @@ export function drawRoom(o) {
 
   /* walls and floor */
   const W = 10, D = 10, H = 9
+  G('walls')
   d.poly([[0, 0, 0], [0, D, 0], [0, D, H], [0, 0, H]], 'url(#wallL)')
   d.poly([[0, 0, 0], [W, 0, 0], [W, 0, H], [0, 0, H]], 'url(#wallR)')
+  E()
+  G('floor')
   d.poly([[0, 0, 0], [W, 0, 0], [W, D, 0], [0, D, 0]], 'url(#floor)')
   for (let i = 1; i < 10; i++) d.line([[0, i, 0], [W, i, 0]], floor.line, 1, ' opacity=".55"')
   for (let i = 0; i < 10; i++) d.line([[2 + (i % 3) * 3 + (i % 2), i, 0], [2 + (i % 3) * 3 + (i % 2), i + 1, 0]], floor.line, 1, ' opacity=".4"')
+  E()
   d.poly([[0, 0, 0], [0, 0.6, 0], [0, 0.6, H], [0, 0, H]], '#000', ' opacity=".05"')
   d.poly([[0, 0, 0], [0.6, 0, 0], [0.6, 0, H], [0, 0, H]], '#000', ' opacity=".06"')
   d.box(0, 0, 0, 0.12, D, 0.35, [trim, shade(trim, -0.04), shade(trim, -0.08)])
@@ -262,13 +269,16 @@ export function drawRoom(o) {
 
   /* rug */
   spots.rug = bounds(Array.from({ length: 24 }, (_, i) => [5.4 + 2.7 * Math.cos((Math.PI * i) / 12), 6.0 + 2.7 * Math.sin((Math.PI * i) / 12), 0]), 0)
+  G('rug')
   if (rug) {
     d.ring(5.4, 6.0, 0.01, 2.7, rug)
     d.ring(5.4, 6.0, 0.02, 2.15, shade(rug, -0.06))
     d.ring(5.4, 6.0, 0.03, 1.6, rug)
     d.ring(5.4, 6.0, 0.04, 0.9, shade(rug, -0.06))
   }
+  E()
 
+  G('desk')
   /* desk */
   d.shadow(0, 1.5, 2.7, 5.9)
   if (room.deskStyle === 'simple') {
@@ -305,7 +315,9 @@ export function drawRoom(o) {
   d.raw(`<path d="M${(lt[0] - 6).toFixed(1)},${lt[1].toFixed(1)} L${(lt[0] + 6).toFixed(1)},${lt[1].toFixed(1)} L${(lt[0] + 9).toFixed(1)},${(lt[1] + 9).toFixed(1)} L${(lt[0] - 9).toFixed(1)},${(lt[1] + 9).toFixed(1)} Z" fill="${sky.lights ? '#F6C46B' : '#E3C48A'}"/>`)
   if (sky.lights) d.raw(`<circle cx="${(lt[0] + 6).toFixed(1)}" cy="${(lt[1] + 22).toFixed(1)}" r="70" fill="url(#glow)"/>`)
   spots.desk = bounds([[0, 1.6, 0], [2.5, 1.6, 0], [2.5, 5.7, 0], [0, 5.7, 0], [0, 1.6, 4.0], [0, 5.7, 4.6]], 2)
+  E()
 
+  G('chair')
   /* chair */
   const chair = (FABRICS[room.chairColor] || FABRICS.lilac).c
   d.shadow(2.5, 2.6, 4.1, 4.2, 0.12)
@@ -319,6 +331,7 @@ export function drawRoom(o) {
     d.box(3.85, 2.75, 1.73, 0.18, 1.3, 1.6, chair)
   }
   spots.chair = bounds([[2.65, 2.75, 0], [4.05, 2.75, 0], [4.05, 4.05, 0], [2.65, 4.05, 0], [2.65, 2.75, 3.33], [4.05, 4.05, 3.33]], 2)
+  E()
 
   /* floor lamp in the corner next to the bed */
   d.ring(5.2, 0.75, 0.02, 0.45, '#5B4536', ' opacity=".18"')
@@ -328,6 +341,7 @@ export function drawRoom(o) {
   d.raw(`<path d="M${(fl[0] - 7).toFixed(1)},${(fl[1] - 6).toFixed(1)} L${(fl[0] + 7).toFixed(1)},${(fl[1] - 6).toFixed(1)} L${(fl[0] + 11).toFixed(1)},${(fl[1] + 8).toFixed(1)} L${(fl[0] - 11).toFixed(1)},${(fl[1] + 8).toFixed(1)} Z" fill="${sky.lights ? '#FBE3B4' : '#F3E6D2'}"/>`)
   if (sky.lights) d.raw(`<circle cx="${fl[0].toFixed(1)}" cy="${(fl[1] + 14).toFixed(1)}" r="46" fill="url(#glow)"/>`)
 
+  G('bed')
   /* bed */
   d.shadow(5.7, 0.1, 10, 5.5, 0.18)
   const canopy = room.bedStyle === 'canopy'
@@ -377,11 +391,13 @@ export function drawRoom(o) {
     })
   }
   spots.bed = bounds([[5.9, 0, 0], [9.7, 0, canopy ? 7.7 : 3.3], [9.7, 5.2, 0], [5.9, 5.2, 0], [5.9, 0, canopy ? 7.7 : 3.3]], 0)
+  E()
 
   /* pouf on the rug */
   d.ring(6.6, 8.0, 0.02, 0.85, '#5B4536', ' opacity=".14"')
   d.cylinder(6.6, 8.0, 0, 0.75, 0.85, dark ? '#E9C46A' : '#EBC77A')
 
+  G('shelf')
   /* bookshelf (opens Books) */
   const sx = 1.45
   const tall = room.shelfStyle !== 'low'
@@ -417,6 +433,7 @@ export function drawRoom(o) {
   d.box(0.25, sy0 + sdy - 0.95, sh + 0.14, 0.9, 0.6, 0.18, '#E28FA3')
   d.box(0.3, sy0 + sdy - 0.9, sh + 0.32, 0.8, 0.5, 0.15, '#7FA3C8')
   spots.shelf = bounds([[0, sy0, 0], [sx, sy0, 0], [sx, sy0 + sdy, 0], [0, sy0 + sdy, sh + 1.2], [sx, sy0, sh + 1.2], [0, sy0, sh + 1.2]], 0)
+  E()
 
   /* plant in the front corner: grows with your diary streak */
   const [px, py] = P(3.6, 9.0, 0)

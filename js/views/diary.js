@@ -1,70 +1,91 @@
-// The diary is a book: one spread (two pages) for every day.
-// On the pages you can write, draw with a pen, add stickers and photos,
-// choose the paper and say how the day felt. Pages are saved in IndexedDB.
+// The diary is one book: page 1, 2, 3… to the last page, two pages open at a time.
+// Turn a page by clicking its outer edge. Each page can be lined, dotted, grid, plain
+// or a ready-made layout (daily planner, lists, habit tracker, good things).
+// On top you can write, draw, add stickers and photos. Pages are saved in IndexedDB.
 
-import { markDiaryDay, todayISO, uid } from '../store.js'
+import { getState, setDiaryBook, markDiaryDay, todayISO, uid } from '../store.js'
 import * as db from '../db.js'
 import { STICKERS, sticker } from '../stickers.js'
-import { $, $$, esc, addDays, weekday, longDate, debounce, toast, isoToDate } from '../ui.js'
+import { LAYOUTS, blockHTML } from '../templates.js'
+import { $, $$, esc, debounce, toast } from '../ui.js'
 
-const INKS = [
-  ['Ink', '#3B3450'], ['Rose', '#D9637F'], ['Blue', '#4F79AC'], ['Green', '#4F8A6D'], ['Honey', '#C9902F'], ['Lilac', '#8E74C4'],
-]
+const INKS = [['Ink', '#3B3450'], ['Rose', '#D9637F'], ['Blue', '#4F79AC'], ['Green', '#4F8A6D'], ['Honey', '#C9902F'], ['Lilac', '#8E74C4']]
 const SIZES = [['Thin', 3], ['Medium', 6], ['Thick', 12]]
-const PAPERS = { lined: 'Lined', dotted: 'Dotted', grid: 'Grid', plain: 'Plain' }
 const TINTS = { cream: '#FFFCF4', white: '#FFFFFF', pink: '#FFF2F4', blue: '#F2F6FD', sage: '#F3F8F0', lilac: '#F6F2FD' }
-const MOODS = [
-  ['Heavy', '#8C9BC4', 'M8 16.5c2-2 6-2 8 0'], ['Low', '#A9C1D6', 'M8.5 16h7'], ['Calm', '#9CC7B4', 'M8 15c2 1.6 6 1.6 8 0'],
-  ['Good', '#EBC86A', 'M7.5 14.5c2.2 2.6 6.8 2.6 9 0'], ['Bright', '#EDA0B4', 'M7 14c2.5 3.5 7.5 3.5 10 0'],
-]
 const CANVAS_W = 1000, CANVAS_H = 1300
 
-const blankPage = () => ({ paper: 'lined', tint: 'cream', mood: null, items: [], ink: [null, null] })
-const pageKey = (date) => 'page:' + date
-const hasContent = (p) => p.items.length > 0 || p.ink.some(Boolean) || p.mood !== null
+const blankPage = () => ({ paper: 'lined', tint: 'cream', layout: 'lined', items: [], ink: null })
+const key = (n) => 'bp:' + n
+const hasContent = (p) => p.items.some((i) => i.type !== 'title') || !!p.ink
+const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
-export async function loadPage(date) {
-  return { ...blankPage(), ...((await db.get(pageKey(date))) || {}) }
+export async function loadPage(n) {
+  return { ...blankPage(), ...((await db.get(key(n))) || {}) }
 }
 
-async function savePage(date, page) {
+async function savePage(n, page) {
   try {
-    await db.set(pageKey(date), page)
-    markDiaryDay(date, hasContent(page))
+    await db.set(key(n), page)
   } catch {
     toast('Could not save this page. Your browser storage may be full.')
   }
 }
 
-// Used by the quick input in "My room": adds a line of text to a day's page.
-export async function appendDiaryText(date, text) {
-  const page = await loadPage(date)
-  const onLeft = page.items.filter((i) => i.page === 0).length
-  page.items.push({ id: uid(), type: 'text', page: onLeft < 4 ? 0 : 1, x: 8, y: onLeft < 4 ? 26 + onLeft * 14 : 10, w: 84, rot: 0, text, color: INKS[0][1], fs: 5.6 })
-  await savePage(date, page)
+// Makes sure the book exists. Diary pages from the first version (one spread per day) become pages of the book.
+export async function ensureBook() {
+  const { count } = getState().diaryBook
+  if (count > 0) return count
+  const old = (await db.keys('page:')).sort()
+  let n = 0
+  for (const k of old) {
+    const p = await db.get(k)
+    if (!p) continue
+    const date = String(k).slice(5)
+    const dateLabel = new Date(date + 'T12:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    for (const side of [0, 1]) {
+      const items = (p.items || []).filter((i) => i.page === side).map(({ page, ...rest }) => rest)
+      if (side === 0) items.unshift({ id: uid(), type: 'text', x: 8, y: 4, w: 84, rot: 0, text: dateLabel, color: '#8E74C4', fs: 4.6 })
+      await savePage(n++, { ...blankPage(), paper: p.paper || 'lined', layout: p.paper || 'lined', tint: p.tint || 'cream', items, ink: (p.ink || [])[side] || null })
+    }
+  }
+  if (n === 0) n = 2
+  if (n % 2) n++
+  setDiaryBook({ count: n, spread: Math.max(0, n / 2 - 1) })
+  return n
+}
+
+// Used by the quick input in "My room": writes a line on the last written page (or the next free one).
+export async function appendDiaryText(_date, text) {
+  let count = await ensureBook()
+  let n = count - 1
+  while (n > 0 && !hasContent(await loadPage(n))) n--
+  let page = await loadPage(n)
+  const texts = page.items.filter((i) => i.type === 'text').length
+  if (page.layout in { daily: 1, lists: 1, habits: 1, thankful: 1 } || texts >= 6) {
+    n++
+    if (n >= count) { count += 2; setDiaryBook({ count }) }
+    page = await loadPage(n)
+  }
+  const used = page.items.filter((i) => i.type === 'text').length
+  page.items.push({ id: uid(), type: 'text', x: 8, y: 8 + used * 13, w: 84, rot: 0, text, color: INKS[0][1], fs: 5.6 })
+  await savePage(n, page)
+  markDiaryDay(todayISO(), true)
 }
 
 export function mount(el) {
-  let date = (location.hash.split('/')[1]) || todayISO()
-  let page = blankPage()
+  let spread = 0
+  let pages = [blankPage(), blankPage()]
   let tool = 'hand'
   let color = INKS[0][1]
   let size = SIZES[1][1]
   let selected = null
   let popover = null
+  let busy = false
 
   el.innerHTML = `
     <section class="diary-page">
       <header class="diary-head">
-        <div class="day-nav">
-          <button class="icon-btn" data-day="-1" aria-label="Previous day">‹</button>
-          <div class="day-title"><h2 id="d-weekday"></h2><p id="d-date"></p></div>
-          <button class="icon-btn" data-day="1" aria-label="Next day">›</button>
-        </div>
-        <div class="day-jump">
-          <button class="pill" data-today>Today</button>
-          <label class="pill pick-date">Go to a day<input type="date" id="d-pick" aria-label="Go to a day"></label>
-        </div>
+        <div class="day-title"><h2>My diary</h2><p id="d-pages"></p></div>
       </header>
 
       <div class="toolbar" role="toolbar" aria-label="Diary tools">
@@ -90,39 +111,39 @@ export function mount(el) {
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span>Photo</span>
             <input type="file" accept="image/*" id="d-photo" class="sr-only">
           </label>
-          <button class="tool" data-pop="paper" title="Paper">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/></svg><span>Paper</span></button>
         </div>
         <div class="popover" id="d-pop" hidden></div>
       </div>
 
       <div class="book" id="book">
-        <div class="page" data-page="0"></div>
+        <div class="page" data-side="0"></div>
         <div class="spine" aria-hidden="true"></div>
-        <div class="page" data-page="1"></div>
+        <div class="page" data-side="1"></div>
       </div>
       <p class="diary-tip" id="d-tip"></p>
     </section>`
 
   const book = $('#book', el)
-  const pages = $$('.page', book)
-  const save = debounce(() => savePage(date, page), 400)
+  const pageEls = $$('.page', book)
+  const count = () => getState().diaryBook.count
+  const num = (side) => spread * 2 + side // page index in the book (0-based)
+
+  const saveSoon = debounce(() => {
+    savePage(num(0), pages[0])
+    savePage(num(1), pages[1])
+    if (hasContent(pages[0]) || hasContent(pages[1])) markDiaryDay(todayISO(), true)
+  }, 400)
 
   /* ---------- drawing the pages ---------- */
 
-  function paperStyle() {
-    return `--tint:${TINTS[page.tint] || TINTS.cream}`
-  }
-
   function itemHTML(it) {
+    if (it.type === 'block' || it.type === 'title') return blockHTML(it.type === 'title' ? { ...it, kind: 'title' } : it)
     const style = `left:${it.x}%;top:${it.y}%;width:${it.w}%;--rot:${it.rot || 0}deg`
     const sel = selected === it.id ? ' selected' : ''
     let inner = ''
-    if (it.type === 'text') {
-      inner = `<span class="grip" data-grip aria-hidden="true"></span><div class="text" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Text on page" style="color:${it.color};--fs:${it.fs || 5.6}"></div>`
-    }
+    if (it.type === 'text') inner = `<span class="grip" data-grip aria-hidden="true"></span><div class="text" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Text on page" style="color:${it.color};--fs:${it.fs || 5.6}"></div>`
     if (it.type === 'sticker') inner = sticker(it.sticker)
-    if (it.type === 'photo') inner = `<figure class="polaroid"><img src="${it.src}" alt="${esc(it.alt || 'Photo')}" style="aspect-ratio:${1 / (it.ratio || 1)}"><span class="tape" aria-hidden="true"></span></figure>`
+    if (it.type === 'photo') inner = `<figure class="polaroid"><img src="${it.src}" alt="Photo" style="aspect-ratio:${1 / (it.ratio || 1)}"><span class="tape" aria-hidden="true"></span></figure>`
     return `<div class="item item-${it.type}${sel}" data-id="${it.id}" style="${style}">
       ${inner}
       <button class="item-del" data-del aria-label="Remove">×</button>
@@ -130,189 +151,232 @@ export function mount(el) {
     </div>`
   }
 
-  function renderPage(i) {
-    const p = pages[i]
+  function renderPage(side) {
+    const p = pageEls[side]
+    const page = pages[side]
+    const n = num(side)
     p.className = `page paper-${page.paper}`
-    p.setAttribute('style', paperStyle())
-    const header = i === 0 ? `
-      <header class="page-date">
-        <span class="pd-day">${esc(weekday(date))}</span>
-        <span class="pd-date">${esc(isoToDate(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }))}</span>
-        <div class="moods" role="radiogroup" aria-label="How was today?">
-          <span class="moods-q">Today felt</span>
-          ${MOODS.map(([n, c, mouth], m) => `<button role="radio" aria-checked="${page.mood === m}" aria-label="${n}" title="${n}" data-mood="${m}" class="mood ${page.mood === m ? 'on' : ''}" style="--m:${c}">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--m)"/><circle cx="9" cy="10" r="1.1" fill="#3B3450"/><circle cx="15" cy="10" r="1.1" fill="#3B3450"/><path d="${mouth}" fill="none" stroke="#3B3450" stroke-width="1.4" stroke-linecap="round"/></svg>
-          </button>`).join('')}
-        </div>
-      </header>` : `<span class="page-num" aria-hidden="true">${isoToDate(date).getDate()}</span>`
-    p.innerHTML = `<div class="paper" aria-hidden="true"></div>${header}<div class="items">${page.items.filter((it) => it.page === i).map(itemHTML).join('')}</div>
-      <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${i + 1}"></canvas>`
-    // fill text safely after the HTML is in place
-    page.items.filter((it) => it.page === i && it.type === 'text').forEach((it) => {
-      $(`[data-id="${it.id}"] .text`, p).innerText = it.text || ''
-    })
-    const cv = $('canvas', p)
-    if (page.ink[i]) {
+    p.setAttribute('style', `--tint:${TINTS[page.tint] || TINTS.cream}`)
+    const blocks = page.items.filter((i) => i.type === 'block' || i.type === 'title')
+    const free = page.items.filter((i) => i.type !== 'block' && i.type !== 'title')
+    const isEmpty = !page.items.length && !page.ink && page.layout in { lined: 1, dotted: 1, grid: 1, plain: 1 }
+    const lastSpread = num(1) >= count() - 1
+    p.innerHTML = `
+      <div class="paper" aria-hidden="true"></div>
+      <div class="blocks">${blocks.map(itemHTML).join('')}</div>
+      <div class="items">${free.map(itemHTML).join('')}</div>
+      <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
+      ${isEmpty ? `<button class="layout-hint" data-layout-for="${side}">Choose how this page looks</button>` : ''}
+      <footer class="page-foot">
+        <button class="page-menu" data-layout-for="${side}" aria-label="Page ${n + 1} style" title="Page style">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        </button>
+        <span class="page-num">${n + 1}</span>
+      </footer>
+      ${side === 0
+        ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
+        : `<button class="edge edge-next" data-turn="1" aria-label="${lastSpread ? 'New page' : 'Next page'}"><span class="curl" aria-hidden="true"></span></button>`}`
+    free.filter((it) => it.type === 'text').forEach((it) => { $(`[data-id="${it.id}"] .text`, p).innerText = it.text || '' })
+    if (page.ink) {
       const img = new Image()
-      img.onload = () => cv.getContext('2d').drawImage(img, 0, 0)
-      img.src = page.ink[i]
+      img.onload = () => $('canvas', p)?.getContext('2d').drawImage(img, 0, 0)
+      img.src = page.ink
     }
   }
 
   function render() {
-    $('#d-weekday', el).textContent = date === todayISO() ? 'Today' : weekday(date)
-    $('#d-date', el).textContent = longDate(date)
-    $('#d-pick', el).value = date
+    $('#d-pages', el).textContent = `Pages ${num(0) + 1}–${num(1) + 1} of ${count()}`
     renderPage(0)
     renderPage(1)
     book.dataset.using = tool
     $('#d-tip', el).textContent = {
-      hand: 'Drag stickers and photos to move them. Pull the little corner to make them bigger. Click a text to write.',
+      hand: 'Click the edge of a page to turn it. Drag stickers and photos, pull the little corner to resize.',
       pen: 'Draw anywhere on the pages.',
       eraser: 'Rub over your drawing to erase it.',
     }[tool]
   }
 
-  async function open(d) {
-    date = d
+  async function openSpread(s) {
+    spread = s
     selected = null
-    history.replaceState(null, '', '#diary/' + d)
-    page = await loadPage(d)
+    pages = [await loadPage(num(0)), await loadPage(num(1))]
+    setDiaryBook({ spread })
     render()
+  }
+
+  async function turn(dir) {
+    if (busy) return
+    const target = spread + dir
+    if (target < 0) return
+    if (dir > 0 && target * 2 >= count()) {
+      if (!hasContent(pages[0]) && !hasContent(pages[1])) return toast('Write something on these pages first')
+      setDiaryBook({ count: count() + 2 })
+    }
+    busy = true
+    closePop()
+    book.classList.add(dir > 0 ? 'fold-next' : 'fold-prev')
+    await wait(240)
+    await openSpread(target)
+    book.classList.remove('fold-next', 'fold-prev')
+    book.classList.add(dir > 0 ? 'open-next' : 'open-prev')
+    await wait(260)
+    book.classList.remove('open-next', 'open-prev')
+    busy = false
   }
 
   /* ---------- adding things ---------- */
 
-  const emptierPage = () => (page.items.filter((i) => i.page === 0).length <= page.items.filter((i) => i.page === 1).length ? 0 : 1)
-  const randomTilt = () => Math.round((Math.random() * 10 - 5) * 10) / 10
+  const emptierSide = () => (pages[0].items.length <= pages[1].items.length ? 0 : 1)
+  const tilt = () => Math.round((Math.random() * 10 - 5) * 10) / 10
 
-  function addItem(it) {
-    page.items.push({ id: uid(), rot: 0, ...it })
-    selected = page.items[page.items.length - 1].id
+  function addItem(side, it) {
+    const item = { id: uid(), rot: 0, ...it }
+    pages[side].items.push(item)
+    selected = item.id
     setTool('hand')
-    render()
-    save()
-    if (it.type === 'text') {
-      const t = $(`[data-id="${selected}"] .text`, book)
-      t?.focus()
-    }
+    saveSoon()
+    if (it.type === 'text') $(`[data-id="${item.id}"] .text`, book)?.focus()
   }
 
   function addText() {
-    const onLeft = page.items.filter((i) => i.page === 0 && i.type === 'text').length
-    const target = onLeft < 4 ? 0 : 1
-    const count = page.items.filter((i) => i.page === target).length
-    addItem({ type: 'text', page: target, x: 8, y: Math.min(target === 0 ? 26 + count * 12 : 8 + count * 12, 82), w: 84, text: '', color, fs: 5.6 })
+    const side = pages[0].items.filter((i) => i.type === 'text').length < 5 ? 0 : 1
+    const used = pages[side].items.filter((i) => i.type === 'text').length
+    addItem(side, { type: 'text', x: 8, y: Math.min(8 + used * 13, 84), w: 84, text: '', color, fs: 5.6 })
   }
 
-  function addSticker(name) {
-    const p = emptierPage()
-    addItem({ type: 'sticker', page: p, sticker: name, x: 20 + Math.random() * 50, y: 20 + Math.random() * 55, w: 18, rot: randomTilt() * 2 })
-  }
+  const addSticker = (name) => addItem(emptierSide(), { type: 'sticker', sticker: name, x: 20 + Math.random() * 50, y: 20 + Math.random() * 55, w: 18, rot: tilt() * 2 })
 
   async function addPhoto(file) {
     try {
       const { src, ratio } = await db.shrinkImage(file, 900)
-      const p = emptierPage()
-      addItem({ type: 'photo', page: p, src, ratio, x: 14 + Math.random() * 20, y: 16 + Math.random() * 20, w: 56, rot: randomTilt() })
-    } catch (err) {
-      toast(err.message)
-    }
+      addItem(emptierSide(), { type: 'photo', src, ratio, x: 14 + Math.random() * 20, y: 16 + Math.random() * 20, w: 56, rot: tilt() })
+    } catch (err) { toast(err.message) }
   }
 
-  /* ---------- toolbar ---------- */
+  function setLayout(side, id) {
+    const L = LAYOUTS[id]
+    const page = pages[side]
+    page.layout = id
+    page.paper = L.paper
+    page.items = page.items.filter((i) => i.type !== 'block' && i.type !== 'title')
+    if (L.blocks) {
+      page.items.unshift(...L.blocks.map((b) => (b.kind === 'title'
+        ? { id: uid(), type: 'title', x: b.x, y: b.y, w: b.w, h: b.h, text: b.text }
+        : { id: uid(), type: 'block', ...b, data: {} })))
+    }
+    saveSoon()
+    render()
+  }
+
+  /* ---------- toolbar and popovers ---------- */
 
   function setTool(t) {
     tool = t
     $$('[data-tool]', el).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === t)))
-    book.dataset.using = t
     render()
   }
 
   function closePop() { $('#d-pop', el).hidden = true; popover = null }
 
-  function openPop(kind) {
+  function openPop(kind, side) {
     const pop = $('#d-pop', el)
-    if (popover === kind) return closePop()
-    popover = kind
+    const id = kind + (side ?? '')
+    if (popover === id) return closePop()
+    popover = id
     if (kind === 'stickers') {
       pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>`
     } else {
-      pop.innerHTML = `<p class="pop-title">Paper</p>
-        <div class="paper-row">${Object.entries(PAPERS).map(([id, n]) => `<button class="chip ${page.paper === id ? 'on' : ''}" data-paper="${id}">${n}</button>`).join('')}</div>
-        <p class="pop-title">Colour</p>
-        <div class="paper-row">${Object.entries(TINTS).map(([id, c]) => `<button class="tint ${page.tint === id ? 'on' : ''}" data-tint="${id}" aria-label="${id} paper" title="${id}" style="--t:${c}"></button>`).join('')}</div>`
+      const page = pages[side]
+      pop.innerHTML = `<p class="pop-title">Page ${num(side) + 1}</p>
+        <div class="layout-grid">${Object.entries(LAYOUTS).map(([lid, L]) => `<button class="layout-card ${page.layout === lid ? 'on' : ''}" data-layout="${lid}" data-side="${side}">
+          <span class="lc-thumb lc-${lid}" aria-hidden="true"></span><span>${L.name}</span></button>`).join('')}</div>
+        <p class="pop-title">Paper colour</p>
+        <div class="paper-row">${Object.entries(TINTS).map(([tid, c]) => `<button class="tint ${page.tint === tid ? 'on' : ''}" data-tint="${tid}" data-side="${side}" aria-label="${tid} paper" title="${tid}" style="--t:${c}"></button>`).join('')}</div>
+        ${page.items.some((i) => i.type === 'block') ? '<p class="pop-note">Choosing another look replaces the boxes on this page. Your text, stickers and drawings stay.</p>' : ''}`
     }
-    pop.dataset.kind = kind
     pop.hidden = false
   }
 
   el.addEventListener('click', (e) => {
     const t = e.target
-    const day = t.closest('[data-day]')
-    if (day) return open(addDays(date, Number(day.dataset.day)))
-    if (t.closest('[data-today]')) return open(todayISO())
+    const turnBtn = t.closest('[data-turn]')
+    if (turnBtn) return turn(Number(turnBtn.dataset.turn))
     const toolBtn = t.closest('[data-tool]')
     if (toolBtn) return setTool(toolBtn.dataset.tool)
     if (t.closest('[data-add="text"]')) return addText()
     const pop = t.closest('[data-pop]')
     if (pop) return openPop(pop.dataset.pop)
+    const lf = t.closest('[data-layout-for]')
+    if (lf) return openPop('layout', Number(lf.dataset.layoutFor))
     const st = t.closest('[data-sticker]')
     if (st) { closePop(); return addSticker(st.dataset.sticker) }
-    const paper = t.closest('[data-paper]')
-    if (paper) { page.paper = paper.dataset.paper; save(); render(); popover = null; return openPop('paper') }
+    const lay = t.closest('[data-layout]')
+    if (lay) { const side = Number(lay.dataset.side); setLayout(side, lay.dataset.layout); popover = null; return openPop('layout', side) }
     const tint = t.closest('[data-tint]')
-    if (tint) { page.tint = tint.dataset.tint; save(); render(); popover = null; return openPop('paper') }
+    if (tint) { const side = Number(tint.dataset.side); pages[side].tint = tint.dataset.tint; saveSoon(); render(); popover = null; return openPop('layout', side) }
     const ink = t.closest('[data-ink]')
     if (ink) {
       color = ink.dataset.ink
       $$('[data-ink]', el).forEach((b) => b.classList.toggle('on', b === ink))
-      const it = page.items.find((i) => i.id === selected && i.type === 'text')
-      if (it) { it.color = color; save(); render() } else if (tool === 'hand' || tool === 'eraser') setTool('pen')
+      const it = findItem(selected)
+      if (it?.type === 'text') { it.color = color; saveSoon(); render() } else if (tool !== 'pen') setTool('pen')
       return
     }
     const sz = t.closest('[data-size]')
     if (sz) {
       size = Number(sz.dataset.size)
       $$('[data-size]', el).forEach((b) => b.classList.toggle('on', b === sz))
-      const it = page.items.find((i) => i.id === selected && i.type === 'text')
-      if (it) { it.fs = { 3: 4.4, 6: 5.6, 12: 7.6 }[size]; save(); render() } else if (tool === 'hand') setTool('pen')
+      const it = findItem(selected)
+      if (it?.type === 'text') { it.fs = { 3: 4.4, 6: 5.6, 12: 7.6 }[size]; saveSoon(); render() } else if (tool === 'hand') setTool('pen')
       return
     }
-    const mood = t.closest('[data-mood]')
-    if (mood) { const m = Number(mood.dataset.mood); page.mood = page.mood === m ? null : m; save(); return render() }
+    const tk = t.closest('[data-tick]')
+    if (tk) {
+      const it = findItem(tk.closest('[data-id]').dataset.id)
+      it.data = { ...it.data, [tk.dataset.tick]: !it.data?.[tk.dataset.tick] }
+      tk.setAttribute('aria-pressed', String(!!it.data[tk.dataset.tick]))
+      return saveSoon()
+    }
     const del = t.closest('[data-del]')
     if (del) {
       const id = del.closest('.item').dataset.id
-      page.items = page.items.filter((i) => i.id !== id)
+      pages.forEach((p) => { p.items = p.items.filter((i) => i.id !== id) })
       selected = null
-      save()
+      saveSoon()
       return render()
     }
     if (popover && !t.closest('#d-pop')) closePop()
   })
+
+  const findItem = (id) => pages[0].items.find((i) => i.id === id) || pages[1].items.find((i) => i.id === id)
 
   $('#d-photo', el).addEventListener('change', (e) => {
     const f = e.target.files[0]
     if (f) addPhoto(f)
     e.target.value = ''
   })
-  $('#d-pick', el).addEventListener('change', (e) => { if (e.target.value) open(e.target.value) })
 
-  /* ---------- typing ---------- */
+  /* ---------- typing in text and in the boxes of a layout ---------- */
 
   book.addEventListener('input', (e) => {
     const box = e.target.closest('.text')
-    if (!box) return
-    const it = page.items.find((i) => i.id === box.closest('.item').dataset.id)
-    if (it) { it.text = box.innerText; save() }
+    if (box) {
+      const it = findItem(box.closest('.item').dataset.id)
+      if (it) { it.text = box.innerText; saveSoon() }
+      return
+    }
+    const f = e.target.closest('[data-k]')
+    if (f) {
+      const it = findItem(f.closest('[data-id]').dataset.id)
+      if (it) { it.data = { ...it.data, [f.dataset.k]: f.value }; saveSoon() }
+    }
   })
   book.addEventListener('focusout', (e) => {
     const box = e.target.closest?.('.text')
     if (!box) return
     const id = box.closest('.item').dataset.id
-    const it = page.items.find((i) => i.id === id)
-    if (it && !it.text.trim()) { page.items = page.items.filter((i) => i.id !== id); save(); setTimeout(render, 0) }
+    const it = findItem(id)
+    if (it && !it.text.trim()) { pages.forEach((p) => { p.items = p.items.filter((i) => i.id !== id) }); saveSoon(); setTimeout(render, 0) }
   })
 
   /* ---------- moving, resizing and drawing ---------- */
@@ -321,22 +385,21 @@ export function mount(el) {
 
   book.addEventListener('pointerdown', (e) => {
     const pageEl = e.target.closest('.page')
-    if (!pageEl) return
-    const i = Number(pageEl.dataset.page)
+    if (!pageEl || e.target.closest('.edge, .page-foot, .layout-hint')) return
+    const side = Number(pageEl.dataset.side)
     const rect = pageEl.getBoundingClientRect()
 
     if (tool === 'pen' || tool === 'eraser') {
       const cv = $('canvas', pageEl)
       const ctx = cv.getContext('2d')
       const at = (ev) => [((ev.clientX - rect.left) / rect.width) * CANVAS_W, ((ev.clientY - rect.top) / rect.height) * CANVAS_H]
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round'
       ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over'
       ctx.strokeStyle = color
       ctx.lineWidth = tool === 'eraser' ? size * 4 : size
       const [x, y] = at(e)
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 0.1, y + 0.1); ctx.stroke()
-      action = { kind: 'draw', ctx, at, cv, i }
+      action = { kind: 'draw', ctx, at, cv, side }
       cv.setPointerCapture(e.pointerId)
       e.preventDefault()
       return
@@ -347,16 +410,15 @@ export function mount(el) {
       if (selected) { selected = null; $$('.item.selected', book).forEach((n) => n.classList.remove('selected')) }
       return
     }
-    const it = page.items.find((x) => x.id === itemEl.dataset.id)
+    const it = findItem(itemEl.dataset.id)
     if (selected !== it.id) {
       selected = it.id
       $$('.item.selected', book).forEach((n) => n.classList.remove('selected'))
       itemEl.classList.add('selected')
     }
     if (e.target.closest('[data-del]')) return
-    if (e.target.closest('.text') && !e.target.closest('[data-grip]')) return // let people type
-    const resizing = !!e.target.closest('[data-resize]')
-    action = { kind: resizing ? 'resize' : 'move', it, itemEl, rect, sx: e.clientX, sy: e.clientY, x: it.x, y: it.y, w: it.w }
+    if (e.target.closest('.text') && !e.target.closest('[data-grip]')) return
+    action = { kind: e.target.closest('[data-resize]') ? 'resize' : 'move', it, itemEl, rect, sx: e.clientX, sy: e.clientY, x: it.x, y: it.y, w: it.w }
     itemEl.setPointerCapture(e.pointerId)
     itemEl.classList.add('dragging')
     e.preventDefault()
@@ -386,12 +448,10 @@ export function mount(el) {
     if (!action) return
     if (action.kind === 'draw') {
       action.ctx.globalCompositeOperation = 'source-over'
-      page.ink[action.i] = isBlank(action.cv) ? null : action.cv.toDataURL('image/png')
-    } else {
-      action.itemEl.classList.remove('dragging')
-    }
+      pages[action.side].ink = isBlank(action.cv) ? null : action.cv.toDataURL('image/png')
+    } else action.itemEl.classList.remove('dragging')
     action = null
-    save()
+    saveSoon()
   }
   book.addEventListener('pointerup', finish)
   book.addEventListener('pointercancel', finish)
@@ -403,16 +463,21 @@ export function mount(el) {
   }
 
   const onKey = (e) => {
-    if ((e.key === 'Delete' || e.key === 'Backspace') && selected && !e.target.closest?.('.text, input')) {
-      page.items = page.items.filter((i) => i.id !== selected)
-      selected = null
-      save()
-      render()
+    const typing = e.target.closest?.('.text, input, textarea')
+    if (typing) return
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
+      pages.forEach((p) => { p.items = p.items.filter((i) => i.id !== selected) })
+      selected = null; saveSoon(); render()
     }
+    if (e.key === 'ArrowRight') turn(1)
+    if (e.key === 'ArrowLeft') turn(-1)
     if (e.key === 'Escape') closePop()
   }
   document.addEventListener('keydown', onKey)
 
-  open(date)
+  ensureBook().then(() => {
+    const { count: c, spread: s } = getState().diaryBook
+    openSpread(Math.min(s, Math.max(0, c / 2 - 1)))
+  })
   return () => document.removeEventListener('keydown', onKey)
 }

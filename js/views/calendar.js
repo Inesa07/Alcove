@@ -83,13 +83,16 @@ export function mount(el) {
         ? `<p class="muted small-note">Reminders are blocked in this browser. You can allow them in the site settings.</p>`
         : ''
     $('#c-day', el).innerHTML = `
-      <h3>${esc(dayLabel(selected))}</h3>
-      <p class="muted">${esc(isoToDate(selected).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}</p>
+      <h3>${esc(isoToDate(selected).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}</h3>
+      <p class="muted">${['Today', 'Tomorrow', 'Yesterday'].includes(dayLabel(selected)) ? dayLabel(selected) : isoToDate(selected).getFullYear()}</p>
       <form class="ev-form" id="c-form" autocomplete="off">
         <label for="c-what" class="sr-only">What to remember</label>
         <input id="c-what" placeholder="What do you need to remember?" required>
+        <div class="ev-when">
+          <label class="when-field">Date<input id="c-date" type="date" value="${selected}" required></label>
+          <label class="when-field">Time<input id="c-time" type="time"></label>
+        </div>
         <div class="ev-row">
-          <label class="time-field">Time<input id="c-time" type="time"></label>
           <label class="check-field"><input id="c-remind" type="checkbox" checked> Remind me</label>
           <button class="primary small" type="submit">Add</button>
         </div>
@@ -134,7 +137,13 @@ export function mount(el) {
     const title = $('#c-what', el).value.trim()
     if (!title) return
     const time = $('#c-time', el).value || findTime(title)
-    add('events', { title, date: selected, time, remind: !!time && $('#c-remind', el).checked, notified: false })
+    const date = $('#c-date', el).value || selected
+    add('events', { title, date, time, remind: !!time && $('#c-remind', el).checked, notified: false })
+    if (date !== selected) {
+      selected = date
+      cursor = date
+      render()
+    }
     if (time && $('#c-remind', el).checked && permission() === 'default') askPermission().then(renderDay)
   })
 

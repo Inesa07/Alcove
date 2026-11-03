@@ -23,6 +23,9 @@ export const STICKERS = {
   book: `<path d="M8 14c8-3 16-3 24 2v38c-8-5-16-5-24-2z" fill="#B9A9E0" ${W}/><path d="M56 14c-8-3-16-3-24 2v38c8-5 16-5 24-2z" fill="#CFC4EF" ${W}/>`,
   cake: `<rect x="10" y="30" width="44" height="24" rx="5" fill="#F4B7C8" ${W}/><path d="M10 38q5 5 11 0t11 0 11 0 11 0" fill="none" stroke="#FFF" stroke-width="3"/><rect x="30" y="16" width="4" height="14" rx="2" fill="#7FA3C8"/><ellipse cx="32" cy="12" rx="3" ry="4.5" fill="#F6CF5E"/>`,
   gift: `<rect x="9" y="26" width="46" height="30" rx="4" fill="#8FC6A9" ${W}/><rect x="6" y="18" width="52" height="10" rx="3" fill="#A7D3BC" ${W}/><rect x="29" y="18" width="6" height="38" fill="#E98AA0"/><path d="M32 18c-6-10-16-8-14-2 1 3 8 3 14 2zM32 18c6-10 16-8 14-2-1 3-8 3-14 2z" fill="#E98AA0"/>`,
+  arrow: `<path d="M10 50C22 46 36 34 44 16" fill="none" stroke="#8E74C4" stroke-width="5" stroke-linecap="round"/><path d="M32 18l13-5 3 14" fill="none" stroke="#8E74C4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`,
+  bolt: `<path d="M38 4L14 36h16l-6 24 26-34H34z" fill="#F2B544" ${W}/>`,
+  sprig: `<path d="M14 56L50 10" stroke="#8FA8D8" stroke-width="3.5" stroke-linecap="round"/><g fill="#A9BEEA" ${W}><ellipse cx="26" cy="34" rx="5" ry="10" transform="rotate(-50 26 34)"/><ellipse cx="38" cy="22" rx="5" ry="10" transform="rotate(-50 38 22)"/><ellipse cx="32" cy="44" rx="5" ry="10" transform="rotate(40 32 44)"/><ellipse cx="44" cy="30" rx="5" ry="10" transform="rotate(40 44 30)"/></g>`,
   smile: `<circle cx="32" cy="32" r="25" fill="#F6CF5E" ${W}/><circle cx="23" cy="27" r="3" fill="#4A4260"/><circle cx="41" cy="27" r="3" fill="#4A4260"/><path d="M21 38q11 10 22 0" stroke="#4A4260" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="17" cy="36" r="3.5" fill="#F4A3A8" opacity=".8"/><circle cx="47" cy="36" r="3.5" fill="#F4A3A8" opacity=".8"/>`,
 }
 

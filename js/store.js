@@ -12,7 +12,8 @@ const empty = () => ({
   notes: [],      // { id, text, color, createdAt }
   books: [],      // { id, title, author, color, hasCover, finishedOn, createdAt }
   events: [],     // { id, title, date: 'YYYY-MM-DD', time: 'HH:MM' | '', remind, notified }
-  diaryDays: [],  // dates that have something written or drawn
+  diaryDays: [],  // dates on which something was written or drawn (for the plant)
+  diaryBook: { count: 0, spread: 0 }, // how many pages the diary has, and where it is open
   room: { ...DEFAULT_ROOM },
 })
 
@@ -25,6 +26,7 @@ function load() {
     if (raw) {
       const s = { ...empty(), ...JSON.parse(raw) }
       s.room = { ...DEFAULT_ROOM, ...s.room }
+      s.diaryBook = { ...empty().diaryBook, ...s.diaryBook }
       return s
     }
     const old = localStorage.getItem(OLD_KEY)
@@ -81,6 +83,8 @@ export function remove(kind, id) {
 export function setName(name) { state = { ...state, name }; save() }
 
 export function setRoom(patch) { state = { ...state, room: { ...state.room, ...patch } }; save() }
+
+export function setDiaryBook(patch) { state = { ...state, diaryBook: { ...state.diaryBook, ...patch } }; save() }
 
 export function markDiaryDay(date, hasContent) {
   const has = state.diaryDays.includes(date)

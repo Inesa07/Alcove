@@ -69,6 +69,7 @@ export function mount(el) {
       events: s.events.filter((e) => e.date === today).length,
       diaryToday: s.diaryDays.includes(today),
       leaves: 3 + streak(),
+      selected: decorating ? part : null,
     })
 
     let overlay
