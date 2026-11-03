@@ -1,14 +1,19 @@
-// All data lives in the browser (localStorage) for now.
+// Small data (name, notes, books, calendar, room settings) lives in localStorage.
+// Big data (diary pages with drawings and photos, book covers) lives in IndexedDB, see db.js.
 // Later this file is the only place that changes when we move to Supabase.
 
-const KEY = 'planner.v1'
+import { DEFAULT_ROOM } from './room.js'
+
+const KEY = 'planner.v2'
+const OLD_KEY = 'planner.v1'
 
 const empty = () => ({
   name: '',
-  tasks: [],  // { id, text, date: 'YYYY-MM-DD', time: 'HH:MM' | '', done: false, doneOn: 'YYYY-MM-DD' | null }
-  notes: [],  // { id, text, tag, createdAt }
-  books: [],  // { id, title, status: 'want' | 'reading' | 'read', createdAt }
-  diary: [],  // { id, text, date, createdAt }
+  notes: [],      // { id, text, color, createdAt }
+  books: [],      // { id, title, author, color, hasCover, finishedOn, createdAt }
+  events: [],     // { id, title, date: 'YYYY-MM-DD', time: 'HH:MM' | '', remind, notified }
+  diaryDays: [],  // dates that have something written or drawn
+  room: { ...DEFAULT_ROOM },
 })
 
 let state = load()
@@ -17,10 +22,25 @@ const listeners = new Set()
 function load() {
   try {
     const raw = localStorage.getItem(KEY)
-    return raw ? { ...empty(), ...JSON.parse(raw) } : empty()
-  } catch {
-    return empty()
-  }
+    if (raw) {
+      const s = { ...empty(), ...JSON.parse(raw) }
+      s.room = { ...DEFAULT_ROOM, ...s.room }
+      return s
+    }
+    const old = localStorage.getItem(OLD_KEY)
+    if (old) return migrate(JSON.parse(old))
+  } catch { /* broken or blocked storage: start fresh */ }
+  return empty()
+}
+
+// Version 1 had tasks; they become calendar events.
+function migrate(v1) {
+  const s = empty()
+  s.name = v1.name || ''
+  s.notes = (v1.notes || []).map((n) => ({ id: n.id, text: n.text, color: pick(NOTE_COLORS), createdAt: n.createdAt || Date.now() }))
+  s.books = (v1.books || []).map((b) => ({ id: b.id, title: b.title, author: '', color: pick(COVER_COLORS), hasCover: false, finishedOn: todayISO(), createdAt: b.createdAt || Date.now() }))
+  s.events = (v1.tasks || []).filter((t) => !t.done).map((t) => ({ id: t.id, title: t.text, date: t.date, time: t.time || '', remind: !!t.time, notified: false }))
+  return s
 }
 
 function save() {
@@ -28,9 +48,12 @@ function save() {
   listeners.forEach((fn) => fn(state))
 }
 
+export const NOTE_COLORS = ['#FBE7A6', '#F7CFD9', '#CFE4F5', '#D8EBD9', '#E6DCF5']
+export const COVER_COLORS = ['#8E7CC3', '#E28FA3', '#6FA287', '#D9A441', '#5F86B3', '#C97F62', '#9C6FA8', '#3F6B5E']
+export const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+
 export const getState = () => state
 export const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn) }
-
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
 
 export function todayISO(d = new Date()) {
@@ -39,8 +62,10 @@ export function todayISO(d = new Date()) {
 }
 
 export function add(kind, item) {
-  state = { ...state, [kind]: [{ id: uid(), ...item }, ...state[kind]] }
+  const withId = { id: uid(), ...item }
+  state = { ...state, [kind]: [withId, ...state[kind]] }
   save()
+  return withId
 }
 
 export function update(kind, id, patch) {
@@ -53,20 +78,20 @@ export function remove(kind, id) {
   save()
 }
 
-export function setName(name) {
-  state = { ...state, name }
+export function setName(name) { state = { ...state, name }; save() }
+
+export function setRoom(patch) { state = { ...state, room: { ...state.room, ...patch } }; save() }
+
+export function markDiaryDay(date, hasContent) {
+  const has = state.diaryDays.includes(date)
+  if (hasContent === has) return
+  state = { ...state, diaryDays: hasContent ? [...state.diaryDays, date].sort() : state.diaryDays.filter((d) => d !== date) }
   save()
 }
 
-export function toggleTask(id) {
-  const t = state.tasks.find((x) => x.id === id)
-  if (!t) return
-  update('tasks', id, { done: !t.done, doneOn: t.done ? null : todayISO() })
-}
-
-// Days in a row (ending today or yesterday) with at least one finished task.
+// Days in a row (ending today or yesterday) with something in the diary. The plant grows with it.
 export function streak() {
-  const days = new Set(state.tasks.filter((t) => t.done && t.doneOn).map((t) => t.doneOn))
+  const days = new Set(state.diaryDays)
   const d = new Date()
   if (!days.has(todayISO(d))) d.setDate(d.getDate() - 1)
   let n = 0

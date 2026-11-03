@@ -4,29 +4,27 @@ A cozy room that is your planner and diary.
 
 ## The problem
 
-Ideas, tasks and notes end up scattered in phone notes. After a few days it is hard to find anything: you have to open and reread every note to remember where you wrote what.
+Ideas, plans and notes end up scattered in phone notes. After a few days it is hard to find anything: you have to open and reread every note to remember where you wrote what.
 
 ## The idea
 
-Your planner is a small isometric room. Every object is a part of it:
+The menu is on the left. **My room** is a small isometric room, and every object in it opens a part of the app:
 
-| Object | What it holds |
-| --- | --- |
-| Desk | Tasks for today and the coming days |
-| Corkboard | Ideas and notes, sorted by topic |
-| Bookshelf | Books you want to read, are reading and have read |
-| Bed with an open diary | Diary entries and feelings |
-| Window | The real time of day (weather later) |
-| Plant | Your streak: a new leaf for every day in a row with a finished task |
+| In the room | Opens | What you do there |
+| --- | --- | --- |
+| Bed with an open diary | **Diary** | A book with a page spread for every day: write, draw with a pen, add stickers and photos, choose the paper, say how the day felt |
+| Bookshelf | **Books** | Collect the books you have read, with their covers. The shelf in the room fills up with every book |
+| Corkboard | **Notes** | Anything you want to remember, on coloured paper notes, with search |
+| Desk calendar | **Calendar** | Month and week view. Write what you need to do on a day, add a time and get a reminder |
 
-You write everything in **one input**, and the app decides where it belongs:
+**Decorate** lets everyone make the room their own: wall and floor colours, a rug, and different bookshelves, desks and beds in different colours. The window follows the real time of day, the lamps turn on in the evening, and the plant grows a leaf for every day in a row you write in your diary.
 
-- "call grandma tomorrow 18:00" → a task on the desk, tomorrow at 18:00
-- "idea: dark mode" → a note on the corkboard
-- "read The Little Prince" → a book on the shelf
-- "today was calm and I felt proud" → a diary entry
+You can also write anything in the field under the room, and it goes to the right place:
 
-The room grows with you: books appear on the shelf, notes on the corkboard, leaves on the plant.
+- "dentist Friday 11:00" → Calendar, with a reminder
+- "read The Little Prince" → Books
+- "I feel calm and proud today" → Diary
+- anything else → Notes
 
 ## Run it
 
@@ -41,20 +39,22 @@ Then open http://localhost:8000. On iPhone, open the site in Safari and choose *
 ## Project structure
 
 ```
-index.html            page layout
-css/styles.css        styles, phone first, room + panel side by side on computers
-js/app.js             rendering and events
-js/room.js            the room illustration and its clickable spots
-js/classify.js        decides where a note belongs (word rules for now, AI later)
-js/store.js           data, saved in the browser (localStorage)
-sw.js                 offline support
-manifest.webmanifest  install as an app
+index.html              menu and page frame
+css/styles.css          layout, menu, shared buttons; phone layout puts the menu at the bottom
+css/views.css           styles for each page
+js/app.js               menu, greeting, switching pages
+js/room.js              draws the room on an isometric grid, with all decorating options
+js/stickers.js          diary stickers
+js/store.js             notes, books, calendar and room settings (saved in the browser)
+js/db.js                diary pages and pictures (saved in IndexedDB, because they are bigger)
+js/classify.js          decides where a quick note belongs (word rules now, AI later)
+js/reminders.js         reminders for calendar events
+js/views/*.js           the pages: room, diary, books, notes, calendar
+sw.js                   offline support and opening the calendar from a reminder
 ```
 
-## Next steps
+## What is not there yet
 
-- Sign in and sync between phone and computer (Supabase)
-- AI that understands any sentence instead of word rules
-- Reminders as push notifications
-- Real weather in the window
-- Choose wall colors, furniture and a pet
+- Everything is saved only in this browser. Sign-in and sync between phone and computer come next (Supabase).
+- Reminders work while the app is open. Reminders when it is closed need a server (push notifications).
+- The quick field understands simple English phrases. Later an AI model will understand any sentence.

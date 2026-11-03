@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#24203A" />
+    <meta name="theme-color" content="#1D1A30" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Planner</title>
     <meta name="apple-mobile-web-app-title" content="Planner" />
     <meta name="description" content="A cozy room that is your planner and diary." />
+    <title>Planner</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -16,46 +16,58 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Figtree:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Figtree:wght@400;500;600;700&display=swap"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/views.css" />
   </head>
   <body>
     <div class="app">
-      <header class="top">
-        <p class="date" id="date"></p>
-        <h1 class="greeting" id="greeting"></h1>
-        <form class="name-form" id="name-form" hidden>
-          <label for="name-input">What should I call you?</label>
-          <input id="name-input" autocomplete="given-name" placeholder="Your name" />
-          <button type="submit">Save</button>
-        </form>
-      </header>
+      <aside class="side">
+        <div class="brand">Planner</div>
 
-      <section class="room-wrap" aria-label="Your room">
-        <div class="room" id="room"></div>
-        <div class="toast" id="toast" role="status" hidden></div>
-      </section>
+        <div class="hello">
+          <p class="date" id="date"></p>
+          <h1 class="greeting" id="greeting"></h1>
+          <form class="name-form" id="name-form" hidden>
+            <label for="name-input">What should I call you?</label>
+            <div class="name-row">
+              <input id="name-input" autocomplete="given-name" placeholder="Your name" />
+              <button type="submit">Save</button>
+            </div>
+          </form>
+        </div>
 
-      <div class="side">
-        <form class="capture" id="capture" autocomplete="off">
-          <label for="capture-input" class="sr-only">Write anything</label>
-          <input id="capture-input" placeholder="Try “idea: dark mode” or “test Friday 9:00”" />
-          <button type="submit" aria-label="Put it in my room">
-            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </form>
+        <nav class="nav" id="nav" aria-label="Main">
+          <a href="#room" data-view="room">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/></svg>
+            <span>My room</span>
+          </a>
+          <a href="#diary" data-view="diary">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg>
+            <span>Diary</span>
+          </a>
+          <a href="#books" data-view="books">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>
+            <span>Books</span><em class="count" id="count-books"></em>
+          </a>
+          <a href="#notes" data-view="notes">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5"/></svg>
+            <span>Notes</span><em class="count" id="count-notes"></em>
+          </a>
+          <a href="#calendar" data-view="calendar">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            <span>Calendar</span><em class="count" id="count-events"></em>
+          </a>
+        </nav>
 
-        <section class="sheet" id="sheet" aria-live="polite"></section>
-      </div>
+        <div class="side-foot" id="side-foot"></div>
+      </aside>
 
-      <nav class="nav" aria-label="Main" id="nav">
-        <button data-view="room" aria-current="page">Room</button>
-        <button data-view="week">Week</button>
-        <button data-view="notes">Notes</button>
-        <button data-view="search">Search</button>
-      </nav>
+      <main class="view" id="view"></main>
     </div>
+
+    <div class="toast" id="toast" role="status" hidden></div>
 
     <script type="module" src="js/app.js"></script>
   </body>

@@ -1,8 +1,9 @@
 // Lets the app open without internet once it has been visited.
-const CACHE = 'planner-v1'
+const CACHE = 'planner-v2'
 const FILES = [
-  './', 'index.html', 'css/styles.css', 'manifest.webmanifest',
-  'js/app.js', 'js/store.js', 'js/classify.js', 'js/room.js',
+  './', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'css/views.css',
+  'js/app.js', 'js/store.js', 'js/db.js', 'js/ui.js', 'js/room.js', 'js/classify.js', 'js/reminders.js', 'js/stickers.js',
+  'js/views/room.js', 'js/views/diary.js', 'js/views/books.js', 'js/views/notes.js', 'js/views/calendar.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ]
 
@@ -28,4 +29,14 @@ self.addEventListener('fetch', (e) => {
       })
       .catch(() => caches.match(e.request))
   )
+})
+
+// Tapping a reminder opens the calendar.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  e.waitUntil(self.clients.matchAll({ type: 'window' }).then((list) => {
+    const open = list.find((c) => 'focus' in c)
+    if (open) { open.navigate('./#calendar'); return open.focus() }
+    return self.clients.openWindow('./#calendar')
+  }))
 })
