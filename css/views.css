@@ -45,18 +45,35 @@
 .capture input::placeholder { color: #aba6c4; }
 .capture button { width: 46px; height: 46px; border-radius: 18px; border: none; background: var(--honey); color: var(--night); display: flex; align-items: center; justify-content: center; }
 
-/* decorate drawer: dark glass, floats over the right side of the room */
+/* decorate mode */
+.room-actions { display: flex; align-items: center; gap: 8px; }
+.ghost-dark { height: 44px; padding: 0 18px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, .2); background: transparent; color: #fff; font-size: 15px; }
+.ghost-dark:hover { background: rgba(255, 255, 255, .08); }
+.room-page.decorating .room-hint { color: #fff; font-weight: 600; }
+.room-page.has-part .room-stage { padding-right: 330px; }
+.room-page.decorating .room { filter: drop-shadow(0 0 30px rgba(242, 201, 76, .12)); }
+button.spot { padding: 0; border: none; background: transparent; cursor: pointer; }
+.spot.shape { inset: 0; width: 100%; height: 100%; border-radius: 0; transition: background .2s; }
+.spot.shape::before { display: none; }
+.spot.shape:hover, .spot.shape:focus-visible { background: rgba(255, 255, 255, .14); }
+.spot.shape.on { background: rgba(242, 201, 76, .18); }
+.decor-spot::before { border-color: rgba(255, 255, 255, .35); }
+.decor-spot .tag { opacity: 0; transition: opacity .15s, transform .2s; }
+.decor-spot:hover .tag, .decor-spot:focus-visible .tag, .decor-spot.on .tag { opacity: 1; }
+.decor-spot.on::before { border: 2px solid var(--honey); background: rgba(242, 201, 76, .12); }
+
+/* options for the chosen part: a small dark-glass card */
 .decor {
-  position: absolute; top: 76px; right: 24px; bottom: 26px; width: 320px; z-index: 5;
+  position: absolute; top: 80px; right: 24px; width: 300px; max-height: calc(100% - 110px); z-index: 5;
   display: flex; flex-direction: column;
-  background: rgba(24, 21, 40, .86); border: 1px solid rgba(255, 255, 255, .12); border-radius: 24px;
+  background: rgba(24, 21, 40, .88); border: 1px solid rgba(255, 255, 255, .12); border-radius: 24px;
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6);
 }
-.room-page.decorating .room-stage { padding-right: 340px; }
 .decor-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 6px 22px; }
 .decor-head h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-style: italic; font-size: 26px; }
 .decor-body { overflow-y: auto; padding: 4px 22px 20px; }
 .decor section { padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.decor section:last-child { border-bottom: none; }
 .decor h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--lilac-text); }
 .decor .sub { margin: 10px 0 8px; font-size: 12px; color: var(--muted-dark); }
 .decor .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
@@ -325,8 +342,20 @@
   .room-hint { font-size: 13px; }
   .room { width: 100%; }
   .spot .tag { font-size: 11px; padding: 4px 8px; }
-  .decor { position: fixed; left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 62dvh; border-radius: 24px 24px 0 0; z-index: 45; }
-  .room-page.decorating .room-stage { padding-right: 0; }
+  .decor { position: fixed; left: 0; right: 0; top: auto; bottom: calc(68px + env(safe-area-inset-bottom)); width: auto; max-height: 46dvh; border-radius: 24px 24px 0 0; z-index: 45; }
+  .room-top { flex-wrap: wrap; }
+  .room-page.has-part .room-stage { padding-right: 0; }
+  .room-page.decorating .room-hint { width: 100%; order: 2; font-size: 13px; }
+  body.decorating .hello { display: none; }
+  .room-page.decorating { padding-top: calc(14px + env(safe-area-inset-top)); }
+  .decor { max-height: 36dvh; }
+  .decor-head { padding: 12px 14px 0 18px; }
+  .decor-head h2 { font-size: 22px; }
+  .decor-head .icon-btn { width: 36px; height: 36px; }
+  .decor-body { padding: 0 18px 12px; }
+  .decor section { padding: 10px 0; }
+  .decor .swatches { flex-wrap: nowrap; overflow-x: auto; padding: 4px 2px; }
+  .sw { flex-shrink: 0; }
 
   .diary-page, .books-page, .notes-page, .cal-page { padding: 16px 14px 24px; }
   .day-title h2 { font-size: 28px; }

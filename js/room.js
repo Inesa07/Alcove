@@ -61,6 +61,7 @@ export const STYLES = {
   shelfStyle: { tall: 'Tall bookcase', low: 'Low shelf' },
   deskStyle: { drawers: 'Desk with drawers', simple: 'Light table' },
   bedStyle: { classic: 'Cozy bed', canopy: 'Canopy bed' },
+  chairStyle: { classic: 'Desk chair', stool: 'Round stool' },
 }
 
 export const DEFAULT_ROOM = {
@@ -68,6 +69,7 @@ export const DEFAULT_ROOM = {
   shelfStyle: 'tall', shelfWood: 'oak',
   deskStyle: 'drawers', deskWood: 'oak',
   bedStyle: 'classic', bedWood: 'oak', blanket: 'lilac',
+  chairStyle: 'classic', chairColor: 'lilac',
 }
 
 /* ---------- colour helpers ---------- */
@@ -253,12 +255,13 @@ export function drawRoom(o) {
     const pin = P(0.05, ny + 0.4, nz + 0.72)
     d.raw(`<circle cx="${pin[0].toFixed(1)}" cy="${pin[1].toFixed(1)}" r="1.6" fill="${i % 2 ? '#3F6B9A' : '#C2556B'}"/>`)
   })
-  spots.notes = bounds([[0, 1.6, 4.5], [0, 5.4, 4.5], [0, 5.4, 7.1], [0, 1.6, 7.1]], 3)
+  spots.board = bounds([[0, 1.6, 4.5], [0, 5.4, 4.5], [0, 5.4, 7.1], [0, 1.6, 7.1]], 3)
 
   /* light from the window on the floor */
   if (sky.beam) d.poly([[6.6, 0.2, 0.02], [9.2, 0.2, 0.02], [8.0, 5.2, 0.02], [5.4, 5.2, 0.02]], 'url(#beam)')
 
   /* rug */
+  spots.rug = bounds(Array.from({ length: 24 }, (_, i) => [5.4 + 2.7 * Math.cos((Math.PI * i) / 12), 6.0 + 2.7 * Math.sin((Math.PI * i) / 12), 0]), 0)
   if (rug) {
     d.ring(5.4, 6.0, 0.01, 2.7, rug)
     d.ring(5.4, 6.0, 0.02, 2.15, shade(rug, -0.06))
@@ -301,15 +304,21 @@ export function drawRoom(o) {
   d.raw(`<ellipse cx="${lb[0].toFixed(1)}" cy="${lb[1].toFixed(1)}" rx="6" ry="3" fill="#4A4260"/><path d="M${lb[0].toFixed(1)},${lb[1].toFixed(1)} L${lt[0].toFixed(1)},${lt[1].toFixed(1)}" stroke="#4A4260" stroke-width="2"/>`)
   d.raw(`<path d="M${(lt[0] - 6).toFixed(1)},${lt[1].toFixed(1)} L${(lt[0] + 6).toFixed(1)},${lt[1].toFixed(1)} L${(lt[0] + 9).toFixed(1)},${(lt[1] + 9).toFixed(1)} L${(lt[0] - 9).toFixed(1)},${(lt[1] + 9).toFixed(1)} Z" fill="${sky.lights ? '#F6C46B' : '#E3C48A'}"/>`)
   if (sky.lights) d.raw(`<circle cx="${(lt[0] + 6).toFixed(1)}" cy="${(lt[1] + 22).toFixed(1)}" r="70" fill="url(#glow)"/>`)
-  spots.calendar = bounds([[0, 1.6, 0], [2.5, 1.6, 0], [2.5, 5.7, 0], [0, 5.7, 0], [0, 1.6, 4.0], [0, 5.7, 4.6]], 2)
+  spots.desk = bounds([[0, 1.6, 0], [2.5, 1.6, 0], [2.5, 5.7, 0], [0, 5.7, 0], [0, 1.6, 4.0], [0, 5.7, 4.6]], 2)
 
   /* chair */
-  const chair = shade(blanket, -0.02)
+  const chair = (FABRICS[room.chairColor] || FABRICS.lilac).c
   d.shadow(2.5, 2.6, 4.1, 4.2, 0.12)
-  d.box(2.75, 2.85, 0, 0.12, 0.12, 1.45, shade(chair, -0.15))
-  d.box(3.75, 3.85, 0, 0.12, 0.12, 1.45, shade(chair, -0.15))
-  d.box(2.65, 2.75, 1.45, 1.35, 1.3, 0.28, chair)
-  d.box(3.85, 2.75, 1.73, 0.18, 1.3, 1.6, chair)
+  if (room.chairStyle === 'stool') {
+    ;[[2.85, 2.95], [3.85, 2.95], [2.85, 3.95], [3.85, 3.95]].forEach(([x, y]) => d.box(x, y, 0, 0.1, 0.1, 1.35, shade(deskWood, -0.1)))
+    d.cylinder(3.4, 3.5, 1.35, 0.72, 0.38, chair)
+  } else {
+    d.box(2.75, 2.85, 0, 0.12, 0.12, 1.45, shade(chair, -0.15))
+    d.box(3.75, 3.85, 0, 0.12, 0.12, 1.45, shade(chair, -0.15))
+    d.box(2.65, 2.75, 1.45, 1.35, 1.3, 0.28, chair)
+    d.box(3.85, 2.75, 1.73, 0.18, 1.3, 1.6, chair)
+  }
+  spots.chair = bounds([[2.65, 2.75, 0], [4.05, 2.75, 0], [4.05, 4.05, 0], [2.65, 4.05, 0], [2.65, 2.75, 3.33], [4.05, 4.05, 3.33]], 2)
 
   /* floor lamp in the corner next to the bed */
   d.ring(5.2, 0.75, 0.02, 0.45, '#5B4536', ' opacity=".18"')
@@ -367,7 +376,7 @@ export function drawRoom(o) {
       d.raw(`<circle class="twinkle" style="animation-delay:${((i % 4) * 0.4).toFixed(1)}s" cx="${p[0].toFixed(1)}" cy="${(p[1] + 1.5).toFixed(1)}" r="1.9" fill="${bulbs[i % 3]}" opacity="${sky.lights ? 1 : 0.6}"/>`)
     })
   }
-  spots.diary = bounds([[5.9, 0, 0], [9.7, 0, canopy ? 7.7 : 3.3], [9.7, 5.2, 0], [5.9, 5.2, 0], [5.9, 0, canopy ? 7.7 : 3.3]], 0)
+  spots.bed = bounds([[5.9, 0, 0], [9.7, 0, canopy ? 7.7 : 3.3], [9.7, 5.2, 0], [5.9, 5.2, 0], [5.9, 0, canopy ? 7.7 : 3.3]], 0)
 
   /* pouf on the rug */
   d.ring(6.6, 8.0, 0.02, 0.85, '#5B4536', ' opacity=".14"')
@@ -407,7 +416,7 @@ export function drawRoom(o) {
   d.raw(`<path d="M${pp[0].toFixed(1)},${pp[1].toFixed(1)} c-6,-6 -10,-14 -4,-20 c4,6 6,12 4,20 z M${(pp[0] + 1).toFixed(1)},${pp[1].toFixed(1)} c4,-8 10,-12 16,-10 c-4,6 -10,10 -16,10 z M${pp[0].toFixed(1)},${pp[1].toFixed(1)} c-2,4 -3,10 -8,14 c1,-6 4,-10 8,-14 z" fill="#7FAF8E"/>`)
   d.box(0.25, sy0 + sdy - 0.95, sh + 0.14, 0.9, 0.6, 0.18, '#E28FA3')
   d.box(0.3, sy0 + sdy - 0.9, sh + 0.32, 0.8, 0.5, 0.15, '#7FA3C8')
-  spots.books = bounds([[0, sy0, 0], [sx, sy0, 0], [sx, sy0 + sdy, 0], [0, sy0 + sdy, sh + 1.2], [sx, sy0, sh + 1.2], [0, sy0, sh + 1.2]], 0)
+  spots.shelf = bounds([[0, sy0, 0], [sx, sy0, 0], [sx, sy0 + sdy, 0], [0, sy0 + sdy, sh + 1.2], [sx, sy0, sh + 1.2], [0, sy0, sh + 1.2]], 0)
 
   /* plant in the front corner: grows with your diary streak */
   const [px, py] = P(3.6, 9.0, 0)
@@ -423,5 +432,11 @@ export function drawRoom(o) {
   d.raw(`<path d="M${(px + 12).toFixed(1)},${py.toFixed(1)} l-24,0 l-3,-21 l30,0 z" fill="#E0A589"/><path d="M${(px - 16).toFixed(1)},${(py - 22).toFixed(1)} l32,0 l-1,5 l-30,0 z" fill="#C98C72"/>`)
 
   const svg = `<svg role="img" aria-label="Your room" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet">${d.out.join('')}</svg>`
-  return { svg, spots }
+  // walls and floor are not boxes, so they get exact outlines (in percent) for clicking
+  const outline = (ps) => ps.map((c) => { const [x, y] = P(...c); return `${(((x - VB.x) / VB.w) * 100).toFixed(2)}% ${(((y - VB.y) / VB.h) * 100).toFixed(2)}%` }).join(', ')
+  const shapes = {
+    floor: [outline([[0, 0, 0], [W, 0, 0], [W, D, 0], [0, D, 0]])],
+    walls: [outline([[0, 0, 0], [0, D, 0], [0, D, H], [0, 0, H]]), outline([[0, 0, 0], [W, 0, 0], [W, 0, H], [0, 0, H]])],
+  }
+  return { svg, spots, shapes }
 }
