@@ -181,7 +181,7 @@ export function mount(el) {
   }
 
   function render() {
-    $('#d-pages', el).textContent = `Pages ${num(0) + 1}–${num(1) + 1} of ${count()}`
+    $('#d-pages', el).textContent = `Pages ${num(0) + 1}–${num(1) + 1}`
     renderPage(0)
     renderPage(1)
     book.dataset.using = tool
@@ -205,7 +205,6 @@ export function mount(el) {
     const target = spread + dir
     if (target < 0) return
     if (dir > 0 && target * 2 >= count()) {
-      if (!hasContent(pages[0]) && !hasContent(pages[1])) return toast('Write something on these pages first')
       setDiaryBook({ count: count() + 2 })
     }
     busy = true
@@ -338,6 +337,22 @@ export function mount(el) {
       it.data = { ...it.data, [tk.dataset.tick]: !it.data?.[tk.dataset.tick] }
       tk.setAttribute('aria-pressed', String(!!it.data[tk.dataset.tick]))
       return saveSoon()
+    }
+    const cyc = t.closest('[data-cycle]')
+    if (cyc) {
+      const it = findItem(cyc.closest('[data-id]').dataset.id)
+      const k = cyc.dataset.cycle
+      it.data = { ...it.data, [k]: (Number(it.data?.[k] || 0) + 1) % 6 }
+      saveSoon()
+      return render()
+    }
+    const rate = t.closest('[data-rate]')
+    if (rate) {
+      const it = findItem(rate.closest('[data-id]').dataset.id)
+      const k = rate.dataset.rate, v = Number(rate.dataset.val)
+      it.data = { ...it.data, [k]: Number(it.data?.[k] || 0) === v ? 0 : v }
+      saveSoon()
+      return render()
     }
     const del = t.closest('[data-del]')
     if (del) {
@@ -475,11 +490,17 @@ export function mount(el) {
     if (e.key === 'ArrowLeft') turn(-1)
     if (e.key === 'Escape') closePop()
   }
+  // Trailing empty pages are not kept: the book ends after the last page you used.
+  async function trimEnd() {
+    let c = count()
+    while (c > 2 && num(1) < c - 2 && !hasContent(await loadPage(c - 1)) && !hasContent(await loadPage(c - 2)) && (await loadPage(c - 1)).layout === 'lined' && (await loadPage(c - 2)).layout === 'lined') c -= 2
+    if (c !== count()) setDiaryBook({ count: c })
+  }
   document.addEventListener('keydown', onKey)
 
   ensureBook().then(() => {
     const { count: c, spread: s } = getState().diaryBook
     openSpread(Math.min(s, Math.max(0, c / 2 - 1)))
   })
-  return () => document.removeEventListener('keydown', onKey)
+  return () => { document.removeEventListener('keydown', onKey); trimEnd() }
 }
