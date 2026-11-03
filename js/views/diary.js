@@ -297,7 +297,7 @@ export function mount(el) {
     await new Promise(requestAnimationFrame)
 
     const end = goingOn ? -180 : 180
-    const duration = 1100
+    const duration = 1400
     const anim = leaf.animate(
       [{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${end}deg)` }],
       { duration, easing: 'cubic-bezier(.42, 0, .22, 1)', fill: 'forwards' }

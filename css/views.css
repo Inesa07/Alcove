@@ -572,7 +572,7 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .turn-half.from-left .page-copy { border-radius: 6px 2px 2px 6px; }
 
 /* Page turn: one two-sided leaf turning around the spine */
-.flip-stage { position: absolute; inset: 0; z-index: 20; pointer-events: none; perspective: 7000px; -webkit-perspective: 7000px; }
+.flip-stage { position: absolute; inset: 0; z-index: 20; pointer-events: none; perspective: none; -webkit-perspective: none; }
 .flip-cover, .flip-leaf { position: absolute; }
 .flip-leaf { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; will-change: transform; }
 .flip-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(.1px); }
