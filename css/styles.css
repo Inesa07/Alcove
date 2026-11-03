@@ -172,8 +172,8 @@ a { color: inherit; }
 .account .acc-msg { font-size: 14px; color: var(--muted); }
 .account .acc-msg.bad { color: #b4475d; }
 
-body.locked { overflow: hidden; }
-body.locked .app { visibility: hidden; }
+html.locked, html.locked body { overflow: hidden; }
+html.locked .app { visibility: hidden; }
 .auth {
   position: fixed; inset: 0; z-index: 100; display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 20px;
   padding: 40px clamp(20px, 6vw, 90px); overflow: auto;

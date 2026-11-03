@@ -65,14 +65,14 @@ function paintGate() {
 
 function openGate(m = 'in') {
   mode = m
-  document.body.classList.add('locked')
+  document.documentElement.classList.add('locked')
   gate.hidden = false
   paintGate()
 }
 
 function closeGate() {
   gate.hidden = true
-  document.body.classList.remove('locked')
+  document.documentElement.classList.remove('locked')
   note = notice = ''
   const n = sync.nameOf()
   if (n && !getState().name) setName(n)
@@ -154,7 +154,7 @@ function setupMenu() {
 }
 
 export async function setupAccount() {
-  if (!sync.configured()) return
+  if (!sync.configured()) { document.documentElement.classList.remove('locked'); return }
   gate = document.createElement('div')
   gate.className = 'auth'
   gate.hidden = true
@@ -170,7 +170,7 @@ export async function setupAccount() {
 
   const fromLink = /access_token|error_description/.test(location.hash)
   if (!hasSession() && !fromLink) openGate('in')            // not signed in on this device: welcome screen right away
-  else if (fromLink) document.body.classList.add('locked')
+  else if (fromLink) document.documentElement.classList.add('locked')
 
   const r = await sync.start()
   if (r.type === 'recovery') { openGate('newpass'); return }
