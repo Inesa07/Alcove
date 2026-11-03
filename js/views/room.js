@@ -152,7 +152,8 @@ export function mount(el) {
 
   function openGallery() {
     const g = $('#gallery', el)
-    const now = (decorating ? draft : getState().room).theme || 'cozy'
+    const t0 = (decorating ? draft : getState().room).theme || 'cozy'
+    const now = t0 === 'city' ? 'study' : t0
     g.innerHTML = `
       <div class="gallery-head">
         <div><h2 id="gallery-title">Choose your room</h2><p>Every room can still be decorated the way you like.</p></div>
