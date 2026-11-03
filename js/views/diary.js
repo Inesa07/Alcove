@@ -18,6 +18,7 @@ const blankPage = () => ({ paper: 'lined', tint: 'cream', layout: 'lined', items
 const key = (n) => 'bp:' + n
 const hasContent = (p) => p.items.some((i) => i.type !== 'title') || !!p.ink
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+const MIN_PAGES = 10 // a new diary starts with 10 pages and grows without a limit
 
 export async function loadPage(n) {
   return { ...blankPage(), ...((await db.get(key(n))) || {}) }
@@ -34,7 +35,8 @@ async function savePage(n, page) {
 // Makes sure the book exists. Diary pages from the first version (one spread per day) become pages of the book.
 export async function ensureBook() {
   const { count } = getState().diaryBook
-  if (count > 0) return count
+  if (count >= MIN_PAGES) return count
+  if (count > 0) { setDiaryBook({ count: MIN_PAGES }); return MIN_PAGES }
   const old = (await db.keys('page:')).sort()
   let n = 0
   for (const k of old) {
@@ -48,9 +50,10 @@ export async function ensureBook() {
       await savePage(n++, { ...blankPage(), paper: p.paper || 'lined', layout: p.paper || 'lined', tint: p.tint || 'cream', items, ink: (p.ink || [])[side] || null })
     }
   }
-  if (n === 0) n = 2
+  const last = n
   if (n % 2) n++
-  setDiaryBook({ count: n, spread: Math.max(0, n / 2 - 1) })
+  n = Math.max(n, MIN_PAGES)
+  setDiaryBook({ count: n, spread: last ? Math.floor((last - 1) / 2) : 0 })
   return n
 }
 
@@ -493,7 +496,7 @@ export function mount(el) {
   // Trailing empty pages are not kept: the book ends after the last page you used.
   async function trimEnd() {
     let c = count()
-    while (c > 2 && num(1) < c - 2 && !hasContent(await loadPage(c - 1)) && !hasContent(await loadPage(c - 2)) && (await loadPage(c - 1)).layout === 'lined' && (await loadPage(c - 2)).layout === 'lined') c -= 2
+    while (c > MIN_PAGES && num(1) < c - 2 && !hasContent(await loadPage(c - 1)) && !hasContent(await loadPage(c - 2)) && (await loadPage(c - 1)).layout === 'lined' && (await loadPage(c - 2)).layout === 'lined') c -= 2
     if (c !== count()) setDiaryBook({ count: c })
   }
   document.addEventListener('keydown', onKey)
