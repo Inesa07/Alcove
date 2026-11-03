@@ -458,6 +458,9 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .lc-lists { background: linear-gradient(#f2b95a, #f2b95a) 24px 4px / 16px 26px no-repeat, linear-gradient(#ddd 1px, transparent 1px) 4px 4px / 16px 4px no-repeat, #fff; background-size: 16px 26px, 16px 30px; }
 .lc-habits { background: linear-gradient(#dcc8ee, #dcc8ee) 4px 8px / 36px 22px no-repeat, linear-gradient(#fbe7a6, #fbe7a6) 23px 34px / 17px 16px no-repeat, #fff; }
 .lc-thankful { background: radial-gradient(ellipse at 50% 30%, #c9d6f2 30%, transparent 32%), linear-gradient(#f9d3dc, #f9d3dc) 4px 32px / 17px 10px no-repeat, linear-gradient(#d6e6f5, #d6e6f5) 23px 32px / 17px 10px no-repeat, #fff; }
+.page-pick { margin-bottom: 14px; background: #efeaf6; }
+.page-pick button { flex: 1; color: var(--muted); }
+.page-pick button[aria-checked="true"] { background: var(--night); color: #fff; }
 .pop-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
 
 /* boxes of a ready-made layout */
@@ -501,4 +504,6 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 @media (max-width: 860px) {
   .edge { width: 12%; }
   .layout-grid { grid-template-columns: repeat(4, 1fr); }
+  .popover { right: 0; left: 0; margin: 0 auto; }
 }
+.page-foot .page-num { position: static; }

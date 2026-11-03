@@ -81,6 +81,7 @@ export function mount(el) {
   let selected = null
   let popover = null
   let busy = false
+  let layoutSide = 0 // which page the "Page" menu changes
 
   el.innerHTML = `
     <section class="diary-page">
@@ -111,6 +112,8 @@ export function mount(el) {
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span>Photo</span>
             <input type="file" accept="image/*" id="d-photo" class="sr-only">
           </label>
+          <button class="tool" data-pop="layout" title="How the pages look">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 8h3M5.5 11h3M15.5 8h3M15.5 11h3"/></svg><span>Page</span></button>
         </div>
         <div class="popover" id="d-pop" hidden></div>
       </div>
@@ -159,20 +162,13 @@ export function mount(el) {
     p.setAttribute('style', `--tint:${TINTS[page.tint] || TINTS.cream}`)
     const blocks = page.items.filter((i) => i.type === 'block' || i.type === 'title')
     const free = page.items.filter((i) => i.type !== 'block' && i.type !== 'title')
-    const isEmpty = !page.items.length && !page.ink && page.layout in { lined: 1, dotted: 1, grid: 1, plain: 1 }
     const lastSpread = num(1) >= count() - 1
     p.innerHTML = `
       <div class="paper" aria-hidden="true"></div>
       <div class="blocks">${blocks.map(itemHTML).join('')}</div>
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
-      ${isEmpty ? `<button class="layout-hint" data-layout-for="${side}">Choose how this page looks</button>` : ''}
-      <footer class="page-foot">
-        <button class="page-menu" data-layout-for="${side}" aria-label="Page ${n + 1} style" title="Page style">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-        </button>
-        <span class="page-num">${n + 1}</span>
-      </footer>
+      <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
       ${side === 0
         ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
         : `<button class="edge edge-next" data-turn="1" aria-label="${lastSpread ? 'New page' : 'Next page'}"><span class="curl" aria-hidden="true"></span></button>`}`
@@ -283,11 +279,17 @@ export function mount(el) {
     const id = kind + (side ?? '')
     if (popover === id) return closePop()
     popover = id
+    if (kind === 'layout' && side !== undefined) layoutSide = side
     if (kind === 'stickers') {
       pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>`
     } else {
+      side = layoutSide
       const page = pages[side]
-      pop.innerHTML = `<p class="pop-title">Page ${num(side) + 1}</p>
+      pop.innerHTML = `<div class="seg page-pick" role="radiogroup" aria-label="Which page">
+          <button role="radio" aria-checked="${side === 0}" data-pick-side="0">Left page · ${num(0) + 1}</button>
+          <button role="radio" aria-checked="${side === 1}" data-pick-side="1">Right page · ${num(1) + 1}</button>
+        </div>
+        <p class="pop-title">Look</p>
         <div class="layout-grid">${Object.entries(LAYOUTS).map(([lid, L]) => `<button class="layout-card ${page.layout === lid ? 'on' : ''}" data-layout="${lid}" data-side="${side}">
           <span class="lc-thumb lc-${lid}" aria-hidden="true"></span><span>${L.name}</span></button>`).join('')}</div>
         <p class="pop-title">Paper colour</p>
@@ -306,8 +308,8 @@ export function mount(el) {
     if (t.closest('[data-add="text"]')) return addText()
     const pop = t.closest('[data-pop]')
     if (pop) return openPop(pop.dataset.pop)
-    const lf = t.closest('[data-layout-for]')
-    if (lf) return openPop('layout', Number(lf.dataset.layoutFor))
+    const ps = t.closest('[data-pick-side]')
+    if (ps) { popover = null; return openPop('layout', Number(ps.dataset.pickSide)) }
     const st = t.closest('[data-sticker]')
     if (st) { closePop(); return addSticker(st.dataset.sticker) }
     const lay = t.closest('[data-layout]')
@@ -385,7 +387,7 @@ export function mount(el) {
 
   book.addEventListener('pointerdown', (e) => {
     const pageEl = e.target.closest('.page')
-    if (!pageEl || e.target.closest('.edge, .page-foot, .layout-hint')) return
+    if (!pageEl || e.target.closest('.edge')) return
     const side = Number(pageEl.dataset.side)
     const rect = pageEl.getBoundingClientRect()
 
