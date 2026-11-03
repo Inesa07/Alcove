@@ -161,6 +161,8 @@ export async function signUp(name, email, password) {
   const c = await getClient()
   const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: here() } })
   if (error) throw error
+  // Supabase answers this way when the email already has an account (it does not send a new email then)
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return 'exists'
   if (!data.session) return 'check-email'   // the project asks people to confirm their email first
   return begin(data.user)
 }

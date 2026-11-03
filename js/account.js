@@ -16,7 +16,7 @@ function forms() {
   const ok = notice ? `<p class="auth-msg" role="status">${esc(notice)}</p>` : ''
   if (mode === 'check') return `
     <h1>Check your email</h1>
-    <p class="auth-lead">We sent you a link. Open it on this device to confirm your account, and you are in.</p>
+    <p class="auth-lead">We sent you a link. Open it on this device to confirm your account, and you are in. If it does not come in a few minutes, look in Spam.</p>
     <button class="auth-link" data-mode="in">Back to sign in</button>`
   if (mode === 'forgot') return `
     <h1>Forgot your password?</h1>
@@ -98,6 +98,7 @@ async function submit(form) {
     if (form.dataset.do === 'up') {
       const r = await sync.signUp(f.name.trim(), f.email.trim(), f.password)
       if (r === 'check-email') { mode = 'check'; paintGate(); return }
+      if (r === 'exists') { mode = 'in'; notice = 'You already have an account with this email. Sign in with your password.'; paintGate(); return }
       closeGate(); toast('Your account is ready')
     }
     if (form.dataset.do === 'forgot') { await sync.sendReset(f.email.trim()); notice = 'Sent! Check your email.'; paintGate(); return }
