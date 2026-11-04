@@ -79,7 +79,7 @@ export const THEME_PRESETS = {
   cozy: { wall: 'lavender', wallStyle: 'plain', floor: 'oak', floorStyle: 'planks', rug: 'pink', blanket: 'lilac', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', chairStyle: 'classic' },
   attic: { wall: 'peach', wallStyle: 'boards', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'rose', shelfWood: 'white', deskWood: 'white', bedWood: 'oak', chairColor: 'cream', pet: 'cat', petColor: 'ginger', art: 'flowers' },
   japanese: { wall: 'cream', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'none', blanket: 'blue', chairColor: 'peach', pet: 'cat', petColor: 'white', art: 'plants' },
-  lofi: { wall: 'mocha', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'cream', blanket: 'peach', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', pet: 'cat', petColor: 'black', art: 'moon' },
+  lofi: { wall: 'peach', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'peach', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', pet: 'cat', petColor: 'black', art: 'moon' },
   plants: { wall: 'cream', wallStyle: 'boards', floor: 'honey', floorStyle: 'herringbone', rug: 'sage', blanket: 'cream', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', pet: 'cat', petColor: 'ginger', art: 'plants' },
   study: { wall: 'night', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'blue', blanket: 'blue', shelfWood: 'walnut', deskWood: 'walnut', bedWood: 'walnut', chairColor: 'blue', pet: 'cat', petColor: 'black', art: 'moon' },
 }
@@ -561,16 +561,17 @@ function cityWindow(d, sky, blanket, x0 = 6.0, x1 = 9.6, z0 = 3.2, z1 = 8.0, rai
   d.raw(`<clipPath id="cityw"><polygon points="${pts([[x0, 0.02, z0], [x1, 0.02, z0], [x1, 0.02, z1], [x0, 0.02, z1]])}"/></clipPath><g clip-path="url(#cityw)">`)
   d.poly([[x0, 0.02, z0], [x1, 0.02, z0], [x1, 0.02, z1], [x0, 0.02, z1]], 'url(#sky)')
   const moon = P(x1 - 0.7, 0.03, z1 - 0.8)
-  d.raw(`<circle cx="${moon[0].toFixed(1)}" cy="${moon[1].toFixed(1)}" r="9" fill="#E9ECF7" opacity=".18"/><circle cx="${moon[0].toFixed(1)}" cy="${moon[1].toFixed(1)}" r="4" fill="#E9ECF7"/>`)
+  d.raw(`<circle cx="${moon[0].toFixed(1)}" cy="${moon[1].toFixed(1)}" r="9" fill="${sky.orb}" opacity=".25"/><circle cx="${moon[0].toFixed(1)}" cy="${moon[1].toFixed(1)}" r="4.5" fill="${sky.orb}"/>`)
   seed = 7
   // far buildings, then near ones with lit windows
-  ;[['#283062', 0.6, 1.4], ['#1A2048', 0.0, 1.0]].forEach(([col, lift, lit]) => {
+  const night = sky.lights
+  ;[[night ? '#283062' : '#B9C9DB', 0.6, 1.4], [night ? '#1A2048' : '#9CB0C7', 0.0, 1.0]].forEach(([col, lift, lit]) => {
     let x = x0
     while (x < x1) {
       const w = 0.35 + rnd() * 0.35, h = 1.0 + rnd() * 2.6 + lift
       d.poly([[x, 0.03, z0], [x + w, 0.03, z0], [x + w, 0.03, z0 + h], [x, 0.03, z0 + h]], col)
       for (let wz = z0 + 0.2; wz < z0 + h - 0.2; wz += 0.28) for (let wx = x + 0.07; wx < x + w - 0.1; wx += 0.16) {
-        if (rnd() < 0.32 * lit) d.poly([[wx, 0.04, wz], [wx + 0.07, 0.04, wz], [wx + 0.07, 0.04, wz + 0.1], [wx, 0.04, wz + 0.1]], rnd() < 0.7 ? '#F6C46B' : '#FBE3B4', ' opacity=".9"')
+        if (rnd() < 0.32 * lit) d.poly([[wx, 0.04, wz], [wx + 0.07, 0.04, wz], [wx + 0.07, 0.04, wz + 0.1], [wx, 0.04, wz + 0.1]], night ? (rnd() < 0.7 ? '#F6C46B' : '#FBE3B4') : '#E6EEF6', ` opacity="${night ? 0.9 : 0.7}"`)
       }
       x += w + 0.04
     }
@@ -1303,7 +1304,8 @@ function lofiScene(S) {
   // the desk under the window: lamp, books, notebook, tea, headphones, the calendar (opens the Calendar)
   G('desk')
   wallDesk(d, { x0: 2.6, x1: 8.8, depth: 2.0, top: 2.5, wood: dk, drawers: 'left' })
-  deskLamp(d, 3.1, 0.5, 2.5, true, glow, '#E07A5F')
+  deskLamp(d, 3.1, 0.5, 2.5, sky.lights, glow, '#E07A5F')
+  if (sky.beam) d.poly([[3.0, 2.0, 0.02], [8.4, 2.0, 0.02], [7.2, 7.6, 0.02], [1.8, 7.6, 0.02]], 'url(#beam)')
   ;[0, 1, 2, 3, 4].forEach((i) => d.box(4.0 + i * 0.22, 0.15, 2.5, 0.2, 0.75, 0.7 + (i % 3) * 0.12, BOOK_COLORS[(i * 2 + 1) % BOOK_COLORS.length]))
   d.box(4.0, 1.1, 2.5, 0.9, 0.6, 0.12, '#7FA3C8'); d.box(4.05, 1.15, 2.62, 0.8, 0.5, 0.1, '#E9C46A')
   openDiary(d, 5.3, 0.9, 2.52, true)
@@ -1361,7 +1363,7 @@ export function drawRoom(o) {
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
   const theme = THEMES[room.theme] ? room.theme : 'cozy'
-  const sky = theme === 'lofi' ? (tod === 'night' ? SKIES.night : SKIES.evening) : SKIES[tod]
+  const sky = SKIES[tod]
   const glows = []   // lamp lights, drawn again on top in the night room
   const glow = (x, y, r) => { glows.push([x, y, r]); d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#glow)"/>`) }
   const blanket = (FABRICS[room.blanket] || FABRICS.lilac).c
@@ -1799,7 +1801,7 @@ export function drawRoom(o) {
 
   if (theme === 'lofi') {
     // always the golden hour or night here: a warm dim room lit by the lamp and the lights
-    d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#2A1838', ` opacity="${tod === 'night' ? 0.3 : 0.18}" pointer-events="none"`)
+    if (tod === 'night') d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#2A1838', ' opacity=".1" pointer-events="none"')
     glows.forEach(([x, y, r]) => d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 0.85}" fill="url(#glow)" opacity=".75" pointer-events="none"/>`))
     const win = P(5.7, 1.5, 3.5)
     d.raw(`<ellipse cx="${win[0].toFixed(1)}" cy="${win[1].toFixed(1)}" rx="70" ry="40" fill="#F3B98F" opacity=".12" pointer-events="none"/>`)
