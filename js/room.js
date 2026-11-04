@@ -1104,6 +1104,10 @@ function japaneseScene(S) {
   if (room.pet === 'cat' || room.pet === 'dog') { const at = P(8.95, 3.05, 0.6); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.white, at[0] - 21, at[1] - 21, 0.42)) }
   spots.bed = bounds([[6.6, 0.6, 0], [9.8, 0.6, 0], [9.8, 4.6, 0], [6.6, 4.6, 0], [6.6, 0.6, 1.2]], 0)
   E()
+  const cc = (FABRICS[room.chairColor] || FABRICS.peach).c
+  G('chair')
+  soft(d, 1.7, 4.9, 0, 1.15, 1.2, 0.24, [shade(cc, 0.12), cc, shade(cc, -0.14)], 0.25, 1)
+  E()
   // the kotatsu: a low table under a quilt, with a cast-iron teapot and the calendar (opens the Calendar)
   G('desk')
   d.shadow(3.0, 4.4, 7.4, 8.2, 0.16)
@@ -1112,16 +1116,15 @@ function japaneseScene(S) {
   d.poly([[3.25, 4.55, 0.02], [7.15, 4.55, 0.02], [7.45, 7.95, 0.02], [3.05, 8.15, 0.02]], 'url(#asanoha)', ' opacity=".95"')
   soft(d, 3.6, 4.9, 0, 3.2, 2.7, 0.95, [shade(q, 0.08), shade(q, -0.02), shade(q, -0.14)], 0.45)
   d.box(3.7, 5.0, 0.95, 3.0, 2.5, 0.12, [shade(dark, 0.35), shade(dark, 0.15), dark])
-  teaSet(d, 5.6, 5.9, 1.07)
-  calendarFront(d, 4.1, 4.75, 7.1, 1.07, 0.95, events)
-  spots.desk = tagAt(bounds([[3.0, 4.4, 0], [7.4, 4.4, 0], [7.4, 8.2, 0], [3.0, 8.2, 0], [4.1, 7.1, 2.3]], 2), [4.4, 7.1, 2.3])
+  teaSet(d, 4.7, 6.4, 1.07)
+  // a standing calendar at the back of the table, where you can see it
+  calendarFront(d, 5.55, 6.4, 5.45, 1.07, 1.35, events)
+  spots.desk = tagAt(bounds([[3.0, 4.4, 0], [7.4, 4.4, 0], [7.4, 8.2, 0], [3.0, 8.2, 0], [5.55, 5.45, 2.6]], 2), [5.95, 5.45, 3.1])
   E()
-  // zabuton cushions to sit on
+  // a zabuton cushion in front of the table
   G('chair')
-  const cc = (FABRICS[room.chairColor] || FABRICS.peach).c
-  soft(d, 4.3, 8.4, 0, 1.25, 1.15, 0.24, [shade(cc, 0.12), cc, shade(cc, -0.14)], 0.25, 1)
-  soft(d, 1.7, 6.3, 0, 1.1, 1.2, 0.24, [shade(cc, 0.12), cc, shade(cc, -0.14)], 0.25, 1)
-  spots.chair = bounds([[4.2, 8.3, 0], [5.6, 8.3, 0], [5.6, 9.6, 0], [4.2, 9.6, 0], [4.2, 8.3, 0.6]], 2)
+  soft(d, 4.5, 8.5, 0, 1.25, 1.15, 0.24, [shade(cc, 0.12), cc, shade(cc, -0.14)], 0.25, 1)
+  spots.chair = bounds([[4.4, 8.4, 0], [5.8, 8.4, 0], [5.8, 9.7, 0], [4.4, 9.7, 0], [4.4, 8.4, 0.6]], 2)
   E()
   // an andon lantern with a dark wooden frame, in the corner by the futon
   const lx = 9.0, ly = 6.0
