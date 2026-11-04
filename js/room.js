@@ -73,10 +73,14 @@ export const THEMES = {
   cozy: { name: 'Cozy room', note: 'Lavender, light wood, fairy lights' },
   attic: { name: 'Attic studio', note: 'Round window, wooden beams, plushies' },
   study: { name: 'Night study', note: 'A desk by the big window, city lights, a reading lamp' },
+  japanese: { name: 'Japanese room', note: 'Tatami, a kotatsu table, a futon and paper doors' },
+  plants: { name: 'Plant room', note: 'Garden windows, a wooden bed and plants everywhere' },
 }
 export const THEME_PRESETS = {
   cozy: { wall: 'lavender', wallStyle: 'plain', floor: 'oak', floorStyle: 'planks', rug: 'pink', blanket: 'lilac', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', chairStyle: 'classic' },
   attic: { wall: 'peach', wallStyle: 'boards', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'rose', shelfWood: 'white', deskWood: 'white', bedWood: 'oak', chairColor: 'cream', pet: 'cat', petColor: 'ginger', art: 'flowers' },
+  japanese: { wall: 'cream', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'none', blanket: 'sage', chairColor: 'rose', pet: 'cat', petColor: 'white', art: 'plants' },
+  plants: { wall: 'cream', wallStyle: 'boards', floor: 'honey', floorStyle: 'herringbone', rug: 'sage', blanket: 'cream', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', pet: 'cat', petColor: 'ginger', art: 'plants' },
   study: { wall: 'night', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'blue', blanket: 'blue', shelfWood: 'walnut', deskWood: 'walnut', bedWood: 'walnut', chairColor: 'blue', pet: 'cat', petColor: 'black', art: 'moon' },
 }
 
@@ -910,6 +914,256 @@ function studyScene(S) {
   plant(d, 9.0, 8.6, leaves)
 }
 
+/* ---------- small potted plants of different kinds ---------- */
+
+function pottedPlant(d, x, y, kind = 'leafy', k = 1, pot = '#D98F72') {
+  const b = P(x, y, 0)
+  d.raw(`<ellipse cx="${b[0].toFixed(1)}" cy="${(b[1] + 1).toFixed(1)}" rx="${(9 * k).toFixed(1)}" ry="${(3.5 * k).toFixed(1)}" fill="#3a2a22" opacity=".18" filter="url(#soft)"/>`)
+  d.cylinder(x, y, 0, 0.32 * k, 0.55 * k, pot)
+  const t = P(x, y, 0.55 * k)
+  const leaf = (dx, dy, rx, ry, rot, c) => d.raw(`<ellipse cx="${(t[0] + dx * k).toFixed(1)}" cy="${(t[1] + dy * k).toFixed(1)}" rx="${(rx * k).toFixed(1)}" ry="${(ry * k).toFixed(1)}" fill="${c}" transform="rotate(${rot} ${(t[0] + dx * k).toFixed(1)} ${(t[1] + dy * k).toFixed(1)})"/>`)
+  if (kind === 'snake') {
+    ;[[-4, -14, -8], [0, -18, 0], [4, -13, 9], [-1, -10, -3]].forEach(([dx, dy, r], i) => d.raw(`<path d="M${(t[0] + dx * k).toFixed(1)},${t[1].toFixed(1)} q${(2 * k).toFixed(1)},${(dy * k).toFixed(1)} ${(r * 0.3 * k).toFixed(1)},${(dy * 1.9 * k).toFixed(1)} q${(-3 * k).toFixed(1)},${(-dy * 0.9 * k).toFixed(1)} ${(-1 * k).toFixed(1)},${(-dy * 1.9 * k).toFixed(1)}" fill="${['#5E937A', '#7FAF8E', '#6FA287', '#8DBB9B'][i]}"/>`))
+  } else if (kind === 'flower') {
+    ;[[-6, -6, 6, 2.5, -30], [6, -7, 6, 2.5, 30], [0, -10, 5, 2.2, 90]].forEach(([dx, dy, rx, ry, r]) => leaf(dx, dy, rx, ry, r, '#7FAF8E'))
+    ;[[-5, -14], [4, -16], [0, -20], [7, -11], [-8, -10]].forEach(([dx, dy], i) => d.raw(`<circle cx="${(t[0] + dx * k).toFixed(1)}" cy="${(t[1] + dy * k).toFixed(1)}" r="${(2.6 * k).toFixed(1)}" fill="${['#E99AAE', '#F2C46B', '#F4B7C8', '#E0566F', '#FFFFFF'][i]}"/>`))
+  } else if (kind === 'trail') {
+    ;[[-1, 1], [1, 1]].forEach(([s]) => { for (let i = 0; i < 6; i++) leaf(s * (5 + i * 1.6), -3 + i * 3.2, 3, 1.6, s * 40, i % 2 ? '#6FA287' : '#8DBB9B') })
+    for (let i = 0; i < 5; i++) leaf(-6 + i * 3, -5 - (i % 2) * 2, 3.4, 2, i * 30, '#7FAF8E')
+  } else if (kind === 'succulent') {
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; leaf(Math.cos(a) * 4, -3 + Math.sin(a) * 1.8, 3.6, 1.8, (a * 180) / Math.PI, i % 2 ? '#8FB89A' : '#A7CBB0') }
+    leaf(0, -4, 2.2, 2.6, 0, '#B7D6BE')
+  } else {
+    ;[[-8, -8, -40], [8, -9, 40], [-3, -15, -15], [4, -16, 15], [0, -10, 90], [-10, -14, -60], [10, -14, 60]].forEach(([dx, dy, r], i) => leaf(dx, dy, 6.5, 3, r, ['#6FA287', '#7FAF8E', '#5E937A', '#8DBB9B'][i % 4]))
+  }
+}
+
+// a tatami floor: mats with dark cloth edges, laid in the classic pattern
+function tatami(d) {
+  const mats = [[0, 0, 5, 2.5], [0, 2.5, 5, 2.5], [5, 0, 2.5, 5], [7.5, 0, 2.5, 5], [0, 5, 2.5, 5], [2.5, 5, 2.5, 5], [5, 5, 5, 2.5], [5, 7.5, 5, 2.5]]
+  mats.forEach(([x, y, dx, dy], i) => {
+    d.poly([[x, y, 0.005], [x + dx, y, 0.005], [x + dx, y + dy, 0.005], [x, y + dy, 0.005]], i % 2 ? '#D8CB9E' : '#D2C394')
+    for (let k = 1; k < 12; k++) {
+      if (dx >= dy) d.line([[x + (dx * k) / 12, y + 0.1, 0.006], [x + (dx * k) / 12, y + dy - 0.1, 0.006]], '#C4B484', 0.5, ' opacity=".5"')
+      else d.line([[x + 0.1, y + (dy * k) / 12, 0.006], [x + dx - 0.1, y + (dy * k) / 12, 0.006]], '#C4B484', 0.5, ' opacity=".5"')
+    }
+    const e = 0.12
+    if (dx >= dy) { d.poly([[x, y, 0.007], [x + dx, y, 0.007], [x + dx, y + e, 0.007], [x, y + e, 0.007]], '#4F5A3E'); d.poly([[x, y + dy - e, 0.007], [x + dx, y + dy - e, 0.007], [x + dx, y + dy, 0.007], [x, y + dy, 0.007]], '#4F5A3E') }
+    else { d.poly([[x, y, 0.007], [x + e, y, 0.007], [x + e, y + dy, 0.007], [x, y + dy, 0.007]], '#4F5A3E'); d.poly([[x + dx - e, y, 0.007], [x + dx, y, 0.007], [x + dx, y + dy, 0.007], [x + dx - e, y + dy, 0.007]], '#4F5A3E') }
+  })
+}
+
+// a paper shoji window/door on the left wall: wooden grid over glowing paper
+function shoji(d, side, u0, u1, z0, z1, wood, glowing) {
+  d.poly(quad(side, u0 - 0.15, u1 + 0.15, z0 - 0.1, z1 + 0.15, 0.02), wood)
+  d.poly(quad(side, u0, u1, z0, z1, 0.03), glowing ? '#FFF6DE' : '#F7F1E4')
+  for (let i = 1; i < 4; i++) { const u = u0 + ((u1 - u0) * i) / 4; d.poly(quad(side, u - 0.03, u + 0.03, z0, z1, 0.04), wood) }
+  for (let j = 1; j < 7; j++) { const z = z0 + ((z1 - z0) * j) / 7; d.poly(quad(side, u0, u1, z - 0.03, z + 0.03, 0.04), wood) }
+}
+
+/* ---------- the Japanese room ---------- */
+
+function japaneseScene(S) {
+  const { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket } = S
+  const wood = '#8A5A3C', dark = '#5E3B26'
+  G('floor'); tatami(d); E()
+  // wooden posts and a rail around the room
+  ;[[0.02, 0.0], [0.02, 3.6], [0.02, 6.3], [0.02, 9.6]].forEach(([x, y]) => d.box(0, y, 0, 0.22, 0.25, 9, [shade(wood, 0.15), wood, shade(wood, -0.15)]))
+  ;[0.0, 5.3, 9.6].forEach((x) => d.box(x, 0, 0, 0.25, 0.22, 9, [shade(wood, 0.15), wood, shade(wood, -0.15)]))
+  d.box(0, 0, 6.9, 0.2, 10, 0.3, [shade(wood, 0.15), wood, shade(wood, -0.15)])
+  d.box(0, 0, 6.9, 10, 0.2, 0.3, [shade(wood, 0.15), wood, shade(wood, -0.15)])
+  // paper bunting above the rail
+  ;['left', 'right'].forEach((side) => { for (let i = 0; i < 7; i++) { const u = 0.8 + i * 1.25; d.poly([onWall(side, u, 8.4, 0.05), onWall(side, u + 0.9, 8.4, 0.05), onWall(side, u + 0.45, 7.6, 0.05)], ['#F2B5C6', '#F7D9DF', '#E99AAE'][i % 3], ' opacity=".85"') } })
+  // a big shoji door on the left wall, glowing with light from outside
+  shoji(d, 'left', 6.6, 9.4, 0.25, 6.6, '#A06A44', !sky.lights)
+  // sliding fusuma doors on the right wall
+  ;[[5.6, 7.6], [7.6, 9.55]].forEach(([u0, u1]) => {
+    d.poly(quad('right', u0, u1, 0.1, 6.85, 0.02), '#F4F0E8')
+    d.poly(quad('right', u0, u1, 3.0, 3.9, 0.03), '#B9BFB4')
+    d.poly(quad('right', u0 + 0.02, u0 + 0.08, 0.1, 6.85, 0.03), '#CFC6B6')
+    const h = P(...onWall('right', u0 + 0.35, 3.45, 0.04)); d.raw(`<ellipse cx="${h[0].toFixed(1)}" cy="${h[1].toFixed(1)}" rx="1.8" ry="2.6" fill="#8A7A66"/>`)
+  })
+  // a clock on the right wall, above the doors
+  const ck = quad('right', 7.9, 8.9, 7.3, 8.3, 0.04)
+  d.poly(ck, '#3E2A1E'); d.poly(quad('right', 8.0, 8.8, 7.4, 8.2, 0.05), '#FFFDF8')
+  // a picture scroll on the left wall
+  G('art'); art(d, room.art || 'plants', 'left', 4.2, 5.4, 2.6, 6.2, '#E9DFC9'); spots.art = bounds([[0, 4.0, 2.4], [0, 5.6, 2.4], [0, 5.6, 6.4], [0, 4.0, 6.4]], 1); E()
+  // notes: little wooden ema plaques hanging on a rail on the right wall
+  d.line([onWall('right', 0.8, 6.1, 0.05), onWall('right', 4.8, 6.1, 0.05)], dark, 1.4)
+  ;[0, 1, 2, 3, 4, 5].slice(0, Math.max(2, Math.min(notes + 1, 6))).forEach((i) => {
+    const u = 1.0 + i * 0.65, z = 5.0 + (i % 2) * 0.25
+    d.line([onWall('right', u + 0.25, 6.1, 0.05), onWall('right', u + 0.25, z + 0.7, 0.05)], '#C2556B', 0.6)
+    d.poly([onWall('right', u, z, 0.06), onWall('right', u + 0.5, z, 0.06), onWall('right', u + 0.5, z + 0.55, 0.06), onWall('right', u + 0.25, z + 0.75, 0.06), onWall('right', u, z + 0.55, 0.06)], '#E2C595')
+    d.line([onWall('right', u + 0.1, z + 0.35, 0.07), onWall('right', u + 0.4, z + 0.35, 0.07)], '#8A5A3C', 0.5)
+  })
+  spots.board = bounds([[0.8, 0, 4.8], [4.8, 0, 4.8], [4.8, 0, 6.3], [0.8, 0, 6.3]], 3)
+  // a low tansu chest with a bonsai and a little lucky cat
+  d.box(1.3, 0.05, 0, 3.0, 1.1, 1.7, [shade(dark, 0.2), dark, shade(dark, -0.12)])
+  ;[0.25, 0.95].forEach((z) => { d.poly([[1.45, 1.16, z], [4.15, 1.16, z], [4.15, 1.16, z + 0.55], [1.45, 1.16, z + 0.55]], shade(dark, 0.08)); ;[2.1, 3.5].forEach((x) => { const k = P(x, 1.17, z + 0.28); d.raw(`<circle cx="${k[0].toFixed(1)}" cy="${k[1].toFixed(1)}" r="1.1" fill="#C9A26E"/>`) }) })
+  const bz = P(2.2, 0.6, 1.7)
+  d.raw(`<ellipse cx="${bz[0].toFixed(1)}" cy="${bz[1].toFixed(1)}" rx="9" ry="3" fill="#3E2A1E"/><path d="M${bz[0].toFixed(1)},${bz[1].toFixed(1)} q-3,-8 2,-13 q4,-4 -1,-10" stroke="#5E3B26" stroke-width="2.2" fill="none"/>`)
+  ;[[-6, -16, 9], [4, -21, 8], [-2, -27, 7], [8, -14, 6]].forEach(([dx, dy, r]) => d.raw(`<ellipse cx="${(bz[0] + dx).toFixed(1)}" cy="${(bz[1] + dy).toFixed(1)}" rx="${r}" ry="${r * 0.6}" fill="#5E9F80"/><ellipse cx="${(bz[0] + dx - 2).toFixed(1)}" cy="${(bz[1] + dy - 1.5).toFixed(1)}" rx="${r * 0.6}" ry="${r * 0.3}" fill="#7FBE9C"/>`))
+  const lc = P(3.6, 0.6, 1.7)
+  d.raw(`<g transform="translate(${lc[0].toFixed(1)} ${(lc[1] - 6).toFixed(1)})"><ellipse cx="0" cy="3" rx="5" ry="5.5" fill="#FFFFFF"/><circle cx="0" cy="-4" r="4.6" fill="#FFFFFF"/><path d="M-4,-7 l1,-4 l3,3 M4,-7 l-1,-4 l-3,3" fill="#FFFFFF" stroke="#E8E1D8" stroke-width=".6"/><path d="M4,-2 q4,-5 2,-9" stroke="#FFFFFF" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="0" cy="1" r="1.3" fill="#E0566F"/><path d="M-2,-4 q1,1 2,0 M0.5,-4 q1,1 2,0" stroke="#3A3350" stroke-width=".5" fill="none"/></g>`)
+  // the bookcase in the corner
+  G('shelf'); spots.shelf = bookcase(d, { y0: 0.6, len: 2.8, depth: 1.25, h: 4.6, levels: [0.25, 1.4, 2.55, 3.7], wood: dark, books }); E()
+  // light through the shoji on the floor
+  if (!sky.lights) for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) d.poly([[0.4 + i * 0.75, 6.8 + j * 0.62, 0.01], [1.0 + i * 0.75, 6.8 + j * 0.62, 0.01], [1.25 + i * 0.75, 7.3 + j * 0.62, 0.01], [0.65 + i * 0.75, 7.3 + j * 0.62, 0.01]], '#FFF5D6', ' opacity=".35"')
+  spots.rug = bounds([[3.2, 4.2, 0], [7.2, 4.2, 0], [7.2, 8.0, 0], [3.2, 8.0, 0]], 0)
+  G('rug'); E()
+  // the futon on the floor by the doors (opens the Diary)
+  G('bed')
+  d.shadow(6.6, 0.6, 9.8, 4.6, 0.12)
+  soft(d, 6.7, 0.7, 0, 3.0, 3.7, 0.45, ['#FBF7F0', '#EFE8DD', '#E0D7C9'], 0.3)
+  soft(d, 7.3, 0.85, 0.45, 1.8, 0.75, 0.32, ['#FFFFFF', '#F2EEE6', '#E4DED3'], 0.3, 1)
+  duvet(d, 6.72, 1.75, 9.68, 4.4, 0.53, 0.42, blanket)
+  openDiary(d, 7.4, 2.6, 0.62, diaryToday)
+  if (room.pet === 'cat' || room.pet === 'dog') { const at = P(8.9, 3.0, 0.62); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.white, at[0] - 21, at[1] - 21, 0.42)) }
+  spots.bed = bounds([[6.6, 0.6, 0], [9.8, 0.6, 0], [9.8, 4.6, 0], [6.6, 4.6, 0], [6.6, 0.6, 1.2]], 0)
+  E()
+  // the kotatsu: a low table with a plaid quilt, tea and the calendar (opens the Calendar)
+  G('desk')
+  d.shadow(3.0, 4.4, 7.4, 8.2, 0.16)
+  const q = shade(blanket, 0.05)
+  d.raw(`<defs><pattern id="plaid" patternUnits="userSpaceOnUse" width="1" height="1" patternTransform="${ISO.floor}"><rect width="1" height="1" fill="${q}"/><rect width=".22" height="1" fill="${shade(q, -0.15)}" opacity=".6"/><rect width="1" height=".22" fill="${shade(q, -0.15)}" opacity=".6"/><rect x=".6" width=".06" height="1" fill="#F6E7C2" opacity=".7"/><rect y=".6" width="1" height=".06" fill="#F6E7C2" opacity=".7"/></pattern></defs>`)
+  d.poly([[3.2, 4.5, 0.02], [7.2, 4.5, 0.02], [7.5, 8.0, 0.02], [3.0, 8.2, 0.02]], 'url(#plaid)', ' opacity=".9"')
+  soft(d, 3.6, 4.9, 0, 3.2, 2.7, 1.0, [shade(q, 0.08), shade(q, -0.02), shade(q, -0.14)], 0.45)
+  d.box(3.75, 5.05, 1.0, 2.9, 2.4, 0.14, [shade(wood, 0.2), wood, shade(wood, -0.12)])
+  d.cylinder(4.5, 5.7, 1.14, 0.2, 0.26, '#3E4A5A')
+  const tp = P(5.6, 5.6, 1.14); d.raw(`<ellipse cx="${tp[0].toFixed(1)}" cy="${tp[1].toFixed(1)}" rx="5" ry="2.4" fill="#F2EBDD"/><ellipse cx="${(tp[0] + 3).toFixed(1)}" cy="${(tp[1] + 2).toFixed(1)}" rx="3" ry="1.4" fill="#E99AAE"/>`)
+  calendarFront(d, 4.6, 5.25, 7.0, 1.14, 1.0, events)
+  spots.desk = tagAt(bounds([[3.0, 4.4, 0], [7.4, 4.4, 0], [7.4, 8.2, 0], [3.0, 8.2, 0], [4.6, 7.0, 2.4]], 2), [4.9, 7.0, 2.4])
+  E()
+  // floor cushions (zabuton) to sit on
+  G('chair')
+  const cc = (FABRICS[room.chairColor] || FABRICS.rose).c
+  soft(d, 4.2, 8.35, 0, 1.3, 1.2, 0.28, [shade(cc, 0.15), cc, shade(cc, -0.12)], 0.3, 1)
+  soft(d, 1.7, 5.4, 0, 1.2, 1.3, 0.28, [shade(cc, 0.15), cc, shade(cc, -0.12)], 0.3, 1)
+  spots.chair = bounds([[4.1, 8.3, 0], [5.6, 8.3, 0], [5.6, 9.6, 0], [4.1, 9.6, 0], [4.1, 8.3, 0.6]], 2)
+  E()
+  // a paper andon lantern
+  const an = P(8.9, 8.9, 0)
+  d.box(8.6, 8.6, 0, 0.6, 0.6, 1.7, ['#F4EBDA', sky.lights ? '#FFE9B8' : '#F6EEDD', sky.lights ? '#F8DDA0' : '#EADFCB'])
+  for (let i = 1; i < 4; i++) d.line([[8.6, 9.2, i * 0.42], [9.2, 9.2, i * 0.42], [9.2, 8.6, i * 0.42]], '#6B4A36', 0.6)
+  if (sky.lights) glow(an[0], an[1] - 20, 40)
+  plant(d, 0.8, 4.4, leaves)
+}
+
+/* ---------- the plant room ---------- */
+
+function plantScene(S) {
+  const { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug } = S
+  const wood = room.shelfWood === 'oak' ? '#C89B6A' : shelfWood
+  // big garden windows on the right wall
+  const x0 = 3.4, x1 = 9.8, z0 = 1.8, z1 = 8.6
+  d.poly(quad('right', x0 - 0.15, x1, z0 - 0.15, z1 + 0.15, 0.02), shade(wood, 0.05))
+  d.raw(`<clipPath id="gardenw"><polygon points="${pts(quad('right', x0, x1, z0, z1, 0.03))}"/></clipPath><g clip-path="url(#gardenw)">`)
+  d.poly(quad('right', x0, x1, z0, z1, 0.03), 'url(#sky)')
+  d.poly([onWall('right', x0, z0, 0.04), onWall('right', x0, 3.6, 0.04), onWall('right', 5, 4.4, 0.04), onWall('right', 6.8, 3.8, 0.04), onWall('right', 8.4, 4.6, 0.04), onWall('right', x1, 4.0, 0.04), onWall('right', x1, z0, 0.04)], '#9DC4A0', ' opacity=".9"')
+  ;[4.0, 5.6, 7.3, 9.0].forEach((u, i) => { const c = P(...onWall('right', u, 4.2 + (i % 2) * 0.5, 0.05)); d.raw(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${10 + (i % 2) * 4}" fill="#7FB08A" opacity=".8"/>`) })
+  d.raw('</g>')
+  ;[5.5, 7.6].forEach((u) => d.poly(quad('right', u - 0.08, u + 0.08, z0, z1, 0.05), shade(wood, 0.05)))
+  d.poly(quad('right', x0, x1, 5.7, 5.85, 0.05), shade(wood, 0.05))
+  // shelves on the window with little pots
+  d.box(5.6, 0, 6.3, 2.0, 0.5, 0.1, shade(wood, 0.1))
+  ;[5.9, 6.6, 7.3].forEach((x, i) => { d.cylinder(x, 0.25, 6.4, 0.18, 0.28, ['#D98F72', '#F2EBDD', '#C97F62'][i]); const t = P(x, 0.25, 6.68); d.raw(`<ellipse cx="${t[0].toFixed(1)}" cy="${(t[1] - 3).toFixed(1)}" rx="4.5" ry="3.5" fill="#7FAF8E"/>`) })
+  // pictures and notes on the board wall
+  G('art'); art(d, room.art || 'plants', 'left', 5.6, 7.0, 4.2, 6.0, '#E6D3B5'); spots.art = bounds([[0, 5.4, 4.0], [0, 7.2, 4.0], [0, 7.2, 6.2], [0, 5.4, 6.2]], 1); E()
+  d.line([onWall('left', 1.4, 6.6, 0.05), onWall('left', 4.6, 6.4, 0.05)], '#8C7A66', 0.8)
+  ;[0, 1, 2, 3, 4].slice(0, Math.max(2, Math.min(notes + 1, 5))).forEach((i) => {
+    const u = 1.6 + i * 0.62, z = 5.6
+    d.poly([onWall('left', u, z, 0.06), onWall('left', u + 0.5, z, 0.06), onWall('left', u + 0.5, z + 0.75, 0.06), onWall('left', u, z + 0.75, 0.06)], ['#FBE7A6', '#D8EBD9', '#F7CFD9', '#CFE4F5', '#FFFFFF'][i])
+    d.line([onWall('left', u + 0.25, z + 0.6, 0.07), onWall('left', u + 0.25, z + 0.95, 0.07)], '#B08A5A', 1.2)
+  })
+  spots.board = bounds([[0, 1.4, 5.4], [0, 4.7, 5.4], [0, 4.7, 6.8], [0, 1.4, 6.8]], 3)
+  // ivy climbing the left wall
+  for (let i = 0; i < 14; i++) { const c = P(...onWall('left', 9.4 - (i % 3) * 0.2, 0.6 + i * 0.5, 0.06)); d.raw(`<ellipse cx="${(c[0] + (i % 2 ? 3 : -3)).toFixed(1)}" cy="${c[1].toFixed(1)}" rx="3.2" ry="2" fill="${i % 2 ? '#6FA287' : '#8DBB9B'}" transform="rotate(${i % 2 ? 30 : -30} ${c[0].toFixed(1)} ${c[1].toFixed(1)})"/>`) }
+  // floor rug
+  spots.rug = bounds([[3.0, 4.6, 0], [7.4, 4.6, 0], [7.4, 8.0, 0], [3.0, 8.0, 0]], 0)
+  G('rug')
+  const rc = rug || '#B7D3BE'
+  d.poly([[3.0, 4.6, 0.01], [7.4, 4.6, 0.01], [7.4, 8.0, 0.01], [3.0, 8.0, 0.01]], room.rug === 'pink' ? '#A9CDB4' : rc)
+  ;[[4.0, 5.4], [5.6, 6.6], [4.6, 7.2], [6.4, 5.3]].forEach(([x, y]) => d.ring(x, y, 0.02, 0.35, '#FFFFFF', ' opacity=".35"', 12))
+  E()
+  // a dresser at the back with the calendar and a lamp (opens the Calendar)
+  G('desk')
+  const dw = room.deskWood === 'oak' ? '#C89B6A' : deskWood
+  d.shadow(1.2, 0, 3.6, 1.3, 0.14)
+  d.box(1.3, 0.05, 0, 2.2, 1.1, 2.3, [shade(dw, 0.18), dw, shade(dw, -0.12)])
+  ;[0.25, 0.95, 1.6].forEach((z) => { d.poly([[1.45, 1.16, z], [3.35, 1.16, z], [3.35, 1.16, z + 0.55], [1.45, 1.16, z + 0.55]], shade(dw, -0.04)); const k = P(2.4, 1.17, z + 0.28); d.raw(`<ellipse cx="${k[0].toFixed(1)}" cy="${k[1].toFixed(1)}" rx="2" ry="1" fill="#8A6A48"/>`) })
+  calendarFront(d, 2.55, 3.2, 0.95, 2.3, 1.0, events)
+  d.cylinder(1.8, 0.5, 2.3, 0.3, 0.4, '#F2EBDD')
+  const pp = P(1.8, 0.5, 2.7); ;[[-6, -6], [6, -7], [0, -12], [-3, -16], [4, -15]].forEach(([dx, dy], i) => d.raw(`<ellipse cx="${(pp[0] + dx).toFixed(1)}" cy="${(pp[1] + dy).toFixed(1)}" rx="5" ry="2.6" fill="${i % 2 ? '#6FA287' : '#8DBB9B'}" transform="rotate(${dx * 6} ${(pp[0] + dx).toFixed(1)} ${(pp[1] + dy).toFixed(1)})"/>`))
+  spots.desk = tagAt(bounds([[1.3, 0, 0], [3.5, 0, 0], [3.5, 1.2, 0], [1.3, 1.2, 0], [1.3, 0, 3.6], [3.5, 1.2, 3.4]], 2), [2.9, 0.95, 3.6])
+  E()
+  // the long low bookcase under the window, full of plants on top (opens Books)
+  G('shelf')
+  let placed = 0
+  d.shadow(4.6, 0, 9.8, 1.6, 0.14)
+  d.box(4.7, 0.05, 0, 5.0, 1.3, 2.2, [shade(wood, 0.2), wood, shade(wood, -0.12)])
+  d.poly([[4.85, 1.36, 0.15], [9.55, 1.36, 0.15], [9.55, 1.36, 2.05], [4.85, 1.36, 2.05]], shade(wood, -0.3))
+  d.box(4.7, 0.05, 1.05, 5.0, 1.3, 0.1, shade(wood, 0.08))
+  ;[[0.2, 0], [1.15, 1]].forEach(([z, si]) => {
+    let x = 4.95, k = si * 3
+    while (x < 9.4) {
+      const w = [0.24, 0.3, 0.27, 0.33, 0.25][k % 5]
+      if (placed < books) {
+        const h = [0.75, 0.68, 0.82, 0.6, 0.72][k % 5]
+        d.box(x, 0.25, z, w, 1.05, h, bookAt(placed, BOOK_COLORS[(placed * 3 + si) % BOOK_COLORS.length]))
+        noteBook(placed, [[x, 0.25, z], [x + w, 1.3, z], [x, 1.3, z + h], [x + w, 0.25, z + h]])
+        placed++
+      }
+      x += w + 0.04; k++
+    }
+  })
+  ;[[5.3, 'flower'], [6.4, 'trail'], [7.5, 'leafy'], [8.6, 'succulent'], [9.3, 'snake']].forEach(([x, kind]) => {
+    const t = P(x, 0.6, 2.2)
+    d.raw(`<g transform="translate(0 ${(t[1] - P(x, 0.6, 0)[1]).toFixed(1)})">`)
+    pottedPlant(d, x, 0.6, kind, 0.8, ['#D98F72', '#F2EBDD', '#C97F62', '#E9C46A', '#F2EBDD'][Math.round(x) % 5])
+    d.raw('</g>')
+  })
+  spots.shelf = bounds([[4.7, 0, 0], [9.7, 0, 0], [9.7, 1.4, 0], [4.7, 1.4, 0], [4.7, 0, 3.6], [9.7, 1.4, 3.2]], 0)
+  E()
+  // a wooden bed against the left wall with a mushroom lamp beside it (opens the Diary)
+  G('bed')
+  const bw = room.bedWood === 'oak' ? '#C89B6A' : bedWood
+  nightstand(d, 0.15, 5.0, bw, sky.lights, glow, '#C9C2B6')
+  d.shadow(0, 1.2, 4.6, 4.9, 0.18)
+  // headboard against the wall, then the frame and a soft mattress, pillows and duvet
+  d.box(0, 1.3, 0, 0.3, 3.4, 3.0, [shade(bw, 0.2), bw, shade(bw, -0.12)])
+  ;[1.7, 2.4, 3.1, 3.8].forEach((y) => d.line([[0.31, y, 0.9], [0.31, y, 2.8]], shade(bw, -0.15), 0.8))
+  d.box(0.3, 1.3, 0, 4.1, 3.4, 0.9, [shade(bw, 0.2), bw, shade(bw, -0.12)])
+  soft(d, 0.35, 1.38, 0.9, 4.0, 3.24, 0.65, ['#FFFFFF', '#F2EEE6', '#E4DED3'], 0.3)
+  const mt = 1.55
+  soft(d, 0.45, 1.55, mt, 1.0, 1.45, 0.5, ['#FFFFFF', '#F4F0EA', '#E6E0D6'], 0.38, 2)
+  soft(d, 0.45, 3.1, mt, 1.0, 1.45, 0.5, ['#FFFFFF', '#F4F0EA', '#E6E0D6'], 0.38, 2)
+  duvet(d, 1.55, 1.4, 4.38, 4.65, mt + 0.08, 0.75, blanket)
+  openDiary(d, 2.2, 2.3, mt + 0.12, diaryToday)
+  if (room.pet === 'cat' || room.pet === 'dog') { const at = P(3.6, 3.6, mt + 0.12); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.ginger, at[0] - 21, at[1] - 21, 0.42)) }
+  spots.bed = bounds([[0, 1.2, 0], [4.6, 1.2, 0], [4.6, 4.9, 0], [0, 4.9, 0], [0, 1.2, 3.1]], 0)
+  E()
+  // a wooden beam frame with hanging plants
+  ;[[4.8, 5.2], [8.6, 5.2]].forEach(([x, y]) => d.box(x, y, 0, 0.12, 0.12, 8.0, '#B8936A'))
+  d.box(0, 5.2, 8.0, 8.8, 0.14, 0.16, '#B8936A')
+  d.box(4.8, 0, 8.0, 0.14, 5.3, 0.16, '#B8936A')
+  d.box(8.6, 0, 8.0, 0.14, 5.3, 0.16, '#B8936A')
+  ;[[6.6, 5.25], [2.4, 5.25]].forEach(([x, y]) => {
+    const top = P(x, y, 8.0), pot = P(x, y, 6.2)
+    d.raw(`<path d="M${top[0].toFixed(1)},${top[1].toFixed(1)} L${(pot[0] - 5).toFixed(1)},${(pot[1] - 3).toFixed(1)} M${top[0].toFixed(1)},${top[1].toFixed(1)} L${(pot[0] + 5).toFixed(1)},${(pot[1] - 3).toFixed(1)}" stroke="#8C7A66" stroke-width=".6"/>`)
+    d.raw(`<path d="M${(pot[0] - 6).toFixed(1)},${(pot[1] - 3).toFixed(1)} h12 l-2,6 h-8 z" fill="#E9DCC8"/>`)
+    for (let i = 0; i < 7; i++) d.raw(`<ellipse cx="${(pot[0] + (i % 2 ? 5 : -5) + (i % 3) - 1).toFixed(1)}" cy="${(pot[1] + 3 + i * 3.2).toFixed(1)}" rx="3" ry="1.7" fill="${i % 2 ? '#6FA287' : '#8DBB9B'}"/>`)
+  })
+  // a low wooden bench and lots of pots on the floor
+  G('chair')
+  d.box(2.6, 7.9, 0, 2.0, 0.9, 0.55, [shade(bw, 0.2), bw, shade(bw, -0.12)])
+  d.box(2.7, 8.0, 0, 0.14, 0.7, 0.42, shade(bw, -0.2))
+  spots.chair = bounds([[2.6, 7.9, 0], [4.6, 7.9, 0], [4.6, 8.8, 0], [2.6, 8.8, 0], [2.6, 7.9, 0.9]], 2)
+  E()
+  ;[[1.0, 6.8, 'leafy', 1.2], [1.6, 8.6, 'flower', 1], [5.6, 9.0, 'snake', 1.3], [7.0, 8.2, 'leafy', 1.1], [8.2, 9.2, 'flower', 1], [9.2, 7.6, 'trail', 1.1], [6.4, 9.6, 'succulent', 0.9]].forEach(([x, y, kind, k], i) => pottedPlant(d, x, y, kind, k, ['#D98F72', '#C97F62', '#F2EBDD', '#E0A589'][i % 4]))
+  plant(d, 9.0, 3.2, leaves)
+  if (sky.beam) d.poly([[4.0, 0.3, 0.02], [9.6, 0.3, 0.02], [8.0, 6.0, 0.02], [2.6, 6.0, 0.02]], 'url(#beam)')
+}
+
 /* ---------- textures for walls and floor, drawn on the isometric grid ---------- */
 
 const C = COS * K
@@ -1026,6 +1280,8 @@ export function drawRoom(o) {
   const S = { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug }
   if (theme === 'attic') atticScene(S)
   else if (theme === 'study') studyScene(S)
+  else if (theme === 'japanese') japaneseScene(S)
+  else if (theme === 'plants') plantScene(S)
   else {
   /* right wall: picture, little wall shelf, window, string lights */
   G('art')
