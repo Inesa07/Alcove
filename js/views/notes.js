@@ -35,7 +35,7 @@ export function mount(el) {
         <span class="pin" aria-hidden="true"></span>
         <div class="note-text" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note"></div>
         <footer>
-          <span>${esc(new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span>
+          <span>${n.from ? `<b class="note-from">from ${esc(n.from)}</b> · ` : ''}${esc(new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span>
           <button class="note-color" data-recolor aria-label="Change colour"></button>
           <button class="note-del" data-del aria-label="Delete note">×</button>
         </footer>

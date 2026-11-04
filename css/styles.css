@@ -279,3 +279,50 @@ html[data-theme="light"] .mood-dot.on { border-color: #fff; }
 .mood-month i[style*="--m"] { color: #3a3350; }
 .mood-month i.today { outline: 2px solid #8e74c4; }
 .mood-month .mm-empty { background: none; }
+
+/* ---------- friends ---------- */
+.friends-page { padding: 28px 32px 40px; max-width: 1200px; }
+.fr-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 22px 0 26px; }
+.fr-card { padding: 20px 22px; border-radius: 22px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .1); }
+.fr-card h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--lilac-text); }
+.fr-card .muted { font-size: 13.5px; color: var(--lilac-text); margin: 10px 0 0; }
+.code-row { display: flex; align-items: center; gap: 10px; }
+.code { font-family: ui-monospace, Menlo, monospace; font-size: 30px; letter-spacing: .18em; color: var(--honey); }
+.fr-add input { flex: 1; min-width: 0; padding: 11px 14px; border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); color: inherit; font: inherit; font-size: 16px; text-transform: uppercase; letter-spacing: .12em; }
+.fr-add input::placeholder { text-transform: none; letter-spacing: 0; opacity: .6; }
+.fr-err { margin: 8px 0 0; min-height: 1em; font-size: 13px; color: #F4A3A3; }
+.fr-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.fr-friend { display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; text-decoration: none; color: inherit; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .1); transition: transform .2s; }
+.fr-friend:hover { transform: translateY(-3px); }
+.fr-img { aspect-ratio: 1; background: radial-gradient(ellipse at 50% 45%, #403773, #221d3c 70%); }
+.fr-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.fr-text { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px 4px; }
+.fr-text b { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 22px; }
+.fr-text span { font-size: 13px; color: var(--lilac-text); }
+.fr-go { margin: 6px 16px 16px; font-size: 13px; font-weight: 700; color: var(--honey); }
+.fr-empty { color: var(--lilac-text); }
+.fr-back { display: inline-block; margin-bottom: 6px; color: var(--lilac-text); text-decoration: none; font-size: 14px; }
+.fr-back:hover { color: #fff; }
+.fr-visit { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; margin-top: 18px; }
+.fr-room { aspect-ratio: 390 / 380; }
+.fr-room svg { width: 100%; height: 100%; }
+.fr-side { display: flex; flex-direction: column; gap: 14px; }
+.fr-note textarea { width: 100%; resize: vertical; padding: 14px 16px; border: none; border-radius: 6px; background: var(--c); color: #3a3350; font-family: var(--hand); font-size: 20px; line-height: 1.35; box-shadow: 0 10px 20px -12px rgba(0, 0, 0, .5); margin-bottom: 12px; transform: rotate(-.6deg); }
+.fr-note textarea:focus { outline: 2px solid var(--honey); }
+.fr-colors { display: flex; gap: 6px; flex: 1; }
+.fr-colors .sw { width: 26px; height: 26px; }
+.fr-colors .sw.on { border-color: #fff; }
+.fr-books { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; }
+.fr-books li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.fr-books i { width: 8px; height: 30px; border-radius: 2px; flex-shrink: 0; }
+.fr-books span { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.fr-books em { font-style: normal; font-size: 12.5px; color: var(--lilac-text); }
+.fr-books small { font-size: 11.5px; color: var(--honey); }
+.fr-remove { align-self: flex-start; opacity: .7; }
+.note-from { font-weight: 700; }
+html[data-theme="light"] .fr-card, html[data-theme="light"] .fr-friend { background: rgba(255, 255, 255, .8); border-color: rgba(42, 38, 56, .1); }
+html[data-theme="light"] .fr-add input { background: #fff; border-color: rgba(42, 38, 56, .15); }
+html[data-theme="light"] .fr-colors .sw.on { border-color: #3a3350; }
+html[data-theme="light"] .fr-back:hover { color: #2a2638; }
+@media (max-width: 900px) { .fr-visit { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .friends-page { padding: 18px 16px 30px; } .code { font-size: 24px; } }

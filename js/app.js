@@ -9,9 +9,10 @@ import * as notesView from './views/notes.js'
 import * as calendarView from './views/calendar.js'
 import { setupAccount } from './account.js'
 import * as adminView from './views/admin.js'
+import * as friendsView from './views/friends.js'
 import { trackView } from './analytics.js'
 
-const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView, admin: adminView }
+const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView, friends: friendsView, admin: adminView }
 const GREETING = { morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night' }
 
 let current = null

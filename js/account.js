@@ -9,6 +9,7 @@ import { drawRoom, DEFAULT_ROOM } from './room.js'
 import { $, esc, toast, themeMode, setTheme } from './ui.js'
 import { maybeOnboard } from './onboarding.js'
 import { track, trackDaily, flush } from './analytics.js'
+import { checkInbox, publishSoon } from './friends.js'
 
 let gate, mode = 'in', note = '', notice = ''
 
@@ -82,6 +83,8 @@ function closeGate() {
   if (n && !getState().name) setName(n)
   trackDaily('app_open')
   flush()
+  checkInbox()
+  publishSoon()
   maybeOnboard(n)
 }
 
