@@ -3,7 +3,7 @@ import * as db from '../db.js'
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS } from '../store.js'
-import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
+import { drawRoom, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
 import { $, esc, toast } from '../ui.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
@@ -98,6 +98,7 @@ export function mount(el) {
       room: room(),
       tod: timeOfDay(),
       weather,
+      season: room().seasonal === 'off' ? null : seasonOf(),
       books: s.books.length,
       notes: s.notes.length,
       events: s.events.filter((e) => e.date === today).length,
@@ -214,6 +215,11 @@ export function mount(el) {
         <p class="sub">${weatherOn() ? (weather ? `Now: ${weather.name.toLowerCase()}, ${weather.temp}°C` : 'Looking at the sky…') : 'Show the real weather where you are: rain, snow, clouds or sun.'}</p>
         <button class="${weatherOn() ? 'ghost-dark' : 'primary'} small" data-weather>${weatherOn() ? 'Turn off' : 'Show my weather'}</button>
       </section>
+      ${seasonOf() ? `<section>
+        <h3>Seasonal decoration</h3>
+        <p class="sub">${{ winter: 'A little Christmas tree with gifts', love: 'Heart balloons for Valentine’s', spring: 'A cherry blossom branch', summer: 'Sunflowers in a vase', autumn: 'Pumpkins and autumn leaves' }[seasonOf()]} in your room.</p>
+        <button class="ghost-dark small" data-seasonal>${getState().room.seasonal === 'off' ? 'Show it' : 'Hide it'}</button>
+      </section>` : ''}
       <section>
         <h3>Sounds</h3>
         <div class="chips">
@@ -320,6 +326,7 @@ export function mount(el) {
     if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
     if (t.closest('[data-jar]')) return openMoodJar()
     if (t.closest('[data-amb]')) return toggleAmb()
+    if (t.closest('[data-seasonal]')) { setRoom({ seasonal: getState().room.seasonal === 'off' ? 'on' : 'off' }); renderRoom(); renderAmb(); return }
     const snd = t.closest('[data-sound]')
     if (snd) { if (snd.dataset.sound) play(snd.dataset.sound); else stop(); renderAmb(); renderTop(); return }
     if (t.closest('[data-weather]')) {

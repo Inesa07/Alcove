@@ -867,3 +867,5 @@ html[data-theme="light"] .amb section { border-bottom-color: rgba(42, 38, 56, .0
 .room svg .flash { opacity: 0; animation: flash 7s infinite; }
 @keyframes flash { 0%, 90%, 94%, 100% { opacity: 0 } 91% { opacity: .7 } 92% { opacity: .1 } 93% { opacity: .5 } }
 @media (prefers-reduced-motion: reduce) { .room svg .cloud, .room svg .snow, .room svg .fog, .room svg .flash, .rain { animation: none; } }
+.room svg .balloon { animation: balloon 4s ease-in-out infinite alternate; }
+@keyframes balloon { from { transform: translateY(0) } to { transform: translateY(-3px) } }

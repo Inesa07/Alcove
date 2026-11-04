@@ -177,6 +177,88 @@ const SKIES = {
   night: { stops: ['#0D1330', '#1B2550', '#2C3A6E'], orb: '#E9ECF7', orbZ: 6.9, stars: true, lights: true, beam: 0, hills: '#2A2F55' },
 }
 
+/* ---------- seasons: a little decoration that changes through the year ---------- */
+
+export function seasonOf(d = new Date()) {
+  const m = d.getMonth() + 1, day = d.getDate(), md = m * 100 + day
+  if (md >= 1201 || md <= 107) return 'winter'   // a small Christmas tree
+  if (md >= 201 && md <= 215) return 'love'      // heart balloons for Valentine's
+  if (md >= 301 && md <= 531) return 'spring'    // a cherry blossom branch
+  if (md >= 601 && md <= 831) return 'summer'    // sunflowers
+  if (md >= 915 && md <= 1130) return 'autumn'   // pumpkins and leaves
+  return null
+}
+// a free place on the floor near the front of each room
+const SEASON_SPOT = { cozy: [8.9, 8.85], plants: [9.1, 8.7], lofi: [9.3, 6.6], japanese: [3.4, 9.4] }
+const f1 = (n) => n.toFixed(1)
+
+function seasonal(d, season, x, y, lights) {
+  const b = P(x, y, 0)
+  const [bx, by] = b
+  const shadowAt = (rx, ry = rx * 0.42) => d.raw(`<ellipse cx="${f1(bx)}" cy="${f1(by + 1)}" rx="${rx}" ry="${f1(ry)}" fill="#3a2a22" opacity=".2" filter="url(#soft)"/>`)
+  d.raw('<g class="season" pointer-events="none">')
+  if (season === 'autumn') {
+    shadowAt(22)
+    const pumpkin = (cx, cy, r, c) => {
+      d.raw(`<path d="M${f1(cx)},${f1(cy - r * 0.8)} q1,-4 3,-5" stroke="#6B4E2E" stroke-width="2" fill="none" stroke-linecap="round"/>`)
+      ;[[-0.5, 0.55], [0.5, 0.55], [0, 0.62]].forEach(([dx, w], i) => d.raw(`<ellipse cx="${f1(cx + dx * r)}" cy="${f1(cy)}" rx="${f1(r * w)}" ry="${f1(r * 0.78)}" fill="${i === 2 ? shade(c, 0.08) : shade(c, -0.1)}"/>`))
+      d.raw(`<ellipse cx="${f1(cx - r * 0.2)}" cy="${f1(cy - r * 0.35)}" rx="${f1(r * 0.18)}" ry="${f1(r * 0.3)}" fill="#FFF" opacity=".18"/>`)
+      d.raw(`<path d="M${f1(cx + 2)},${f1(cy - r * 0.85)} q6,-5 9,-1 q-5,3 -9,1z" fill="#7C9A55"/>`)
+    }
+    pumpkin(bx - 8, by - 6, 9, '#E58A3C')
+    pumpkin(bx + 9, by - 4, 6.5, '#EFB25A')
+    pumpkin(bx + 1, by + 1, 5, '#D9703A')
+    ;[[-20, 3, '#D9703A', 20], [17, 4, '#C9A23B', -30], [-2, 7, '#B65A3A', 60]].forEach(([dx, dy, c, r]) => d.raw(`<path transform="translate(${f1(bx + dx)},${f1(by + dy)}) rotate(${r})" d="M0,-3 q3,1 3,3 q-1,3 -3,3 q-2,-1 -3,-3 q1,-2 3,-3z" fill="${c}" opacity=".9"/>`))
+  }
+  if (season === 'winter') {
+    shadowAt(22)
+    // gifts are real little boxes on the floor
+    d.box(x + 0.45, y - 1.1, 0, 0.7, 0.7, 0.55, '#E08AA0'); d.line([P(x + 0.8, y - 0.4, 0), P(x + 0.8, y - 0.4, 0.55), P(x + 0.8, y - 1.1, 0.55)], '#FFF4D6', 1.2)
+    d.box(x - 1.0, y + 0.2, 0, 0.6, 0.6, 0.4, '#8FB7E0'); d.line([P(x - 0.7, y + 0.8, 0), P(x - 0.7, y + 0.8, 0.4), P(x - 0.7, y + 0.2, 0.4)], '#FFF4D6', 1.2)
+    d.raw(`<path d="M${f1(bx - 7)},${f1(by)} h14 l-2,-9 h-10z" fill="#B5734A"/><rect x="${f1(bx - 2)}" y="${f1(by - 13)}" width="4" height="5" fill="#6B4E2E"/>`)
+    const tiers = [[34, 13], [26, 11], [18, 10], [10, 9]]
+    let top = by - 12
+    tiers.forEach(([w, h], i) => {
+      const c = ['#3E7A57', '#468A61', '#4F976B', '#5AA476'][i]
+      d.raw(`<path d="M${f1(bx - w / 2)},${f1(top)} Q${f1(bx)},${f1(top + 4)} ${f1(bx + w / 2)},${f1(top)} L${f1(bx)},${f1(top - h - 6)}z" fill="${c}"/>`)
+      top -= h
+    })
+    const bulbs = ['#FFE29A', '#F7A8B8', '#BFE0FF', '#FFFFFF']
+    ;[[-12, -16], [8, -19], [-6, -26], [10, -30], [-4, -36], [5, -41], [-2, -48], [-13, -22], [13, -24]].forEach(([dx, dy], i) =>
+      d.raw(`<circle class="twinkle" style="animation-delay:${(i % 4) * 0.4}s" cx="${f1(bx + dx)}" cy="${f1(by + dy)}" r="1.6" fill="${bulbs[i % 4]}"/>${lights ? `<circle cx="${f1(bx + dx)}" cy="${f1(by + dy)}" r="4" fill="${bulbs[i % 4]}" opacity=".25"/>` : ''}`))
+    d.raw(`<path transform="translate(${f1(bx)},${f1(top - 6)})" d="M0,-5 L1.5,-1.5 L5,-1.5 L2.2,0.8 L3.2,4.5 L0,2.3 L-3.2,4.5 L-2.2,0.8 L-5,-1.5 L-1.5,-1.5z" fill="#F6C46B"/>`)
+  }
+  if (season === 'love') {
+    shadowAt(8)
+    d.raw(`<rect x="${f1(bx - 4)}" y="${f1(by - 5)}" width="8" height="6" rx="2" fill="#B7A3C9"/>`)
+    const heart = (cx, cy, s, c) => `<path transform="translate(${f1(cx)},${f1(cy)}) scale(${s})" d="M0,4 C-7,-1 -6,-7 -2.5,-7 C-1,-7 0,-6 0,-5 C0,-6 1,-7 2.5,-7 C6,-7 7,-1 0,4z" fill="${c}"/><path transform="translate(${f1(cx)},${f1(cy)}) scale(${s})" d="M-3.5,-5 q-1.5,1 -1,3" stroke="#FFF" stroke-width=".8" fill="none" opacity=".6" stroke-linecap="round"/>`
+    ;[[-10, -62, '#EDA0B4', 1.6], [6, -70, '#E57A95', 1.8], [14, -54, '#F7C6D3', 1.4]].forEach(([dx, dy, c, sc], i) => {
+      d.raw(`<path d="M${f1(bx)},${f1(by - 5)} Q${f1(bx + dx * 0.3)},${f1(by + dy / 2)} ${f1(bx + dx)},${f1(by + dy + 6 * sc)}" stroke="#9A8AAE" stroke-width=".6" fill="none"/>`)
+      d.raw(`<g class="balloon" style="animation-delay:${i * 0.7}s">${heart(bx + dx, by + dy, sc, c)}</g>`)
+    })
+  }
+  if (season === 'spring' || season === 'summer') {
+    shadowAt(10)
+    d.raw(`<path d="M${f1(bx - 6)},${f1(by)} q-3,-10 0,-20 h12 q3,10 0,20z" fill="${season === 'spring' ? '#E9E2F2' : '#8FB7E0'}"/><ellipse cx="${f1(bx)}" cy="${f1(by - 20)}" rx="6" ry="1.6" fill="${season === 'spring' ? '#D6CBE3' : '#6F9CC9'}"/>`)
+    if (season === 'spring') {
+      const br = [[0, -20, -14, -48], [0, -20, 12, -52], [-6, -36, -18, -40], [6, -38, 20, -40], [0, -20, 2, -58]]
+      br.forEach(([x0, y0, x1, y1]) => d.raw(`<path d="M${f1(bx + x0)},${f1(by + y0)} Q${f1(bx + (x0 + x1) / 2 + 3)},${f1(by + (y0 + y1) / 2)} ${f1(bx + x1)},${f1(by + y1)}" stroke="#6B4E3E" stroke-width="1.3" fill="none" stroke-linecap="round"/>`))
+      let r = 5
+      const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647
+      br.forEach(([x0, y0, x1, y1]) => { for (let i = 0; i < 6; i++) { const t = 0.35 + rnd() * 0.7, px = bx + x0 + (x1 - x0) * t + (rnd() - 0.5) * 5, py = by + y0 + (y1 - y0) * t + (rnd() - 0.5) * 4; d.raw(`<circle cx="${f1(px)}" cy="${f1(py)}" r="${f1(1.8 + rnd() * 1.4)}" fill="${rnd() < 0.5 ? '#F7C6D3' : '#FBDDE6'}"/><circle cx="${f1(px)}" cy="${f1(py)}" r=".6" fill="#E57A95"/>`) } })
+      ;[[-22, 2], [16, 4]].forEach(([dx, dy]) => d.raw(`<ellipse cx="${f1(bx + dx)}" cy="${f1(by + dy)}" rx="2" ry="1.2" fill="#F7C6D3" opacity=".9"/>`))
+    } else {
+      ;[[-10, -50], [9, -54], [0, -62]].forEach(([dx, dy]) => {
+        d.raw(`<path d="M${f1(bx)},${f1(by - 20)} Q${f1(bx + dx * 0.4)},${f1(by + dy / 2)} ${f1(bx + dx)},${f1(by + dy)}" stroke="#5E8C4E" stroke-width="1.4" fill="none"/>`)
+        for (let i = 0; i < 12; i++) { const a = (Math.PI * 2 * i) / 12; d.raw(`<ellipse transform="translate(${f1(bx + dx + Math.cos(a) * 4.5)},${f1(by + dy + Math.sin(a) * 4.5)}) rotate(${(a * 180) / Math.PI})" rx="3" ry="1.4" fill="#F2C443"/>`) }
+        d.raw(`<circle cx="${f1(bx + dx)}" cy="${f1(by + dy)}" r="3.4" fill="#7A5230"/>`)
+      })
+      d.raw(`<path d="M${f1(bx - 2)},${f1(by - 32)} q-8,-2 -10,4 q6,1 10,-4z M${f1(bx + 2)},${f1(by - 36)} q8,-3 10,3 q-6,2 -10,-3z" fill="#6FA287"/>`)
+    }
+  }
+  d.raw('</g>')
+}
+
 /* ---------- real weather in the window ---------- */
 
 // kind: clear | partly | cloudy | fog | rain | storm | snow
@@ -1972,6 +2054,7 @@ export function drawRoom(o) {
     const sj = P(0.05, 8.0, 3.5)
     d.raw(`<ellipse cx="${sj[0].toFixed(1)}" cy="${sj[1].toFixed(1)}" rx="34" ry="50" fill="url(#halo)" opacity=".35" pointer-events="none"/>`)
   }
+  if (o.season && SEASON_SPOT[theme]) seasonal(d, o.season, ...SEASON_SPOT[theme], sky.lights)
   if (theme === 'study') {
     // the room is dark; only the lamps and the window light it
     d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#0E1338', ' opacity=".34" pointer-events="none"')
