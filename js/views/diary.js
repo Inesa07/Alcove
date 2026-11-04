@@ -179,7 +179,7 @@ export function mount(el) {
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
       <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
-      ${true ? `<button class="page-trash" data-trash="${side}" aria-label="Throw page ${n + 1} in the bin" title="Throw this page in the bin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>` : ''}
+
       ${side === 0
         ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
         : `<button class="edge edge-next" data-turn="1" aria-label="${lastSpread ? 'New page' : 'Next page'}"><span class="curl" aria-hidden="true"></span></button>`}`
