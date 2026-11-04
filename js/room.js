@@ -71,15 +71,13 @@ export const STYLES = {
 // Whole-room looks. Choosing one also sets matching colours, which can still be changed one by one.
 export const THEMES = {
   cozy: { name: 'Cozy room', note: 'Lavender, light wood, fairy lights' },
-  attic: { name: 'Attic studio', note: 'Round window, wooden beams, plushies' },
-  study: { name: 'Night study', note: 'A desk by the big window, city lights, a reading lamp' },
   japanese: { name: 'Japanese room', note: 'Tatami, a kotatsu table, a futon and paper doors' },
   plants: { name: 'Plant room', note: 'Garden windows, a wooden bed and plants everywhere' },
 }
 export const THEME_PRESETS = {
   cozy: { wall: 'lavender', wallStyle: 'plain', floor: 'oak', floorStyle: 'planks', rug: 'pink', blanket: 'lilac', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', chairStyle: 'classic' },
   attic: { wall: 'peach', wallStyle: 'boards', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'rose', shelfWood: 'white', deskWood: 'white', bedWood: 'oak', chairColor: 'cream', pet: 'cat', petColor: 'ginger', art: 'flowers' },
-  japanese: { wall: 'cream', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'none', blanket: 'sage', chairColor: 'rose', pet: 'cat', petColor: 'white', art: 'plants' },
+  japanese: { wall: 'cream', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'none', blanket: 'blue', chairColor: 'peach', pet: 'cat', petColor: 'white', art: 'plants' },
   plants: { wall: 'cream', wallStyle: 'boards', floor: 'honey', floorStyle: 'herringbone', rug: 'sage', blanket: 'cream', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', pet: 'cat', petColor: 'ginger', art: 'plants' },
   study: { wall: 'night', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'blue', blanket: 'blue', shelfWood: 'walnut', deskWood: 'walnut', bedWood: 'walnut', chairColor: 'blue', pet: 'cat', petColor: 'black', art: 'moon' },
 }
@@ -953,100 +951,185 @@ function tatami(d) {
   })
 }
 
-// a paper shoji window/door on the left wall: wooden grid over glowing paper
-function shoji(d, side, u0, u1, z0, z1, wood, glowing) {
-  d.poly(quad(side, u0 - 0.15, u1 + 0.15, z0 - 0.1, z1 + 0.15, 0.02), wood)
-  d.poly(quad(side, u0, u1, z0, z1, 0.03), glowing ? '#FFF6DE' : '#F7F1E4')
-  for (let i = 1; i < 4; i++) { const u = u0 + ((u1 - u0) * i) / 4; d.poly(quad(side, u - 0.03, u + 0.03, z0, z1, 0.04), wood) }
-  for (let j = 1; j < 7; j++) { const z = z0 + ((z1 - z0) * j) / 7; d.poly(quad(side, u0, u1, z - 0.03, z + 0.03, 0.04), wood) }
-}
-
 /* ---------- the Japanese room ---------- */
+
+// shoji: a fine wooden lattice over warm paper; in daylight, bamboo shadows fall on the paper
+function shoji(d, side, u0, u1, z0, z1, wood, day) {
+  const id = 'sj' + ++softN
+  d.poly(quad(side, u0 - 0.16, u1 + 0.16, z0 - 0.12, z1 + 0.16, 0.02), shade(wood, -0.1))
+  d.raw(`<clipPath id="${id}"><polygon points="${pts(quad(side, u0, u1, z0, z1, 0.03))}"/></clipPath><g clip-path="url(#${id})">`)
+  d.poly(quad(side, u0, u1, z0, z1, 0.03), day ? '#FBF3E1' : '#F6DFAE')
+  if (day) {
+    // soft shadows of bamboo outside
+    ;[u0 + 0.5, u0 + 1.6].forEach((u, i) => {
+      d.poly([onWall(side, u, z0, 0.035), onWall(side, u + 0.1, z0, 0.035), onWall(side, u + 0.5, z1, 0.035), onWall(side, u + 0.4, z1, 0.035)], '#7B6A4E', ' opacity=".12"')
+      for (let k = 0; k < 7; k++) {
+        const c = P(...onWall(side, u + 0.1 + k * 0.06, z0 + 1.6 + k * 0.7 + i * 0.3, 0.035))
+        d.raw(`<ellipse cx="${(c[0] + (k % 2 ? 5 : -5)).toFixed(1)}" cy="${c[1].toFixed(1)}" rx="5.5" ry="1.3" fill="#6B5B40" opacity=".12" transform="rotate(${k % 2 ? 20 : -25} ${c[0].toFixed(1)} ${c[1].toFixed(1)})"/>`)
+      }
+    })
+  }
+  d.raw('</g>')
+  const bar = shade(wood, 0.08)
+  for (let i = 1; i < 5; i++) { const u = u0 + ((u1 - u0) * i) / 5; d.poly(quad(side, u - 0.022, u + 0.022, z0, z1, 0.04), bar) }
+  for (let j = 1; j < 10; j++) { const z = z0 + ((z1 - z0) * j) / 10; d.poly(quad(side, u0, u1, z - 0.022, z + 0.022, 0.04), bar) }
+  d.poly(quad(side, u0 - 0.05, u1 + 0.05, z0 - 0.05, z0 + 0.55, 0.045), shade(wood, -0.02)) // the solid wooden kick panel
+  if (!day) glowOnWall(d, side, (u0 + u1) / 2, (z0 + z1) / 2)
+}
+function glowOnWall(d, side, u, z) {
+  const c = P(...onWall(side, u, z, 0.05))
+  d.raw(`<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="38" ry="52" fill="url(#halo)" opacity=".55"/>`)
+}
+// fusuma: sliding paper doors with a soft ink painting of mountains and cranes across them
+function fusuma(d, u0, u1, z0, z1) {
+  const id = 'fs' + ++softN
+  const frame = '#3E2A1E'
+  d.poly(quad('right', u0 - 0.08, u1 + 0.08, z0, z1 + 0.08, 0.02), frame)
+  d.raw(`<clipPath id="${id}"><polygon points="${pts(quad('right', u0, u1, z0 + 0.05, z1, 0.03))}"/></clipPath><g clip-path="url(#${id})">`)
+  d.poly(quad('right', u0, u1, z0, z1, 0.03), '#F1E8D6')
+  d.poly(quad('right', u0, u1, z1 - 1.6, z1, 0.031), '#E9D9B4', ' opacity=".7"')
+  const m = (pts2, c, op) => d.poly(pts2.map(([u, z]) => onWall('right', u, z, 0.034)), c, ` opacity="${op}"`)
+  m([[u0, z0 + 1.6], [u0 + 0.8, z0 + 3.4], [u0 + 1.5, z0 + 2.6], [u0 + 2.4, z0 + 4.2], [u0 + 3.3, z0 + 2.9], [u1, z0 + 3.6], [u1, z0], [u0, z0]], '#B9B3A6', '.55')
+  m([[u0, z0 + 0.8], [u0 + 1.2, z0 + 2.2], [u0 + 2.0, z0 + 1.5], [u0 + 3.0, z0 + 2.6], [u1, z0 + 1.3], [u1, z0], [u0, z0]], '#8E897D', '.5')
+  const sun = P(...onWall('right', u0 + 2.9, z0 + 5.0, 0.035))
+  d.raw(`<circle cx="${sun[0].toFixed(1)}" cy="${sun[1].toFixed(1)}" r="7" fill="#D9705A" opacity=".75"/>`)
+  ;[[u0 + 0.9, z0 + 5.2], [u0 + 1.4, z0 + 5.6], [u0 + 1.15, z0 + 4.9]].forEach(([u, z]) => { const c = P(...onWall('right', u, z, 0.036)); d.raw(`<path d="M${(c[0] - 3).toFixed(1)},${(c[1] + 1).toFixed(1)} q3,-3 3,0 q0,-3 3,0" stroke="#4A4538" stroke-width=".8" fill="none"/>`) })
+  d.raw('</g>')
+  const mid = (u0 + u1) / 2
+  d.poly(quad('right', mid - 0.04, mid + 0.04, z0, z1, 0.04), frame)
+  ;[mid - 0.4, mid + 0.4].forEach((u) => { const h = P(...onWall('right', u, z0 + 2.9, 0.045)); d.raw(`<ellipse cx="${h[0].toFixed(1)}" cy="${h[1].toFixed(1)}" rx="1.7" ry="2.5" fill="#2A1E16"/><ellipse cx="${h[0].toFixed(1)}" cy="${h[1].toFixed(1)}" rx="1" ry="1.6" fill="#8A6A48"/>`) })
+}
+// ranma: a carved wooden lattice panel above the doors
+function ranma(d, side, u0, u1, z0, z1, wood) {
+  d.poly(quad(side, u0, u1, z0, z1, 0.03), shade(wood, -0.25), ' opacity=".9"')
+  const n = Math.round((u1 - u0) / 0.35)
+  for (let i = 0; i <= n; i++) {
+    const u = u0 + ((u1 - u0) * i) / n
+    d.line([onWall(side, u, z0, 0.04), onWall(side, Math.min(u1, u + (z1 - z0) * 0.5), z1, 0.04)], shade(wood, 0.15), 0.7)
+    d.line([onWall(side, u, z0, 0.04), onWall(side, Math.max(u0, u - (z1 - z0) * 0.5), z1, 0.04)], shade(wood, 0.15), 0.7)
+  }
+  d.poly(quad(side, u0, u1, z0 - 0.05, z0 + 0.05, 0.045), wood)
+  d.poly(quad(side, u0, u1, z1 - 0.05, z1 + 0.05, 0.045), wood)
+}
+// a stand of bamboo in a glazed pot; more stalks as your diary streak grows
+function bamboo(d, x, y, n) {
+  const b = P(x, y, 0)
+  d.raw(`<ellipse cx="${b[0].toFixed(1)}" cy="${(b[1] + 1).toFixed(1)}" rx="13" ry="4.5" fill="#2a1f18" opacity=".22" filter="url(#soft)"/>`)
+  d.cylinder(x, y, 0, 0.45, 0.8, '#2F4A5A')
+  d.ring(x, y, 0.81, 0.4, '#3B2E24')
+  const t = P(x, y, 0.8)
+  const stalks = [[-4, 78], [2, 92], [6, 70], [-1, 60], [-6, 66], [4, 84]].slice(0, Math.max(3, Math.min(n, 6)))
+  stalks.forEach(([dx, h], i) => {
+    const x0 = t[0] + dx, y0 = t[1]
+    d.raw(`<path d="M${x0},${y0} L${x0 + dx * 0.2},${y0 - h}" stroke="${i % 2 ? '#8AA65A' : '#9CB86A'}" stroke-width="2.2" stroke-linecap="round"/>`)
+    for (let k = 1; k < 6; k++) d.raw(`<path d="M${(x0 + dx * 0.2 * (k / 6) - 1.4).toFixed(1)},${(y0 - (h * k) / 6).toFixed(1)} h2.8" stroke="#6E8A44" stroke-width="1"/>`)
+    for (let k = 2; k < 6; k++) {
+      const lx = x0 + dx * 0.2 * (k / 6), ly = y0 - (h * k) / 6 - 2, s = (k + i) % 2 ? 1 : -1
+      d.raw(`<path d="M${lx.toFixed(1)},${ly.toFixed(1)} q${s * 6},${-2} ${s * 12},${3} q${-s * 6},${-1} ${-s * 12},${-3}z" fill="${k % 2 ? '#7E9E52' : '#94B562'}"/>`)
+      d.raw(`<path d="M${lx.toFixed(1)},${(ly - 3).toFixed(1)} q${-s * 5},${-3} ${-s * 10},${1} q${s * 5},${0} ${s * 10},${-1}z" fill="#88A85A"/>`)
+    }
+  })
+}
+function pineBonsai(d, x, y, z) {
+  const b = P(x, y, z)
+  d.raw(`<path d="M${b[0] - 9},${b[1] - 2} h18 l-2,4 h-14 z" fill="#2F4A5A"/><ellipse cx="${b[0]}" cy="${b[1] - 2}" rx="9" ry="2.2" fill="#3A5A6C"/>`)
+  d.raw(`<path d="M${b[0]},${b[1] - 3} q-2,-6 3,-10 q5,-4 1,-9 q-3,-4 2,-7" stroke="#5A3C28" stroke-width="2.4" fill="none" stroke-linecap="round"/>`)
+  ;[[-7, -12, 9, 3.4], [7, -18, 8, 3], [-2, -26, 7, 2.8], [9, -27, 5, 2.2]].forEach(([dx, dy, rx, ry]) => {
+    d.raw(`<ellipse cx="${b[0] + dx}" cy="${b[1] + dy}" rx="${rx}" ry="${ry}" fill="#4E7F5E"/><ellipse cx="${b[0] + dx - 1}" cy="${b[1] + dy - 1.2}" rx="${rx * 0.75}" ry="${ry * 0.55}" fill="#6B9C76"/>`)
+  })
+}
+function ikebana(d, x, y, z) {
+  const b = P(x, y, z)
+  d.raw(`<path d="M${b[0] - 3},${b[1]} q-1,-6 1,-9 h4 q2,3 1,9 z" fill="#E9E1D3"/><ellipse cx="${b[0]}" cy="${b[1] - 9}" rx="2.6" ry="1" fill="#CFC6B6"/>`)
+  d.raw(`<path d="M${b[0]},${b[1] - 9} q-6,-12 -14,-16 M${b[0]},${b[1] - 9} q4,-14 10,-20" stroke="#4A3A2A" stroke-width=".9" fill="none"/>`)
+  ;[[-14, -25], [-10, -21], [-6, -18], [10, -29], [7, -24], [5, -19]].forEach(([dx, dy], i) => d.raw(`<circle cx="${b[0] + dx}" cy="${b[1] + dy}" r="${i % 3 ? 1.7 : 2.2}" fill="${i % 2 ? '#F4C6D0' : '#FBE3E8'}"/>`))
+}
+function teaSet(d, x, y, z) {
+  const t = P(x, y, z)
+  d.raw(`<ellipse cx="${t[0]}" cy="${t[1]}" rx="9" ry="3.4" fill="#3E2A1E" opacity=".9"/>`)
+  d.raw(`<path d="M${t[0] - 4},${t[1] - 1} q-1,-6 4,-6 q5,0 4,6 z" fill="#2C2F33"/><path d="M${t[0] + 4},${t[1] - 4} q4,-1 5,-4" stroke="#2C2F33" stroke-width="1.4" fill="none"/><path d="M${t[0] - 3},${t[1] - 7} q3,-4 6,0" stroke="#2C2F33" stroke-width=".9" fill="none"/>`)
+  ;[[-10, 3], [9, 4]].forEach(([dx, dy]) => d.raw(`<path d="M${t[0] + dx - 2.6},${t[1] + dy - 3} h5.2 l-.8,3.4 h-3.6 z" fill="#E6DCCB"/><ellipse cx="${t[0] + dx}" cy="${t[1] + dy - 3}" rx="2.6" ry=".9" fill="#9DB07A"/>`))
+}
 
 function japaneseScene(S) {
   const { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket } = S
-  const wood = '#8A5A3C', dark = '#5E3B26'
-  G('floor'); tatami(d); E()
-  // wooden posts and a rail around the room
-  ;[[0.02, 0.0], [0.02, 3.6], [0.02, 6.3], [0.02, 9.6]].forEach(([x, y]) => d.box(0, y, 0, 0.22, 0.25, 9, [shade(wood, 0.15), wood, shade(wood, -0.15)]))
-  ;[0.0, 5.3, 9.6].forEach((x) => d.box(x, 0, 0, 0.25, 0.22, 9, [shade(wood, 0.15), wood, shade(wood, -0.15)]))
-  d.box(0, 0, 6.9, 0.2, 10, 0.3, [shade(wood, 0.15), wood, shade(wood, -0.15)])
-  d.box(0, 0, 6.9, 10, 0.2, 0.3, [shade(wood, 0.15), wood, shade(wood, -0.15)])
-  // paper bunting above the rail
-  ;['left', 'right'].forEach((side) => { for (let i = 0; i < 7; i++) { const u = 0.8 + i * 1.25; d.poly([onWall(side, u, 8.4, 0.05), onWall(side, u + 0.9, 8.4, 0.05), onWall(side, u + 0.45, 7.6, 0.05)], ['#F2B5C6', '#F7D9DF', '#E99AAE'][i % 3], ' opacity=".85"') } })
-  // a big shoji door on the left wall, glowing with light from outside
-  shoji(d, 'left', 6.6, 9.4, 0.25, 6.6, '#A06A44', !sky.lights)
-  // sliding fusuma doors on the right wall
-  ;[[5.6, 7.6], [7.6, 9.55]].forEach(([u0, u1]) => {
-    d.poly(quad('right', u0, u1, 0.1, 6.85, 0.02), '#F4F0E8')
-    d.poly(quad('right', u0, u1, 3.0, 3.9, 0.03), '#B9BFB4')
-    d.poly(quad('right', u0 + 0.02, u0 + 0.08, 0.1, 6.85, 0.03), '#CFC6B6')
-    const h = P(...onWall('right', u0 + 0.35, 3.45, 0.04)); d.raw(`<ellipse cx="${h[0].toFixed(1)}" cy="${h[1].toFixed(1)}" rx="1.8" ry="2.6" fill="#8A7A66"/>`)
-  })
-  // a clock on the right wall, above the doors
-  const ck = quad('right', 7.9, 8.9, 7.3, 8.3, 0.04)
-  d.poly(ck, '#3E2A1E'); d.poly(quad('right', 8.0, 8.8, 7.4, 8.2, 0.05), '#FFFDF8')
-  // a picture scroll on the left wall
-  G('art'); art(d, room.art || 'plants', 'left', 4.2, 5.4, 2.6, 6.2, '#E9DFC9'); spots.art = bounds([[0, 4.0, 2.4], [0, 5.6, 2.4], [0, 5.6, 6.4], [0, 4.0, 6.4]], 1); E()
-  // notes: little wooden ema plaques hanging on a rail on the right wall
-  d.line([onWall('right', 0.8, 6.1, 0.05), onWall('right', 4.8, 6.1, 0.05)], dark, 1.4)
+  const wood = '#9A6A44', dark = '#3E2A1E', day = !sky.lights
+  G('floor'); tatami(d)
+  // a polished wooden strip along the shoji side
+  d.poly([[0, 6.3, 0.008], [0.9, 6.3, 0.008], [0.9, 10, 0.008], [0, 10, 0.008]], '#B88A5E')
+  for (let i = 1; i < 4; i++) d.line([[i * 0.22, 6.3, 0.009], [i * 0.22, 10, 0.009]], '#9A6E46', 0.5, ' opacity=".6"')
+  E()
+  // posts and the rail that runs round the room
+  const post = (x, y) => d.box(x, y, 0, 0.24, 0.24, 9, [shade(wood, 0.12), wood, shade(wood, -0.14)])
+  post(0, 0); post(0, 3.6); post(0, 6.3); post(0, 9.6); post(5.3, 0); post(9.6, 0)
+  ranma(d, 'left', 0.24, 3.6, 7.25, 8.7, wood); ranma(d, 'left', 3.84, 6.3, 7.25, 8.7, wood); ranma(d, 'left', 6.54, 9.6, 7.25, 8.7, wood)
+  ranma(d, 'right', 0.24, 5.3, 7.25, 8.7, wood); ranma(d, 'right', 5.54, 9.6, 7.25, 8.7, wood)
+  d.box(0, 0, 6.95, 0.22, 10, 0.3, [shade(wood, 0.12), wood, shade(wood, -0.14)])
+  d.box(0, 0, 6.95, 10, 0.22, 0.3, [shade(wood, 0.12), wood, shade(wood, -0.14)])
+  // the shoji on the left wall, and fusuma with an ink painting on the right
+  shoji(d, 'left', 6.65, 9.4, 0.15, 6.8, wood, day)
+  fusuma(d, 5.65, 9.5, 0.05, 6.9)
+  // the tokonoma: a raised alcove with a hanging scroll and an ikebana
+  d.poly(quad('left', 3.84, 6.3, 0, 6.95, 0.025), shade(room.wall === 'cream' ? '#EFE6D6' : WALLS[room.wall]?.l[1] || '#EFE6D6', -0.06))
+  d.box(0, 3.85, 0, 1.0, 2.45, 0.32, [shade(dark, 0.3), shade(dark, 0.1), dark])
+  G('art'); art(d, room.art || 'plants', 'left', 4.55, 5.55, 2.0, 6.2, '#D8CBB0'); spots.art = bounds([[0, 4.4, 1.8], [0, 5.7, 1.8], [0, 5.7, 6.4], [0, 4.4, 6.4]], 1); E()
+  const rod = P(...onWall('left', 5.05, 6.35, 0.05)); d.raw(`<path d="M${(rod[0] - 10).toFixed(1)},${(rod[1] + 5).toFixed(1)} l20,-11" stroke="${dark}" stroke-width="1.6"/>`)
+  ikebana(d, 0.5, 4.5, 0.32)
+  // the bookcase in the far corner
+  G('shelf'); spots.shelf = bookcase(d, { y0: 0.55, len: 2.9, depth: 1.1, h: 3.6, levels: [0.25, 1.35, 2.45], wood: dark, books }); E()
+  // a tansu chest with iron handles, a pine bonsai and a small vase; notes hang above on ema plaques
+  d.box(1.4, 0.05, 0, 3.2, 1.1, 1.6, [shade(dark, 0.22), shade(dark, 0.08), dark])
+  ;[0.2, 0.9].forEach((z) => { d.poly([[1.55, 1.16, z], [4.45, 1.16, z], [4.45, 1.16, z + 0.58], [1.55, 1.16, z + 0.58]], shade(dark, 0.14)); ;[2.2, 3.8].forEach((x) => { const k = P(x, 1.17, z + 0.3); d.raw(`<path d="M${(k[0] - 2.6).toFixed(1)},${(k[1] - 0.6).toFixed(1)} q2.6,3 5.2,0" stroke="#1E1610" stroke-width="1.2" fill="none"/>`) }) })
+  pineBonsai(d, 2.3, 0.55, 1.6)
+  d.cylinder(3.9, 0.55, 1.6, 0.2, 0.55, '#C9B79A')
+  d.line([onWall('right', 1.2, 6.15, 0.05), onWall('right', 4.8, 6.15, 0.05)], dark, 1.2)
   ;[0, 1, 2, 3, 4, 5].slice(0, Math.max(2, Math.min(notes + 1, 6))).forEach((i) => {
-    const u = 1.0 + i * 0.65, z = 5.0 + (i % 2) * 0.25
-    d.line([onWall('right', u + 0.25, 6.1, 0.05), onWall('right', u + 0.25, z + 0.7, 0.05)], '#C2556B', 0.6)
-    d.poly([onWall('right', u, z, 0.06), onWall('right', u + 0.5, z, 0.06), onWall('right', u + 0.5, z + 0.55, 0.06), onWall('right', u + 0.25, z + 0.75, 0.06), onWall('right', u, z + 0.55, 0.06)], '#E2C595')
-    d.line([onWall('right', u + 0.1, z + 0.35, 0.07), onWall('right', u + 0.4, z + 0.35, 0.07)], '#8A5A3C', 0.5)
+    const u = 1.35 + i * 0.58, z = 5.05 + (i % 2) * 0.2
+    d.line([onWall('right', u + 0.22, 6.15, 0.05), onWall('right', u + 0.22, z + 0.7, 0.05)], '#B4475D', 0.5)
+    d.poly([onWall('right', u, z, 0.06), onWall('right', u + 0.45, z, 0.06), onWall('right', u + 0.45, z + 0.5, 0.06), onWall('right', u + 0.22, z + 0.7, 0.06), onWall('right', u, z + 0.5, 0.06)], '#DCC08E')
+    d.line([onWall('right', u + 0.1, z + 0.3, 0.07), onWall('right', u + 0.35, z + 0.3, 0.07)], '#7A5236', 0.5)
   })
-  spots.board = bounds([[0.8, 0, 4.8], [4.8, 0, 4.8], [4.8, 0, 6.3], [0.8, 0, 6.3]], 3)
-  // a low tansu chest with a bonsai and a little lucky cat
-  d.box(1.3, 0.05, 0, 3.0, 1.1, 1.7, [shade(dark, 0.2), dark, shade(dark, -0.12)])
-  ;[0.25, 0.95].forEach((z) => { d.poly([[1.45, 1.16, z], [4.15, 1.16, z], [4.15, 1.16, z + 0.55], [1.45, 1.16, z + 0.55]], shade(dark, 0.08)); ;[2.1, 3.5].forEach((x) => { const k = P(x, 1.17, z + 0.28); d.raw(`<circle cx="${k[0].toFixed(1)}" cy="${k[1].toFixed(1)}" r="1.1" fill="#C9A26E"/>`) }) })
-  const bz = P(2.2, 0.6, 1.7)
-  d.raw(`<ellipse cx="${bz[0].toFixed(1)}" cy="${bz[1].toFixed(1)}" rx="9" ry="3" fill="#3E2A1E"/><path d="M${bz[0].toFixed(1)},${bz[1].toFixed(1)} q-3,-8 2,-13 q4,-4 -1,-10" stroke="#5E3B26" stroke-width="2.2" fill="none"/>`)
-  ;[[-6, -16, 9], [4, -21, 8], [-2, -27, 7], [8, -14, 6]].forEach(([dx, dy, r]) => d.raw(`<ellipse cx="${(bz[0] + dx).toFixed(1)}" cy="${(bz[1] + dy).toFixed(1)}" rx="${r}" ry="${r * 0.6}" fill="#5E9F80"/><ellipse cx="${(bz[0] + dx - 2).toFixed(1)}" cy="${(bz[1] + dy - 1.5).toFixed(1)}" rx="${r * 0.6}" ry="${r * 0.3}" fill="#7FBE9C"/>`))
-  const lc = P(3.6, 0.6, 1.7)
-  d.raw(`<g transform="translate(${lc[0].toFixed(1)} ${(lc[1] - 6).toFixed(1)})"><ellipse cx="0" cy="3" rx="5" ry="5.5" fill="#FFFFFF"/><circle cx="0" cy="-4" r="4.6" fill="#FFFFFF"/><path d="M-4,-7 l1,-4 l3,3 M4,-7 l-1,-4 l-3,3" fill="#FFFFFF" stroke="#E8E1D8" stroke-width=".6"/><path d="M4,-2 q4,-5 2,-9" stroke="#FFFFFF" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="0" cy="1" r="1.3" fill="#E0566F"/><path d="M-2,-4 q1,1 2,0 M0.5,-4 q1,1 2,0" stroke="#3A3350" stroke-width=".5" fill="none"/></g>`)
-  // the bookcase in the corner
-  G('shelf'); spots.shelf = bookcase(d, { y0: 0.6, len: 2.8, depth: 1.25, h: 4.6, levels: [0.25, 1.4, 2.55, 3.7], wood: dark, books }); E()
-  // light through the shoji on the floor
-  if (!sky.lights) for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) d.poly([[0.4 + i * 0.75, 6.8 + j * 0.62, 0.01], [1.0 + i * 0.75, 6.8 + j * 0.62, 0.01], [1.25 + i * 0.75, 7.3 + j * 0.62, 0.01], [0.65 + i * 0.75, 7.3 + j * 0.62, 0.01]], '#FFF5D6', ' opacity=".35"')
+  spots.board = bounds([[1.2, 0, 4.9], [4.8, 0, 4.9], [4.8, 0, 6.3], [1.2, 0, 6.3]], 3)
+  // daylight from the shoji on the tatami
+  if (day) d.poly([[0.2, 6.7, 0.012], [0.2, 9.3, 0.012], [3.4, 9.8, 0.012], [3.6, 7.1, 0.012]], '#FFF3D2', ' opacity=".28"')
   spots.rug = bounds([[3.2, 4.2, 0], [7.2, 4.2, 0], [7.2, 8.0, 0], [3.2, 8.0, 0]], 0)
   G('rug'); E()
-  // the futon on the floor by the doors (opens the Diary)
+  // the futon, laid out in front of the fusuma (opens the Diary)
   G('bed')
-  d.shadow(6.6, 0.6, 9.8, 4.6, 0.12)
-  soft(d, 6.7, 0.7, 0, 3.0, 3.7, 0.45, ['#FBF7F0', '#EFE8DD', '#E0D7C9'], 0.3)
-  soft(d, 7.3, 0.85, 0.45, 1.8, 0.75, 0.32, ['#FFFFFF', '#F2EEE6', '#E4DED3'], 0.3, 1)
-  duvet(d, 6.72, 1.75, 9.68, 4.4, 0.53, 0.42, blanket)
-  openDiary(d, 7.4, 2.6, 0.62, diaryToday)
-  if (room.pet === 'cat' || room.pet === 'dog') { const at = P(8.9, 3.0, 0.62); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.white, at[0] - 21, at[1] - 21, 0.42)) }
+  d.shadow(6.6, 0.7, 9.8, 4.6, 0.12)
+  soft(d, 6.7, 0.75, 0, 3.0, 3.65, 0.42, ['#FBF8F2', '#EFE9DF', '#E1D9CC'], 0.3)
+  soft(d, 7.4, 0.9, 0.42, 1.6, 0.7, 0.3, ['#FFFFFF', '#F3EFE8', '#E5DFD5'], 0.3, 1)
+  duvet(d, 6.72, 1.8, 9.68, 4.38, 0.5, 0.4, blanket)
+  openDiary(d, 7.35, 2.55, 0.6, diaryToday)
+  if (room.pet === 'cat' || room.pet === 'dog') { const at = P(8.95, 3.05, 0.6); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.white, at[0] - 21, at[1] - 21, 0.42)) }
   spots.bed = bounds([[6.6, 0.6, 0], [9.8, 0.6, 0], [9.8, 4.6, 0], [6.6, 4.6, 0], [6.6, 0.6, 1.2]], 0)
   E()
-  // the kotatsu: a low table with a plaid quilt, tea and the calendar (opens the Calendar)
+  // the kotatsu: a low table under a quilt, with a cast-iron teapot and the calendar (opens the Calendar)
   G('desk')
   d.shadow(3.0, 4.4, 7.4, 8.2, 0.16)
-  const q = shade(blanket, 0.05)
-  d.raw(`<defs><pattern id="plaid" patternUnits="userSpaceOnUse" width="1" height="1" patternTransform="${ISO.floor}"><rect width="1" height="1" fill="${q}"/><rect width=".22" height="1" fill="${shade(q, -0.15)}" opacity=".6"/><rect width="1" height=".22" fill="${shade(q, -0.15)}" opacity=".6"/><rect x=".6" width=".06" height="1" fill="#F6E7C2" opacity=".7"/><rect y=".6" width="1" height=".06" fill="#F6E7C2" opacity=".7"/></pattern></defs>`)
-  d.poly([[3.2, 4.5, 0.02], [7.2, 4.5, 0.02], [7.5, 8.0, 0.02], [3.0, 8.2, 0.02]], 'url(#plaid)', ' opacity=".9"')
-  soft(d, 3.6, 4.9, 0, 3.2, 2.7, 1.0, [shade(q, 0.08), shade(q, -0.02), shade(q, -0.14)], 0.45)
-  d.box(3.75, 5.05, 1.0, 2.9, 2.4, 0.14, [shade(wood, 0.2), wood, shade(wood, -0.12)])
-  d.cylinder(4.5, 5.7, 1.14, 0.2, 0.26, '#3E4A5A')
-  const tp = P(5.6, 5.6, 1.14); d.raw(`<ellipse cx="${tp[0].toFixed(1)}" cy="${tp[1].toFixed(1)}" rx="5" ry="2.4" fill="#F2EBDD"/><ellipse cx="${(tp[0] + 3).toFixed(1)}" cy="${(tp[1] + 2).toFixed(1)}" rx="3" ry="1.4" fill="#E99AAE"/>`)
-  calendarFront(d, 4.6, 5.25, 7.0, 1.14, 1.0, events)
-  spots.desk = tagAt(bounds([[3.0, 4.4, 0], [7.4, 4.4, 0], [7.4, 8.2, 0], [3.0, 8.2, 0], [4.6, 7.0, 2.4]], 2), [4.9, 7.0, 2.4])
+  const q = blanket
+  d.raw(`<defs><pattern id="asanoha" patternUnits="userSpaceOnUse" width=".8" height=".8" patternTransform="${ISO.floor}"><rect width=".8" height=".8" fill="${q}"/><path d="M0,0 L.8,.8 M.8,0 L0,.8 M.4,0 V.8 M0,.4 H.8" stroke="#FFFFFF" stroke-width=".025" opacity=".35"/></pattern></defs>`)
+  d.poly([[3.25, 4.55, 0.02], [7.15, 4.55, 0.02], [7.45, 7.95, 0.02], [3.05, 8.15, 0.02]], 'url(#asanoha)', ' opacity=".95"')
+  soft(d, 3.6, 4.9, 0, 3.2, 2.7, 0.95, [shade(q, 0.08), shade(q, -0.02), shade(q, -0.14)], 0.45)
+  d.box(3.7, 5.0, 0.95, 3.0, 2.5, 0.12, [shade(dark, 0.35), shade(dark, 0.15), dark])
+  teaSet(d, 5.6, 5.9, 1.07)
+  calendarFront(d, 4.1, 4.75, 7.1, 1.07, 0.95, events)
+  spots.desk = tagAt(bounds([[3.0, 4.4, 0], [7.4, 4.4, 0], [7.4, 8.2, 0], [3.0, 8.2, 0], [4.1, 7.1, 2.3]], 2), [4.4, 7.1, 2.3])
   E()
-  // floor cushions (zabuton) to sit on
+  // zabuton cushions to sit on
   G('chair')
-  const cc = (FABRICS[room.chairColor] || FABRICS.rose).c
-  soft(d, 4.2, 8.35, 0, 1.3, 1.2, 0.28, [shade(cc, 0.15), cc, shade(cc, -0.12)], 0.3, 1)
-  soft(d, 1.7, 5.4, 0, 1.2, 1.3, 0.28, [shade(cc, 0.15), cc, shade(cc, -0.12)], 0.3, 1)
-  spots.chair = bounds([[4.1, 8.3, 0], [5.6, 8.3, 0], [5.6, 9.6, 0], [4.1, 9.6, 0], [4.1, 8.3, 0.6]], 2)
+  const cc = (FABRICS[room.chairColor] || FABRICS.peach).c
+  soft(d, 4.3, 8.4, 0, 1.25, 1.15, 0.24, [shade(cc, 0.12), cc, shade(cc, -0.14)], 0.25, 1)
+  soft(d, 1.8, 5.5, 0, 1.15, 1.25, 0.24, [shade(cc, 0.12), cc, shade(cc, -0.14)], 0.25, 1)
+  spots.chair = bounds([[4.2, 8.3, 0], [5.6, 8.3, 0], [5.6, 9.6, 0], [4.2, 9.6, 0], [4.2, 8.3, 0.6]], 2)
   E()
-  // a paper andon lantern
-  const an = P(8.9, 8.9, 0)
-  d.box(8.6, 8.6, 0, 0.6, 0.6, 1.7, ['#F4EBDA', sky.lights ? '#FFE9B8' : '#F6EEDD', sky.lights ? '#F8DDA0' : '#EADFCB'])
-  for (let i = 1; i < 4; i++) d.line([[8.6, 9.2, i * 0.42], [9.2, 9.2, i * 0.42], [9.2, 8.6, i * 0.42]], '#6B4A36', 0.6)
-  if (sky.lights) glow(an[0], an[1] - 20, 40)
-  plant(d, 0.8, 4.4, leaves)
+  // an andon lantern with a dark wooden frame
+  d.box(8.65, 8.65, 0, 0.12, 0.12, 1.9, dark); d.box(9.2, 8.65, 0, 0.12, 0.12, 1.9, dark); d.box(8.65, 9.2, 0, 0.12, 0.12, 1.9, dark)
+  d.box(8.7, 8.7, 0.2, 0.55, 0.55, 1.6, ['#F7EEDC', day ? '#F4EBD9' : '#FFE6AE', day ? '#E9DEC9' : '#F8D898'])
+  d.box(9.2, 9.2, 0, 0.12, 0.12, 1.9, dark)
+  d.box(8.62, 8.62, 1.9, 0.72, 0.72, 0.08, dark)
+  if (!day) { const an = P(8.95, 8.95, 1.0); glow(an[0], an[1], 44) }
+  bamboo(d, 1.0, 9.0, 2 + Math.round(leaves / 2))
 }
 
 /* ---------- the plant room ---------- */
@@ -1194,7 +1277,7 @@ export function drawRoom(o) {
   const { room, tod = timeOfDay(), books = 0, notes = 0, events = 0, diaryToday = false, leaves = 3 } = o
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
-  const theme = room.theme === 'city' ? 'study' : THEMES[room.theme] ? room.theme : 'cozy'
+  const theme = THEMES[room.theme] ? room.theme : 'cozy'
   const sky = theme === 'study' ? SKIES.night : SKIES[tod]
   const glows = []   // lamp lights, drawn again on top in the night room
   const glow = (x, y, r) => { glows.push([x, y, r]); d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#glow)"/>`) }
@@ -1630,6 +1713,13 @@ export function drawRoom(o) {
 
   }
 
+  if (theme === 'japanese' && sky.lights) {
+    // evening: the room goes soft and dim, the lantern and the shoji glow warm
+    d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#1A1838', ' opacity=".22" pointer-events="none"')
+    glows.forEach(([x, y, r]) => d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 0.9}" fill="url(#glow)" opacity=".7" pointer-events="none"/>`))
+    const sj = P(0.05, 8.0, 3.5)
+    d.raw(`<ellipse cx="${sj[0].toFixed(1)}" cy="${sj[1].toFixed(1)}" rx="34" ry="50" fill="url(#halo)" opacity=".35" pointer-events="none"/>`)
+  }
   if (theme === 'study') {
     // the room is dark; only the lamps and the window light it
     d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#0E1338', ' opacity=".34" pointer-events="none"')
