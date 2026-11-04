@@ -706,3 +706,18 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 /* the buttons on an item stay upright when the item is turned */
 .item-del { transform: rotate(calc(var(--rot, 0deg) * -1)); }
 .item-rot svg { transform: rotate(calc(var(--rot, 0deg) * -1)); }
+
+/* An item carried from one page to the other */
+.drag-layer { position: fixed; z-index: 1000; pointer-events: none; container-type: inline-size; }
+.drag-layer .item { pointer-events: none; }
+.drag-layer .item.ghosting { transform: rotate(var(--rot, 0deg)) scale(1.06); filter: drop-shadow(0 14px 18px rgba(30, 20, 50, .35)); transition: transform .15s; }
+.page.drop-here { box-shadow: inset 0 0 0 3px rgba(242, 201, 76, .55), 0 0 0 4px rgba(242, 201, 76, .15); }
+
+/* time: hour and minutes, easy on every browser */
+.time-pick { display: flex; align-items: center; gap: 4px; height: 42px; padding: 0 8px; border-radius: 12px; border: 1px solid #ddd6e6; background: #fff; }
+.time-pick select {
+  flex: 1; min-width: 0; height: 34px; padding: 0 6px; border: none; border-radius: 8px; background: #f5f1fa; color: var(--ink);
+  font: 600 15px var(--sans, Figtree, sans-serif); text-align: center; text-align-last: center; -webkit-appearance: none; appearance: none; cursor: pointer;
+}
+.time-pick select:focus { outline: 2px solid #b9a3e6; }
+.time-pick b { color: var(--muted); font-weight: 600; }

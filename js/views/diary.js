@@ -720,21 +720,10 @@ export function mount(el) {
         if (e.clientY > window.innerHeight - 80) window.scrollBy(0, 14)
         else if (e.clientY < 80) window.scrollBy(0, -14)
       }
-      // dragged over the other page: the sticker, photo or text moves to that page
-      const other = 1 - action.side
-      const or = pageEls[other].getBoundingClientRect()
-      if (e.clientX >= or.left && e.clientX <= or.right && e.clientY >= or.top && e.clientY <= or.bottom) {
-        const it = action.it
-        pages[action.side].items = pages[action.side].items.filter((i) => i !== it)
-        pages[other].items.push(it)
-        it.x = ((e.clientX - action.ox - or.left) / or.width) * 100
-        it.y = ((e.clientY - action.oy - or.top) / or.height) * 100
-        $('.items', pageEls[other]).appendChild(action.itemEl)
-        action.itemEl.style.left = it.x + '%'
-        action.itemEl.style.top = it.y + '%'
-        Object.assign(action, { side: other, rect: or, sx: e.clientX, sy: e.clientY + window.scrollY, x: it.x, y: it.y })
-        return
-      }
+      // leaving the page: the item lifts off and floats with the pointer, so it can go to the other page
+      if (action.ghost) { moveGhost(e); return }
+      const pr = pageEls[action.side].getBoundingClientRect()
+      if (e.clientX < pr.left - 4 || e.clientX > pr.right + 4 || e.clientY < pr.top - 4 || e.clientY > pr.bottom + 4) { startGhost(e, pr); return }
       action.it.x = Math.max(-4, Math.min(100 - action.it.w + 4, action.x + dx))
       action.it.y = Math.max(-2, Math.min(96, action.y + dy))
       action.itemEl.style.left = action.it.x + '%'
@@ -745,8 +734,63 @@ export function mount(el) {
     }
   })
 
-  const finish = () => {
+  function startGhost(e, pr) {
+    const el0 = action.itemEl
+    const layer = document.createElement('div')
+    layer.className = 'drag-layer'
+    Object.assign(layer.style, { left: pr.left + 'px', top: pr.top + 'px', width: pr.width + 'px', height: pr.height + 'px' })
+    const clone = el0.cloneNode(true)
+    clone.classList.add('ghosting')
+    clone.classList.remove('selected')
+    Object.assign(clone.style, { left: el0.offsetLeft + 'px', top: el0.offsetTop + 'px', width: el0.offsetWidth + 'px' })
+    layer.appendChild(clone)
+    document.body.appendChild(layer)
+    el0.style.visibility = 'hidden'
+    action.ghost = { layer, clone, x0: el0.offsetLeft, y0: el0.offsetTop, px: e.clientX, py: e.clientY }
+    moveGhost(e)
+  }
+  function moveGhost(e) {
+    const g = action.ghost
+    g.clone.style.left = g.x0 + (e.clientX - g.px) + 'px'
+    g.clone.style.top = g.y0 + (e.clientY - g.py) + 'px'
+    // show which page it will land on
+    const r = pageEls.map((pe) => pe.getBoundingClientRect())
+    const over = r.findIndex((q) => e.clientX >= q.left && e.clientX <= q.right && e.clientY >= q.top && e.clientY <= q.bottom)
+    pageEls.forEach((pe, i) => pe.classList.toggle('drop-here', i === over && i !== action.side))
+  }
+  function dropGhost(e) {
+    const g = action.ghost
+    const it = action.itemEl
+    const r = pageEls.map((pe) => pe.getBoundingClientRect())
+    const dist = (q) => Math.hypot(Math.max(q.left - e.clientX, 0, e.clientX - q.right), Math.max(q.top - e.clientY, 0, e.clientY - q.bottom))
+    const to = dist(r[0]) <= dist(r[1]) ? 0 : 1
+    const lr = g.layer.getBoundingClientRect()
+    const left = lr.left + parseFloat(g.clone.style.left), top = lr.top + parseFloat(g.clone.style.top)
+    const q = r[to]
+    const item = action.it
+    if (to !== action.side) {
+      pages[action.side].items = pages[action.side].items.filter((i) => i !== item)
+      pages[to].items.push(item)
+      $('.items', pageEls[to]).appendChild(it)
+    }
+    item.x = Math.max(-4, Math.min(100 - item.w + 4, ((left - q.left) / q.width) * 100))
+    item.y = Math.max(-2, Math.min(96, ((top - q.top) / q.height) * 100))
+    it.style.left = item.x + '%'
+    it.style.top = item.y + '%'
+    it.style.visibility = ''
+    pageEls.forEach((pe) => pe.classList.remove('drop-here'))
+    // the floating copy glides into the exact spot, then the real one takes over
+    const end = it.getBoundingClientRect(), now = g.clone.getBoundingClientRect()
+    it.style.visibility = 'hidden'
+    g.clone.animate([{ transform: `translate(0, 0) rotate(${item.rot || 0}deg) scale(1.06)` }, { transform: `translate(${end.left - now.left}px, ${end.top - now.top}px) rotate(${item.rot || 0}deg) scale(1)` }], { duration: 180, easing: 'cubic-bezier(.2, .8, .3, 1)', fill: 'forwards' })
+      .finished.then(() => { it.style.visibility = ''; g.layer.remove() })
+    selected = item.id
+    it.classList.add('selected')
+  }
+
+  const finish = (e) => {
     if (!action) return
+    if (action.ghost) dropGhost(e)
     if (action.kind === 'draw') {
       action.ctx.globalCompositeOperation = 'source-over'
       pages[action.side].ink = isBlank(action.cv) ? null : action.cv.toDataURL('image/png')

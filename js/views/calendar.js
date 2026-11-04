@@ -82,6 +82,8 @@ export function mount(el) {
       : perm === 'denied'
         ? `<p class="muted small-note">Reminders are blocked in this browser. You can allow them in the site settings.</p>`
         : ''
+    const keep = ['c-what', 'c-date', 'c-hour', 'c-min', 'c-remind'].map((id) => { const f = $('#' + id, el); return f && [id, f.type === 'checkbox' ? f.checked : f.value] }).filter(Boolean)
+    const sameDay = $('#c-date', el)?.dataset.day === selected
     $('#c-day', el).innerHTML = `
       <h3>${esc(isoToDate(selected).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}</h3>
       <p class="muted">${['Today', 'Tomorrow', 'Yesterday'].includes(dayLabel(selected)) ? dayLabel(selected) : isoToDate(selected).getFullYear()}</p>
@@ -89,8 +91,14 @@ export function mount(el) {
         <label for="c-what" class="sr-only">What to remember</label>
         <input id="c-what" placeholder="What do you need to remember?" required>
         <div class="ev-when">
-          <label class="when-field">Date<input id="c-date" type="date" value="${selected}" required></label>
-          <label class="when-field">Time<input id="c-time" type="time"></label>
+          <label class="when-field">Date<input id="c-date" type="date" value="${selected}" data-day="${selected}" required></label>
+          <div class="when-field time-field"><span id="c-time-label">Time</span>
+            <div class="time-pick" role="group" aria-labelledby="c-time-label">
+              <select id="c-hour" aria-label="Hour"><option value="">--</option>${Array.from({ length: 24 }, (_, h) => `<option>${String(h).padStart(2, '0')}</option>`).join('')}</select>
+              <b aria-hidden="true">:</b>
+              <select id="c-min" aria-label="Minutes"><option value="">--</option>${Array.from({ length: 12 }, (_, m) => `<option>${String(m * 5).padStart(2, '0')}</option>`).join('')}</select>
+            </div>
+          </div>
         </div>
         <div class="ev-row">
           <label class="check-field"><input id="c-remind" type="checkbox" checked> Remind me</label>
@@ -108,6 +116,7 @@ export function mount(el) {
           <button class="ev-del" data-del="${e.id}" aria-label="Delete ${esc(e.title)}">×</button>
         </li>`).join('') : `<li class="muted empty-day">Nothing on this day yet.</li>`}
       </ul>`
+    if (sameDay) keep.forEach(([id, v]) => { const f = $('#' + id, el); if (f.type === 'checkbox') f.checked = v; else f.value = v })
   }
 
   function render() { renderGrid(); renderDay() }
@@ -136,15 +145,18 @@ export function mount(el) {
     e.preventDefault()
     const title = $('#c-what', el).value.trim()
     if (!title) return
-    const time = $('#c-time', el).value || findTime(title)
+    const h = $('#c-hour', el).value, mm = $('#c-min', el).value
+    const time = h ? `${h}:${mm || '00'}` : findTime(title)
     const date = $('#c-date', el).value || selected
-    add('events', { title, date, time, remind: !!time && $('#c-remind', el).checked, notified: false })
+    const remindOn = $('#c-remind', el).checked
+    $('#c-what', el).value = ''; $('#c-hour', el).value = ''; $('#c-min', el).value = ''
+    add('events', { title, date, time, remind: !!time && remindOn, notified: false })
     if (date !== selected) {
       selected = date
       cursor = date
       render()
     }
-    if (time && $('#c-remind', el).checked && permission() === 'default') askPermission().then(renderDay)
+    if (time && remindOn && permission() === 'default') askPermission().then(renderDay)
   })
 
   render()
