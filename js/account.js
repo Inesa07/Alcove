@@ -148,6 +148,7 @@ function setupMenu() {
       <p class="acc-who">${esc(i.email)}</p>
       <p class="acc-msg ${i.status === 'error' ? 'bad' : ''}">${line}</p>
       <p class="acc-privacy">We collect anonymous usage statistics (like which pages are opened) to improve the app. What you write is never part of them.</p>
+      <p><a class="link-btn" href="#year" data-close>See your year in Planner</a></p>
       ${i.email === OWNER ? '<p><a class="link-btn" href="#admin" data-close>Open your app statistics</a></p>' : ''}
       <p class="acc-label">Look</p>
       <div class="seg acc-theme" role="radiogroup" aria-label="Look">${[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Like my device']].map(([k, v]) => `<button type="button" role="radio" aria-checked="${themeMode() === k}" data-theme-pick="${k}">${v}</button>`).join('')}</div>

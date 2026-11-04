@@ -326,3 +326,41 @@ html[data-theme="light"] .fr-colors .sw.on { border-color: #3a3350; }
 html[data-theme="light"] .fr-back:hover { color: #2a2638; }
 @media (max-width: 900px) { .fr-visit { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .friends-page { padding: 18px 16px 30px; } .code { font-size: 24px; } }
+
+/* ---------- your year ---------- */
+.view-year { padding: 0 !important; }
+.year-page { position: relative; min-height: 100dvh; display: grid; place-items: center; padding: 60px 20px 40px; overflow: hidden;
+  background: radial-gradient(ellipse at 30% 20%, #4a3a86, transparent 60%), radial-gradient(ellipse at 80% 90%, #7a3f6e, transparent 55%), #1d1934; color: #fff; }
+.yr-progress { position: absolute; top: 18px; left: 24px; right: 70px; display: flex; gap: 6px; }
+.yr-progress i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .2); overflow: hidden; }
+.yr-progress i b { display: block; height: 100%; width: 0; background: #fff; transition: width .35s; }
+.yr-progress i.done b { width: 100%; }
+.yr-close { position: absolute; top: 8px; right: 20px; font-size: 30px; color: #fff; text-decoration: none; opacity: .8; }
+.yr-card { width: min(460px, 100%); cursor: pointer; }
+.yr-in { padding: 38px 34px; border-radius: 32px; text-align: center; animation: yr-in .45s cubic-bezier(.2, .8, .2, 1); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .6); min-height: 440px; display: flex; flex-direction: column; justify-content: center; }
+.yr-c0 { background: linear-gradient(160deg, #8e74c4, #5b4c8c); }
+.yr-c1 { background: linear-gradient(160deg, #e28fa3, #9c5f8a); }
+.yr-c2 { background: linear-gradient(160deg, #6fa287, #3f6b5e); }
+.yr-c3 { background: linear-gradient(160deg, #4f6aa8, #2f3a6e); }
+@keyframes yr-in { from { opacity: 0; transform: translateY(20px) scale(.96) } }
+.yr-in h2 { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 32px; line-height: 1.15; margin: 6px 0 14px; }
+.yr-in p { margin: 6px 0; font-size: 16px; line-height: 1.5; opacity: .92; }
+.yr-big { font-family: var(--serif); font-size: 110px; line-height: 1; font-style: italic; }
+.yr-num { font-family: var(--serif); font-size: 96px; line-height: 1; }
+.yr-kicker { text-transform: uppercase; letter-spacing: .14em; font-size: 12px !important; font-weight: 700; opacity: .75 !important; }
+.yr-small { font-size: 14px !important; opacity: .8 !important; margin-top: 14px !important; }
+.yr-quote { margin-top: 16px !important; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, .14); }
+.yr-stars { color: #FBE3A0; }
+.yr-bars { display: flex; align-items: flex-end; gap: 5px; height: 90px; margin: 18px 4px 4px; }
+.yr-bars i { flex: 1; position: relative; height: max(var(--h), 3%); border-radius: 4px 4px 2px 2px; background: rgba(255, 255, 255, .75); }
+.yr-bars span { position: absolute; bottom: -18px; left: 0; right: 0; font-size: 10px; font-style: normal; opacity: .75; }
+.yr-mosaic { display: grid; grid-template-columns: repeat(28, 1fr); gap: 2px; margin: 10px 0 14px; }
+.yr-mosaic i { aspect-ratio: 1; border-radius: 2px; background: rgba(255, 255, 255, .14); }
+.yr-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; font-size: 13px; }
+.yr-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+.yr-room svg { width: 100%; max-height: 240px; }
+.yr-nav button { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: none; background: rgba(255, 255, 255, .12); color: #fff; font-size: 26px; cursor: pointer; }
+.yr-prev { left: max(16px, calc(50% - 300px)); }
+.yr-next { right: max(16px, calc(50% - 300px)); }
+@media (max-width: 720px) { .yr-nav { display: none; } .yr-in { padding: 30px 22px; min-height: 400px; } .yr-big { font-size: 84px; } .yr-num { font-size: 76px; } }
+.yr-pill { display: inline-block; padding: 0 14px 4px; border-radius: 999px; color: #2a2638; font-style: italic; }
