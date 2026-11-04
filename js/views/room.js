@@ -1,3 +1,4 @@
+import * as db from '../db.js'
 // "My room": the room fills the page. Objects open their pages,
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
@@ -58,12 +59,22 @@ export function mount(el) {
 
   /* ---------- the room ---------- */
 
+  // book covers live in IndexedDB; read the ones the shelf shows, then draw again
+  const covers = new Map()
+  ;(async () => {
+    const ids = getState().books.map((b) => b.id)
+    for (const id of ids) covers.set(id, (await db.get('cover:' + id)) || null)
+    if (ids.some((id) => covers.get(id))) renderRoom()
+  })()
+
   function renderRoom() {
     const box = $('#room', el)
     if (!box) return // the page was closed
     const s = getState()
     const today = todayISO()
-    const { svg, spots, shapes } = drawRoom({
+    const list = [...s.books].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    const { svg, spots, shapes, bookSpots } = drawRoom({
+      bookList: list.map((b) => ({ id: b.id, title: b.title, author: b.author, color: b.color, cover: covers.get(b.id)?.src })),
       room: room(),
       tod: timeOfDay(),
       books: s.books.length,
@@ -93,6 +104,17 @@ export function mount(el) {
           style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%">
           <span class="tag" style="${b.tx != null ? `left:${b.tx}%;top:${b.ty}%` : ''}">${label}${counts[id] ? `<b>${counts[id]}</b>` : ''}</span>
         </a>`
+      }).join('')
+    }
+    if (!decorating) {
+      // every book on the shelf shows its title and author when you point at it
+      const byId = new Map(s.books.map((b) => [b.id, b]))
+      overlay += bookSpots.map((b) => {
+        const bk = byId.get(b.id)
+        if (!bk) return ''
+        const cv = covers.get(b.id)?.src
+        return `<a class="book-spot" href="#books" style="left:${b.l}%;top:${b.t}%;width:${Math.max(b.w, 1.2)}%;height:${b.h}%" aria-label="${esc(bk.title)}${bk.author ? ' by ' + esc(bk.author) : ''}">
+          <span class="book-tip">${cv ? `<img src="${cv}" alt="">` : `<i style="background:${bk.color || '#8E7CC3'}"></i>`}<span><b>${esc(bk.title)}</b>${bk.author ? `<em>${esc(bk.author)}</em>` : ''}</span></span></a>`
       }).join('')
     }
     box.innerHTML = svg + overlay

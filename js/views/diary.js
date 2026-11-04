@@ -118,6 +118,8 @@ export function mount(el) {
           </label>
           <button class="tool" data-pop="layout" title="How the pages look">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 8h3M5.5 11h3M15.5 8h3M15.5 11h3"/></svg><span>Page</span></button>
+          <button class="tool" data-pop="trash" title="Throw a page away">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Delete</span></button>
         </div>
         <div class="popover" id="d-pop" hidden></div>
       </div>
@@ -177,7 +179,7 @@ export function mount(el) {
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
       <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
-      ${hasContent(page) || page.items.some((i) => i.type === 'block' && Object.keys(i.data || {}).length) ? `<button class="page-trash" data-trash="${side}" aria-label="Throw page ${n + 1} in the bin" title="Throw this page in the bin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>` : ''}
+      ${true ? `<button class="page-trash" data-trash="${side}" aria-label="Throw page ${n + 1} in the bin" title="Throw this page in the bin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>` : ''}
       ${side === 0
         ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
         : `<button class="edge edge-next" data-turn="1" aria-label="${lastSpread ? 'New page' : 'Next page'}"><span class="curl" aria-hidden="true"></span></button>`}`
@@ -411,7 +413,11 @@ export function mount(el) {
     if (popover === id) return closePop()
     popover = id
     if (kind === 'layout' && side !== undefined) layoutSide = side
-    if (kind === 'stickers') {
+    if (kind === 'trash') {
+      pop.innerHTML = `<p class="pop-title">Throw a page in the bin</p>
+        <div class="seg page-pick"><button data-trash="0">Left page · ${num(0) + 1}</button><button data-trash="1">Right page · ${num(1) + 1}</button></div>
+        <p class="pop-note">The page crumples into the bin. You can put it back from the bin under the book.</p>`
+    } else if (kind === 'stickers') {
       pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>`
     } else {
       side = layoutSide
@@ -445,6 +451,8 @@ export function mount(el) {
 
   async function trashPage(side) {
     if (busy) return
+    const empty = !pages[side].items.length && !pages[side].ink
+    if (empty) { closePop(); return toast('This page is already empty') }
     busy = true
     closePop()
     const n = num(side)

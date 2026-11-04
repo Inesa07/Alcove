@@ -633,7 +633,7 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .page-trash {
   position: absolute; z-index: 9; top: 2.4%; right: 11%; width: 30px; height: 30px; padding: 6px; border-radius: 50%;
   border: 1px solid rgba(90, 70, 130, .15); background: rgba(255, 255, 255, .85); color: #8a7fa3; cursor: pointer;
-  opacity: 0; transition: opacity .2s, background .2s, color .2s;
+  opacity: .55; transition: opacity .2s, background .2s, color .2s;
 }
 .page[data-side="0"] .page-trash { right: auto; left: 11%; }
 .page:hover .page-trash, .page-trash:focus-visible { opacity: 1; }
@@ -654,3 +654,17 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .bin-actions { display: flex; flex-direction: column; gap: 6px; }
 .bin-empty { color: var(--muted); line-height: 1.5; }
 @media (max-width: 860px) { .bin-list li { flex-direction: column; align-items: stretch; } .bin-actions { flex-direction: row; } .bin { right: 0; } }
+
+/* Books on the room's shelf: point at one to see what it is */
+.book-spot { position: absolute; z-index: 3; display: block; }
+.book-tip {
+  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%) translateY(4px); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 10px; min-width: 150px; max-width: 230px; padding: 8px 12px 8px 8px; border-radius: 14px;
+  background: rgba(255, 255, 255, .97); color: var(--ink); box-shadow: 0 10px 24px rgba(0, 0, 0, .3); transition: opacity .15s, transform .15s; z-index: 5;
+}
+.book-tip img, .book-tip i { flex: none; width: 34px; height: 50px; border-radius: 3px 5px 5px 3px; object-fit: cover; box-shadow: 0 2px 5px rgba(0, 0, 0, .2); }
+.book-tip span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.book-tip b { font-family: var(--serif); font-weight: 400; font-size: 15px; line-height: 1.15; overflow-wrap: anywhere; }
+.book-tip em { font-style: normal; font-size: 12px; color: var(--muted); }
+.book-spot:hover .book-tip, .book-spot:focus-visible .book-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.book-spot:hover { outline: 2px solid rgba(255, 226, 150, .9); outline-offset: 1px; border-radius: 2px; }
