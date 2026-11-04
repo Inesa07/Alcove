@@ -5,6 +5,8 @@ import * as db from '../db.js'
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS } from '../store.js'
 import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
 import { $, esc, toast } from '../ui.js'
+import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
+import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
 
 // Normal mode: objects open pages.
 const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['notes', 'Notes'], desk: ['calendar', 'Calendar'], chest: ['diary/memories', 'Memories'] }
@@ -37,6 +39,7 @@ export function mount(el) {
         <div class="room" id="room"></div>
       </div>
       <aside class="decor" id="decor" hidden aria-live="polite"></aside>
+      <div class="amb" id="amb" hidden></div>
       <dialog class="gallery" id="gallery" aria-labelledby="gallery-title"></dialog>
     </section>`
 
@@ -47,6 +50,11 @@ export function mount(el) {
   let part = null       // the part being changed
 
   const room = () => (decorating ? draft : getState().room)
+
+  // the weather outside, when you turned it on
+  let weather = null
+  const getWeather = () => currentWeather().then((w) => { weather = w; renderRoom(); renderTop() })
+  getWeather()
 
   /* ---------- the room ---------- */
 
@@ -89,6 +97,7 @@ export function mount(el) {
       bookList: list.map((b) => ({ id: b.id, title: b.title, author: b.author, color: b.color, cover: covers.get(b.id)?.src })),
       room: room(),
       tod: timeOfDay(),
+      weather,
       books: s.books.length,
       notes: s.notes.length,
       events: s.events.filter((e) => e.date === today).length,
@@ -145,7 +154,11 @@ export function mount(el) {
     $('#room-hint', el).textContent = decorating ? 'Tap the bed, shelf, desk, chair, picture, window, rug, walls or floor to change it' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
-      : `<button class="decorate-btn" data-gallery>
+      : `<button class="decorate-btn" data-amb aria-expanded="${!$('#amb', el).hidden}" aria-label="Weather and sounds">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-8A5.5 5.5 0 0 1 17 9.5a3.5 3.5 0 0 1 .5 7"/>${playing() ? '<path d="M12 13v7M12 13l3-1"/>' : ''}</svg>
+          <span class="amb-label">${weather ? `${weather.temp}°` : playing() ? SOUNDS[playing()] : 'Ambience'}</span>
+        </button>
+        <button class="decorate-btn" data-gallery>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/></svg>
           Rooms
         </button>
@@ -190,6 +203,36 @@ export function mount(el) {
   }
 
   function render() { renderTop(); renderRoom(); renderPanel() }
+
+  /* ---------- weather and sounds ---------- */
+
+  function renderAmb() {
+    const box = $('#amb', el)
+    box.innerHTML = `
+      <section>
+        <h3>Weather in the window</h3>
+        <p class="sub">${weatherOn() ? (weather ? `Now: ${weather.name.toLowerCase()}, ${weather.temp}°C` : 'Looking at the sky…') : 'Show the real weather where you are: rain, snow, clouds or sun.'}</p>
+        <button class="${weatherOn() ? 'ghost-dark' : 'primary'} small" data-weather>${weatherOn() ? 'Turn off' : 'Show my weather'}</button>
+      </section>
+      <section>
+        <h3>Sounds</h3>
+        <div class="chips">
+          <button class="chip ${!playing() ? 'on' : ''}" data-sound="">Quiet</button>
+          ${Object.entries(SOUNDS).map(([id, n]) => `<button class="chip ${playing() === id ? 'on' : ''}" data-sound="${id}" aria-pressed="${playing() === id}">${n}</button>`).join('')}
+        </div>
+        <label class="vol"><span>Volume</span><input type="range" min="0" max="1" step="0.05" value="${getVolume()}" data-volume></label>
+      </section>`
+  }
+  function toggleAmb(open = $('#amb', el).hidden) {
+    $('#amb', el).hidden = !open
+    if (open) renderAmb()
+    renderTop()
+  }
+  document.addEventListener('pointerdown', function away(e) {
+    if (!el.isConnected) return document.removeEventListener('pointerdown', away)
+    const box = $('#amb', el)
+    if (!box.hidden && !e.target.closest('#amb') && !e.target.closest('[data-amb]')) toggleAmb(false)
+  })
 
   /* ---------- the mood jar ---------- */
 
@@ -276,6 +319,16 @@ export function mount(el) {
     if (t.closest('[data-gallery]')) return openGallery()
     if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
     if (t.closest('[data-jar]')) return openMoodJar()
+    if (t.closest('[data-amb]')) return toggleAmb()
+    const snd = t.closest('[data-sound]')
+    if (snd) { if (snd.dataset.sound) play(snd.dataset.sound); else stop(); renderAmb(); renderTop(); return }
+    if (t.closest('[data-weather]')) {
+      if (weatherOn()) { turnOffWeather(); weather = null; renderRoom(); renderAmb(); renderTop(); return }
+      $('#amb .sub', el).textContent = 'Asking your browser where you are…'
+      turnOnWeather().then((w) => { weather = w; renderRoom(); renderAmb(); renderTop(); window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'weather_on' } })) })
+        .catch((err) => { turnOffWeather(); toast(err.message); renderAmb() })
+      return
+    }
     const pt = t.closest('[data-pet]')
     if (pt) {
       // the pet is happy: a little hop, hearts, and a word
@@ -298,12 +351,13 @@ export function mount(el) {
   })
 
   el.addEventListener('input', (e) => {
+    if (e.target.matches('[data-volume]')) return setVolume(Number(e.target.value))
     const k = e.target.dataset?.setText
     if (k && decorating) { draft = { ...draft, [k]: e.target.value.trim() }; renderRoom() }
   })
 
   render()
   const off = subscribe(renderRoom)
-  const tick = setInterval(renderRoom, 5 * 60 * 1000)
+  const tick = setInterval(() => { renderRoom(); getWeather() }, 5 * 60 * 1000)
   return () => { off(); clearInterval(tick); document.body.classList.remove('decorating') }
 }

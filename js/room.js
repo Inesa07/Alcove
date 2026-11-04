@@ -114,7 +114,12 @@ function painter() {
   const d = {
     out,
     raw(s) { out.push(s) },
-    poly(ps, fill, extra = '') { out.push(`<polygon points="${pts(ps)}" fill="${fill}"${extra}/>`) },
+    poly(ps, fill, extra = '') {
+      out.push(`<polygon points="${pts(ps)}" fill="${fill}"${extra}/>`)
+      if (fill === 'url(#sky)' && d.weather) skyWeather(d, ps)
+    },
+    // rain and snow go in front of hills and buildings, so they wait until the view is drawn
+    flushWeather() { if (d.pending) { out.push(d.pending); d.pending = '' } },
     line(ps, stroke, width = 1, extra = '') { out.push(`<polyline points="${pts(ps)}" fill="none" stroke="${stroke}" stroke-width="${width}"${extra}/>`) },
     box(x0, y0, z0, dx, dy, dz, color, extra = '') {
       const [top, front, side] = Array.isArray(color) ? color : tones(color)
@@ -170,6 +175,68 @@ const SKIES = {
   day: { stops: ['#8EC0E8', '#C6E1F4', '#EEF6FB'], orb: '#FFFBEA', orbZ: 7.0, stars: false, lights: false, beam: 0.34, hills: '#9DB79F' },
   evening: { stops: ['#3E477F', '#B9738F', '#F3BB8F'], orb: '#FFF3D6', orbZ: 6.6, stars: true, lights: true, beam: 0, hills: '#7A6496' },
   night: { stops: ['#0D1330', '#1B2550', '#2C3A6E'], orb: '#E9ECF7', orbZ: 6.9, stars: true, lights: true, beam: 0, hills: '#2A2F55' },
+}
+
+/* ---------- real weather in the window ---------- */
+
+// kind: clear | partly | cloudy | fog | rain | storm | snow
+const GREY = { partly: 0.15, cloudy: 0.45, fog: 0.55, rain: 0.55, storm: 0.7, snow: 0.35 }
+function mix(a, b, t) {
+  const h = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16))
+  const x = h(a), y = h(b)
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('')
+}
+function weatherSky(sky, w) {
+  const g = w && GREY[w.kind]
+  if (!g) return sky
+  const night = sky.lights
+  const to = night ? '#30344A' : '#B9BFCB'
+  return {
+    ...sky,
+    stops: sky.stops.map((c) => mix(c, to, g)),
+    orb: w.kind === 'partly' ? sky.orb : 'transparent',
+    stars: sky.stars && w.kind === 'partly',
+    beam: (sky.beam || 0) * (1 - g),
+  }
+}
+let wseq = 0
+function skyWeather(d, ps) {
+  const w = d.weather, kind = w.kind
+  if (!GREY[kind]) return
+  const sp = ps.map((p) => P(...p))
+  const xs = sp.map((p) => p[0]), ys = sp.map((p) => p[1])
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys)
+  const W = x1 - x0, H = y1 - y0
+  let r = 11
+  const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647
+  const id = 'wx' + ++wseq
+  const clip = `<clipPath id="${id}"><polygon points="${sp.map((p) => p.map((n) => n.toFixed(1)).join(',')).join(' ')}"/></clipPath>`
+  const night = d.weatherNight
+  // clouds
+  const cc = kind === 'partly' ? (night ? '#7A819C' : '#FFFFFF') : kind === 'snow' ? (night ? '#6B7189' : '#EEF0F4') : (night ? '#545A72' : '#D9DDE4')
+  const nClouds = kind === 'partly' ? 2 : 4
+  let clouds = ''
+  for (let i = 0; i < nClouds; i++) {
+    const cx = x0 + W * (0.15 + 0.75 * rnd()), cy = y0 + H * (0.12 + 0.3 * rnd()), s = 0.7 + rnd() * 0.6
+    clouds += `<g class="cloud" style="animation-delay:${(-rnd() * 20).toFixed(1)}s"><ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(13 * s).toFixed(1)}" ry="${(5 * s).toFixed(1)}"/><ellipse cx="${(cx - 6 * s).toFixed(1)}" cy="${(cy - 3 * s).toFixed(1)}" rx="${(7 * s).toFixed(1)}" ry="${(5 * s).toFixed(1)}"/><ellipse cx="${(cx + 5 * s).toFixed(1)}" cy="${(cy - 4 * s).toFixed(1)}" rx="${(8 * s).toFixed(1)}" ry="${(6 * s).toFixed(1)}"/></g>`
+  }
+  let back = `${clip}<g clip-path="url(#${id})" pointer-events="none"><g fill="${cc}" opacity="${kind === 'partly' ? 0.9 : 0.85}">${clouds}</g>`
+  if (kind === 'fog') back += `<rect class="fog" x="${(x0 - 20).toFixed(1)}" y="${(y0 + H * 0.35).toFixed(1)}" width="${(W + 40).toFixed(1)}" height="${(H * 0.3).toFixed(1)}" fill="#F2F3F6" opacity=".55"/><rect class="fog fog2" x="${(x0 - 20).toFixed(1)}" y="${(y0 + H * 0.62).toFixed(1)}" width="${(W + 40).toFixed(1)}" height="${(H * 0.4).toFixed(1)}" fill="#F2F3F6" opacity=".7"/>`
+  back += '</g>'
+  d.raw(back)
+  // rain or snow, in front of the view
+  let front = ''
+  const n = Math.round((W * H) / 70)
+  if (kind === 'rain' || kind === 'storm') {
+    let lines = ''
+    for (let i = 0; i < n; i++) lines += `<path d="M${(x0 + rnd() * (W + 10)).toFixed(1)},${(y0 - 10 + rnd() * (H + 10)).toFixed(1)} l-1.3,6.5"/>`
+    front += `<g class="rain" stroke="${night ? '#AFC0E6' : '#FFFFFF'}" stroke-width=".7" opacity=".8" stroke-linecap="round">${lines}</g><g class="rain rain2" stroke="${night ? '#AFC0E6' : '#FFFFFF'}" stroke-width=".7" opacity=".8" stroke-linecap="round">${lines}</g>`
+    if (kind === 'storm') front += `<rect class="flash" x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${W.toFixed(1)}" height="${H.toFixed(1)}" fill="#FFFFFF"/>`
+  }
+  if (kind === 'snow') {
+    for (let i = 0; i < n * 0.7; i++) front += `<circle class="snow" style="animation-delay:${(-rnd() * 4).toFixed(2)}s;animation-duration:${(3 + rnd() * 2).toFixed(1)}s" cx="${(x0 + rnd() * W).toFixed(1)}" cy="${(y0 + rnd() * H).toFixed(1)}" r="${(0.7 + rnd() * 0.9).toFixed(1)}" fill="#FFFFFF"/>`
+  }
+  if (front) d.pending = `<g clip-path="url(#${id})" pointer-events="none">${front}</g>`
 }
 
 /* ---------- the room ---------- */
@@ -659,6 +726,7 @@ function cityWindow(d, sky, blanket, x0 = 6.0, x1 = 9.6, z0 = 3.2, z1 = 8.0, rai
       x += w + 0.04
     }
   })
+  d.flushWeather()
   // rain: thin lines falling down the glass
   const a = P(x0, 0.03, z1), b = P(x1, 0.03, z0)
   let rain = ''
@@ -1238,6 +1306,7 @@ function plantScene(S) {
   d.poly(quad('right', x0, x1, z0, z1, 0.03), 'url(#sky)')
   d.poly([onWall('right', x0, z0, 0.04), onWall('right', x0, 4.2, 0.04), onWall('right', 5.2, 4.9, 0.04), onWall('right', 6.9, 4.3, 0.04), onWall('right', 8.4, 5.1, 0.04), onWall('right', x1, 4.5, 0.04), onWall('right', x1, z0, 0.04)], '#9DC4A0', ' opacity=".9"')
   ;[4.2, 5.8, 7.4, 9.1].forEach((u, i) => { const c = P(...onWall('right', u, 4.7 + (i % 2) * 0.5, 0.05)); d.raw(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${10 + (i % 2) * 4}" fill="#7FB08A" opacity=".8"/>`) })
+  d.flushWeather()
   d.raw('</g>')
   if (S.photo) wallImage(d, x0, x1, z0, z1, S.photo)
   spots.window = bounds([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], 1)
@@ -1454,7 +1523,7 @@ export function drawRoom(o) {
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
   const theme = THEMES[room.theme] ? room.theme : 'cozy'
-  const sky = SKIES[tod]
+  const sky = weatherSky(SKIES[tod], o.weather)
   const glows = []   // lamp lights, drawn again on top in the night room
   const glow = (x, y, r) => { glows.push([x, y, r]); d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#glow)"/>`) }
   const blanket = (FABRICS[room.blanket] || FABRICS.lilac).c
@@ -1465,6 +1534,8 @@ export function drawRoom(o) {
   const trim = shade(wall.l[1], 0.55)
   const dark = room.wall === 'night'
   const d = painter()
+  d.weather = o.weather || null
+  d.weatherNight = !!SKIES[tod].lights
   const spots = {}
   // each piece is a group, so the one being decorated can glow
   const G = (id) => d.raw(`<g class="part part-${id}${o.selected === id ? ' sel' : ''}">`)
@@ -1576,6 +1647,7 @@ export function drawRoom(o) {
       })
     }
     d.poly([[wx0, 0.03, wz0], [7.0, 0.03, 4.6], [7.7, 0.03, 4.35], [8.4, 0.03, 4.8], [wx1, 0.03, 4.4], [wx1, 0.03, wz0]], sky.hills, ' opacity=".6"')
+    d.flushWeather()
     if (o.windowPhoto) wallImage(d, wx0, wx1, wz0, wz1, o.windowPhoto)
     spots.window = bounds([[wx0, 0, wz0], [wx1, 0, wz0], [wx1, 0, wz1], [wx0, 0, wz1]], 1)
     const mid = (wx0 + wx1) / 2

@@ -841,3 +841,29 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .day.has-mood { background: color-mix(in srgb, var(--m) 26%, transparent); }
 .day.has-mood .dn::after { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; background: var(--m); vertical-align: middle; }
 .jar-spot { border-radius: 30%; }
+
+/* ---------- weather and sounds ---------- */
+.amb {
+  position: absolute; top: 80px; right: 24px; width: 300px; z-index: 6; padding: 6px 22px 10px;
+  background: rgba(24, 21, 40, .92); border: 1px solid rgba(255, 255, 255, .12); border-radius: 24px;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+}
+.amb section { padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.amb section:last-child { border-bottom: none; }
+.amb h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--lilac-text); }
+.amb .sub { margin: 0 0 12px; font-size: 13.5px; line-height: 1.45; opacity: .85; }
+.amb .vol { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 13px; opacity: .9; }
+.amb .vol input { flex: 1; accent-color: var(--honey); }
+html[data-theme="light"] .amb { background: rgba(255, 255, 255, .96); color: #2a2638; border-color: rgba(42, 38, 56, .1); }
+html[data-theme="light"] .amb section { border-bottom-color: rgba(42, 38, 56, .08); }
+@media (max-width: 720px) { .amb { left: 12px; right: 12px; width: auto; top: 64px; } .amb-label { display: none; } }
+
+.room svg .cloud { animation: cloud 26s ease-in-out infinite alternate; }
+@keyframes cloud { from { transform: translateX(-10px) } to { transform: translateX(12px) } }
+.room svg .snow { animation: snow 4s linear infinite; }
+@keyframes snow { from { transform: translate(0, -30px); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } to { transform: translate(4px, 30px); opacity: 0 } }
+.room svg .fog { animation: cloud 18s ease-in-out infinite alternate; }
+.room svg .fog2 { animation-direction: alternate-reverse; }
+.room svg .flash { opacity: 0; animation: flash 7s infinite; }
+@keyframes flash { 0%, 90%, 94%, 100% { opacity: 0 } 91% { opacity: .7 } 92% { opacity: .1 } 93% { opacity: .5 } }
+@media (prefers-reduced-motion: reduce) { .room svg .cloud, .room svg .snow, .room svg .fog, .room svg .flash, .rain { animation: none; } }
