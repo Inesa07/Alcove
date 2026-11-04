@@ -73,11 +73,13 @@ export const THEMES = {
   cozy: { name: 'Cozy room', note: 'Lavender, light wood, fairy lights' },
   japanese: { name: 'Japanese room', note: 'Tatami, a kotatsu table, a futon and paper doors' },
   plants: { name: 'Plant room', note: 'Garden windows, a wooden bed and plants everywhere' },
+  lofi: { name: 'Lo-fi study', note: 'A desk by the window at dusk, a warm lamp, music and a cat' },
 }
 export const THEME_PRESETS = {
   cozy: { wall: 'lavender', wallStyle: 'plain', floor: 'oak', floorStyle: 'planks', rug: 'pink', blanket: 'lilac', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', chairStyle: 'classic' },
   attic: { wall: 'peach', wallStyle: 'boards', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'rose', shelfWood: 'white', deskWood: 'white', bedWood: 'oak', chairColor: 'cream', pet: 'cat', petColor: 'ginger', art: 'flowers' },
   japanese: { wall: 'cream', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'none', blanket: 'blue', chairColor: 'peach', pet: 'cat', petColor: 'white', art: 'plants' },
+  lofi: { wall: 'mocha', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'cream', blanket: 'peach', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', pet: 'cat', petColor: 'black', art: 'moon' },
   plants: { wall: 'cream', wallStyle: 'boards', floor: 'honey', floorStyle: 'herringbone', rug: 'sage', blanket: 'cream', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', pet: 'cat', petColor: 'ginger', art: 'plants' },
   study: { wall: 'night', wallStyle: 'plain', floor: 'walnut', floorStyle: 'planks', rug: 'blue', blanket: 'blue', shelfWood: 'walnut', deskWood: 'walnut', bedWood: 'walnut', chairColor: 'blue', pet: 'cat', petColor: 'black', art: 'moon' },
 }
@@ -1247,6 +1249,87 @@ function plantScene(S) {
   if (sky.beam) d.poly([[4.0, 1.5, 0.02], [9.6, 1.5, 0.02], [8.4, 6.6, 0.02], [2.8, 6.6, 0.02]], 'url(#beam)')
 }
 
+/* ---------- the lo-fi study: a desk by a big window at dusk ---------- */
+
+function headphones(d, x, y, z) {
+  const c = P(x, y, z)
+  d.raw(`<path d="M${c[0] - 7},${c[1] - 1} q7,-12 14,0" stroke="#3A3350" stroke-width="2" fill="none"/><ellipse cx="${c[0] - 7}" cy="${c[1]}" rx="3" ry="3.6" fill="#E07A8F"/><ellipse cx="${c[0] + 7}" cy="${c[1]}" rx="3" ry="3.6" fill="#E07A8F"/>`)
+}
+function mug(d, x, y, z, color, steam) {
+  d.cylinder(x, y, z, 0.2, 0.42, color)
+  const m = P(x, y, z + 0.5)
+  if (steam) d.raw(`<path d="M${(m[0] - 1.5).toFixed(1)},${(m[1] - 2).toFixed(1)} q2,-4 0,-8 M${(m[0] + 2).toFixed(1)},${(m[1] - 2).toFixed(1)} q2,-4 0,-8" fill="none" stroke="#FFF" stroke-opacity=".7" stroke-width="1"/>`)
+}
+function recordPlayer(d, x, y, z, wood) {
+  d.box(x, y, z, 1.2, 1.1, 0.28, [shade(wood, 0.2), wood, shade(wood, -0.12)])
+  const c = P(x + 0.55, y + 0.55, z + 0.29)
+  d.raw(`<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="8.5" ry="4.6" fill="#1E1B26"/><ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="5.5" ry="3" fill="none" stroke="#3A3546" stroke-width=".6"/><ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="2.2" ry="1.2" fill="#E07A8F"/>`)
+  d.raw(`<path d="M${(c[0] + 9).toFixed(1)},${(c[1] - 3).toFixed(1)} l-5,4" stroke="#C9C2D2" stroke-width="1.2" stroke-linecap="round"/>`)
+}
+
+function lofiScene(S) {
+  const { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood } = S
+  const dk = room.deskWood === 'oak' ? '#8A5E40' : deskWood
+  const sw = room.shelfWood === 'oak' ? '#7A5238' : shelfWood
+  // the big window, the city at dusk outside
+  cityWindow(d, sky, blanket, 2.9, 8.5, 2.9, 8.1, false)
+  // fairy lights along the top of the window
+  const fl = []
+  for (let i = 0; i <= 14; i++) fl.push([2.8 + i * 0.41, 0.15, 8.35 - 0.3 * Math.sin((Math.PI * i) / 7)])
+  d.line(fl, '#6E5A4A', 0.8)
+  fl.slice(1, -1).forEach((l, i) => { const p = P(...l); d.raw(`<circle cx="${p[0].toFixed(1)}" cy="${(p[1] + 2).toFixed(1)}" r="7" fill="url(#halo)"/><circle class="twinkle" style="animation-delay:${((i % 5) * 0.3).toFixed(1)}s" cx="${p[0].toFixed(1)}" cy="${(p[1] + 2).toFixed(1)}" r="1.8" fill="${['#FFE29A', '#FFC9A8', '#FFE7C2'][i % 3]}"/>`) })
+  // a hanging plant in the window
+  const hp = P(7.7, 0.6, 8.6), pot = P(7.7, 0.6, 6.8)
+  d.raw(`<path d="M${hp[0].toFixed(1)},${hp[1].toFixed(1)} L${(pot[0] - 5).toFixed(1)},${(pot[1] - 3).toFixed(1)} M${hp[0].toFixed(1)},${hp[1].toFixed(1)} L${(pot[0] + 5).toFixed(1)},${(pot[1] - 3).toFixed(1)}" stroke="#8C7A66" stroke-width=".6"/><path d="M${(pot[0] - 6).toFixed(1)},${(pot[1] - 3).toFixed(1)} h12 l-2,6 h-8 z" fill="#D98F72"/>`)
+  for (let i = 0; i < 8; i++) d.raw(`<ellipse cx="${(pot[0] + (i % 2 ? 5 : -5)).toFixed(1)}" cy="${(pot[1] + 2 + i * 3).toFixed(1)}" rx="3" ry="1.7" fill="${i % 2 ? '#5E8F6E' : '#7AA886'}"/>`)
+  // posters and the notes board on the left wall
+  G('art'); art(d, room.art || 'moon', 'left', 4.3, 5.7, 4.2, 6.2, '#2E2A40'); spots.art = bounds([[0, 4.1, 4.0], [0, 5.9, 4.0], [0, 5.9, 6.4], [0, 4.1, 6.4]], 1); E()
+  d.poly(quad('left', 6.4, 9.2, 4.6, 6.6, 0.02), '#6B4E3A')
+  d.poly(quad('left', 6.52, 9.08, 4.72, 6.48, 0.025), '#B58C66')
+  ;[[6.7, 5.5, '#FBE7A6', -4], [7.5, 5.7, '#F7CFD9', 5], [8.3, 5.4, '#CFE4F5', -3], [6.9, 4.85, '#D8EBD9', 3], [7.8, 4.9, '#FFFFFF', -5], [8.5, 4.85, '#FBE7A6', 4]].slice(0, Math.max(2, Math.min(notes + 1, 6))).forEach(([u, z, c]) => {
+    d.poly(quad('left', u, u + 0.6, z, z + 0.62, 0.03), c)
+    const pin = P(...onWall('left', u + 0.3, z + 0.52, 0.04)); d.raw(`<circle cx="${pin[0].toFixed(1)}" cy="${pin[1].toFixed(1)}" r="1.4" fill="#C2556B"/>`)
+  })
+  spots.board = bounds([[0, 6.4, 4.6], [0, 9.2, 4.6], [0, 9.2, 6.6], [0, 6.4, 6.6]], 3)
+  // a warm rug
+  spots.rug = bounds(Array.from({ length: 24 }, (_, i) => [5.6 + 2.2 * Math.cos((Math.PI * i) / 12), 6.2 + 1.9 * Math.sin((Math.PI * i) / 12), 0]), 0)
+  G('rug')
+  const rc = room.rug === 'none' ? null : '#E9B98A'
+  if (rc) { d.ring(5.6, 6.2, 0.01, 2.2, rc); d.ring(5.6, 6.2, 0.02, 1.7, '#D99A6C'); d.ring(5.6, 6.2, 0.03, 1.1, rc); d.ring(5.6, 6.2, 0.04, 0.5, '#D99A6C') }
+  E()
+  // a full bookcase in the corner, with a record player on top (opens Books)
+  G('shelf'); spots.shelf = bookcase(d, { y0: 0.4, len: 2.9, depth: 1.25, h: 4.4, levels: [0.25, 1.3, 2.35, 3.4], wood: sw, books }); E()
+  recordPlayer(d, 0.05, 1.3, 4.52, '#C9A57E')
+  // the desk under the window: lamp, books, notebook, tea, headphones, the calendar (opens the Calendar)
+  G('desk')
+  wallDesk(d, { x0: 2.6, x1: 8.8, depth: 2.0, top: 2.5, wood: dk, drawers: 'left' })
+  deskLamp(d, 3.1, 0.5, 2.5, true, glow, '#E07A5F')
+  ;[0, 1, 2, 3, 4].forEach((i) => d.box(4.0 + i * 0.22, 0.15, 2.5, 0.2, 0.75, 0.7 + (i % 3) * 0.12, BOOK_COLORS[(i * 2 + 1) % BOOK_COLORS.length]))
+  d.box(4.0, 1.1, 2.5, 0.9, 0.6, 0.12, '#7FA3C8'); d.box(4.05, 1.15, 2.62, 0.8, 0.5, 0.1, '#E9C46A')
+  openDiary(d, 5.3, 0.9, 2.52, true)
+  headphones(d, 6.5, 1.5, 2.55)
+  mug(d, 7.0, 0.7, 2.5, '#F2EBDD', true)
+  calendarFront(d, 7.6, 8.3, 1.65, 2.5, 1.15, events)
+  spots.desk = tagAt(bounds([[2.6, 0, 0], [8.8, 0, 0], [8.8, 2.0, 0], [2.6, 2.0, 0], [2.6, 0, 4.4], [8.8, 2.0, 3.7]], 2), [7.95, 1.65, 3.9])
+  E()
+  // a cat on the desk looking out at the city
+  if (room.pet === 'cat') { const at = P(8.2, 0.5, 2.52); d.raw(sittingCat(PET_COLORS[room.petColor] || PET_COLORS.black, at[0], at[1])) }
+  // a soft desk chair
+  G('chair'); spots.chair = chairFacingWall(d, 5.4, 3.0, { color: (FABRICS[room.chairColor] || FABRICS.lilac).c, wood: dk, style: 'swivel' }); E()
+  // the bed under the notes board (opens the Diary)
+  G('bed')
+  const mt = wallBed(d, { y0: 5.9, len: 3.9, depth: 3.1, base: 0.45, blanket, wood: room.bedWood === 'oak' ? '#8A5E40' : bedWood, mattressZ: 1.25, cushions: [[0.5, '#E9C46A'], [1.5, '#B9A3E0']] })
+  openDiary(d, 0.6, 7.9, mt + 0.02, diaryToday)
+  if (room.pet === 'dog') { const at = P(2.2, 8.6, mt + 0.05); d.raw(pet('dog', PET_COLORS[room.petColor] || PET_COLORS.golden, at[0] - 21, at[1] - 21, 0.42)) }
+  spots.bed = bounds([[0, 5.6, 0], [3.2, 5.6, 0], [3.2, 9.8, 0], [0, 9.8, 0], [0, 5.6, 2.8], [3.2, 9.8, 1.7]], 0)
+  E()
+  // a little cabinet with plants and a speaker
+  d.box(8.7, 2.7, 0, 1.1, 1.2, 1.4, [shade(sw, 0.2), sw, shade(sw, -0.12)])
+  d.box(8.85, 2.9, 1.4, 0.6, 0.5, 0.75, ['#4A4558', '#3A3546', '#2E2A3A'])
+  const sp = P(9.46, 3.15, 1.75); d.raw(`<circle cx="${sp[0].toFixed(1)}" cy="${sp[1].toFixed(1)}" r="2.6" fill="#1E1B26"/>`)
+  plant(d, 9.0, 8.6, leaves)
+}
+
 /* ---------- textures for walls and floor, drawn on the isometric grid ---------- */
 
 const C = COS * K
@@ -1278,7 +1361,7 @@ export function drawRoom(o) {
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
   const theme = THEMES[room.theme] ? room.theme : 'cozy'
-  const sky = theme === 'study' ? SKIES.night : SKIES[tod]
+  const sky = theme === 'lofi' ? (tod === 'night' ? SKIES.night : SKIES.evening) : SKIES[tod]
   const glows = []   // lamp lights, drawn again on top in the night room
   const glow = (x, y, r) => { glows.push([x, y, r]); d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#glow)"/>`) }
   const blanket = (FABRICS[room.blanket] || FABRICS.lilac).c
@@ -1365,6 +1448,7 @@ export function drawRoom(o) {
   else if (theme === 'study') studyScene(S)
   else if (theme === 'japanese') japaneseScene(S)
   else if (theme === 'plants') plantScene(S)
+  else if (theme === 'lofi') lofiScene(S)
   else {
   /* right wall: picture, little wall shelf, window, string lights */
   G('art')
@@ -1713,6 +1797,13 @@ export function drawRoom(o) {
 
   }
 
+  if (theme === 'lofi') {
+    // always the golden hour or night here: a warm dim room lit by the lamp and the lights
+    d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#2A1838', ` opacity="${tod === 'night' ? 0.3 : 0.18}" pointer-events="none"`)
+    glows.forEach(([x, y, r]) => d.raw(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 0.85}" fill="url(#glow)" opacity=".75" pointer-events="none"/>`))
+    const win = P(5.7, 1.5, 3.5)
+    d.raw(`<ellipse cx="${win[0].toFixed(1)}" cy="${win[1].toFixed(1)}" rx="70" ry="40" fill="#F3B98F" opacity=".12" pointer-events="none"/>`)
+  }
   if (theme === 'japanese' && sky.lights) {
     // evening: the room goes soft and dim, the lantern and the shoji glow warm
     d.poly([[-T, -T, H], [-T, D, H], [-T, D, -B], [W, D, -B], [W, -T, -B], [W, -T, HR]], '#1A1838', ' opacity=".22" pointer-events="none"')
