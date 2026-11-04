@@ -31,7 +31,7 @@ const saveStamps = (m) => { try { localStorage.setItem(STAMPS, JSON.stringify(m)
 const stamp = (key, t = Date.now()) => { const m = stamps(); m[key] = t; saveStamps(m) }
 const synced = (key) => SYNCED_PREFIXES.some((p) => key.startsWith(p)) || key === 'state'
 
-async function getClient() {
+export async function getClient() {
   if (client) return client
   if (window.__plannerSupabase) return (client = window.__plannerSupabase) // used by tests
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm')
@@ -121,6 +121,7 @@ const here = () => location.origin + location.pathname
 // supabase keeps the session in localStorage; seeing it lets the app open offline
 const storedSession = () => Object.keys(localStorage).some((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
 export const signedIn = () => !!user
+export const currentUser = () => user
 export const nameOf = () => user?.user_metadata?.name || ''
 
 // Links from emails (confirm the account, reset the password) come back with the session in the address.

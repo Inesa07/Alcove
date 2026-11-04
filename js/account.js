@@ -3,9 +3,12 @@
 // The round button with your initial (top of the menu) shows your account and lets you sign out.
 
 import * as sync from './sync.js'
+import { OWNER_EMAIL as OWNER } from './config.js'
 import { getState, setName } from './store.js'
 import { drawRoom, DEFAULT_ROOM } from './room.js'
 import { $, esc, toast, themeMode, setTheme } from './ui.js'
+import { maybeOnboard } from './onboarding.js'
+import { track, trackDaily, flush } from './analytics.js'
 
 let gate, mode = 'in', note = '', notice = ''
 
@@ -55,7 +58,8 @@ function forms() {
       ${err}${ok}
       <button class="primary auth-go" type="submit">Sign in</button>
     </form>
-    <p class="auth-switch">New here? <button class="auth-link" data-mode="up">Create an account</button></p>`
+    <p class="auth-switch">New here? <button class="auth-link" data-mode="up">Create an account</button></p>
+    <p class="auth-privacy">We collect anonymous usage statistics to improve the app. What you write stays private.</p>`
 }
 
 function paintGate() {
@@ -76,6 +80,9 @@ function closeGate() {
   note = notice = ''
   const n = sync.nameOf()
   if (n && !getState().name) setName(n)
+  trackDaily('app_open')
+  flush()
+  maybeOnboard(n)
 }
 
 const friendly = (e) => {
@@ -97,6 +104,7 @@ async function submit(form) {
     if (form.dataset.do === 'in') { await sync.signIn(f.email.trim(), f.password); closeGate(); toast('Welcome back!') }
     if (form.dataset.do === 'up') {
       const r = await sync.signUp(f.name.trim(), f.email.trim(), f.password)
+      track('signed_up')
       if (r === 'check-email') { mode = 'check'; paintGate(); return }
       if (r === 'exists') { mode = 'in'; notice = 'You already have an account with this email. Sign in with your password.'; paintGate(); return }
       closeGate(); toast('Your account is ready')
@@ -136,6 +144,8 @@ function setupMenu() {
       <h3 id="acc-title">${esc(getState().name || sync.nameOf() || 'Your account')}</h3>
       <p class="acc-who">${esc(i.email)}</p>
       <p class="acc-msg ${i.status === 'error' ? 'bad' : ''}">${line}</p>
+      <p class="acc-privacy">We collect anonymous usage statistics (like which pages are opened) to improve the app. What you write is never part of them.</p>
+      ${i.email === OWNER ? '<p><a class="link-btn" href="#admin" data-close>Open your app statistics</a></p>' : ''}
       <p class="acc-label">Look</p>
       <div class="seg acc-theme" role="radiogroup" aria-label="Look">${[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Like my device']].map(([k, v]) => `<button type="button" role="radio" aria-checked="${themeMode() === k}" data-theme-pick="${k}">${v}</button>`).join('')}</div>
       <div class="bf-actions">

@@ -217,3 +217,45 @@ html.locked .app { visibility: hidden; }
 .acc-theme { background: #efeaf6; }
 .acc-theme button { flex: 1; padding: 0 8px; color: var(--muted); font-size: 13.5px; }
 .acc-theme button[aria-checked="true"] { background: var(--night); color: #fff; }
+
+/* ---------- welcome steps (onboarding) ---------- */
+.onboard { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; background: rgba(18, 15, 32, .72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: ob-in .35s ease-out; }
+.onboard.bye { opacity: 0; transition: opacity .3s; }
+@keyframes ob-in { from { opacity: 0 } }
+.ob-card { width: min(640px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 30px; border-radius: 28px; background: var(--paper); color: var(--ink); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .7); }
+.ob-dots { display: flex; gap: 6px; margin-bottom: 18px; }
+.ob-dots i { width: 28px; height: 5px; border-radius: 3px; background: #e6e0ee; }
+.ob-dots i.on { background: #8e74c4; }
+.ob-card h1 { margin: 0 0 6px; font-family: var(--serif); font-weight: 400; font-size: 32px; }
+.ob-lead { margin: 0 0 20px; color: var(--muted); line-height: 1.5; }
+.ob-card form[data-ob="name"] { display: flex; gap: 10px; }
+.ob-card input { flex: 1; min-width: 0; height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid #ddd6e6; background: #fff; color: var(--ink); font-size: 16px; }
+.ob-go { height: 48px; padding: 0 24px; }
+.ob-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.ob-room { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 8px 10px; border-radius: 18px; border: 2px solid #ece6f3; background: #fff; cursor: pointer; color: var(--ink); font: inherit; }
+.ob-room img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 12px; background: radial-gradient(ellipse at 50% 45%, #403773, #221d3c 70%); }
+.ob-room b { font-weight: 600; font-size: 14px; }
+.ob-room.on { border-color: #8e74c4; box-shadow: 0 0 0 3px rgba(142, 116, 196, .2); }
+.ob-row { display: flex; align-items: center; margin-top: 18px; }
+.ob-first { display: flex; flex-direction: column; gap: 12px; }
+.ob-first form { display: flex; align-items: flex-end; gap: 10px; }
+.ob-first label { flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--muted); }
+.ob-first .primary.small { height: 48px; }
+.auth-privacy { margin: 14px 0 0; font-size: 12px; line-height: 1.4; color: var(--muted, #6f6884); text-align: center; }
+.account .acc-privacy { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+/* ---------- the owner's statistics ---------- */
+.admin { padding: 28px 32px 40px; }
+.ad-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 22px; }
+.ad-cards div { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 18px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); }
+.ad-cards b { font-family: var(--serif); font-weight: 400; font-size: 30px; }
+.ad-cards span, .admin .muted { font-size: 13px; color: var(--lilac-text); }
+.ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.ad-grid section { padding: 18px; border-radius: 18px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08); }
+.ad-grid h3 { margin: 0 0 12px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--lilac-text); }
+.ad-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.ad-bars li { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
+.ad-bars i { display: block; height: 10px; min-width: 2px; border-radius: 5px; background: linear-gradient(90deg, #b9a3e6, #f2c94c); }
+.ad-bars b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ad-big { margin: 0; font-family: var(--serif); font-size: 40px; }
+html[data-theme="light"] .ad-cards div, html[data-theme="light"] .ad-grid section { background: #fff; border-color: rgba(42, 38, 56, .08); }

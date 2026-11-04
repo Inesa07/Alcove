@@ -72,7 +72,11 @@ export function todayISO(d = new Date()) {
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10)
 }
 
+// tells the usage statistics that something happened (never what you wrote)
+const track = (name, props) => window.dispatchEvent(new CustomEvent('planner:track', { detail: { name, props } }))
+
 export function add(kind, item) {
+  track('added', { kind })
   const withId = { id: uid(), ...item }
   state = { ...state, [kind]: [withId, ...state[kind]] }
   save()
@@ -103,6 +107,9 @@ export function restore(kind, { item, i }) {
 
 export function setName(name) { state = { ...state, name }; save() }
 
+// a few simple settings at the top level (like onboarded)
+export function setField(patch) { state = { ...state, ...patch }; save() }
+
 // How many books you want to read this year
 export function setReadingGoal(year, count) { state = { ...state, readingGoal: { ...(state.readingGoal || {}), [year]: count } }; save() }
 
@@ -113,6 +120,7 @@ export function setDiaryBook(patch) { state = { ...state, diaryBook: { ...state.
 export function markDiaryDay(date, hasContent) {
   const has = state.diaryDays.includes(date)
   if (hasContent === has) return
+  if (hasContent) track('diary_day')
   state = { ...state, diaryDays: hasContent ? [...state.diaryDays, date].sort() : state.diaryDays.filter((d) => d !== date) }
   save()
 }

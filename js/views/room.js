@@ -223,6 +223,7 @@ export function mount(el) {
     const id = pick.dataset.pickRoom
     if (decorating) { draft = { ...draft, ...THEME_PRESETS[id], theme: id }; renderRoom(); renderPanel() }
     else { setRoom({ ...THEME_PRESETS[id], theme: id }); renderRoom(); toast(`Welcome to your ${THEMES[id].name.toLowerCase()}`) }
+    window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'room', props: { theme: id } } }))
     g.close()
   })
 

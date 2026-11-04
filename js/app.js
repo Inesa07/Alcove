@@ -8,8 +8,10 @@ import * as booksView from './views/books.js'
 import * as notesView from './views/notes.js'
 import * as calendarView from './views/calendar.js'
 import { setupAccount } from './account.js'
+import * as adminView from './views/admin.js'
+import { trackView } from './analytics.js'
 
-const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView }
+const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView, admin: adminView }
 const GREETING = { morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night' }
 
 let current = null
@@ -54,6 +56,7 @@ function show() {
   const el = old.cloneNode(false)
   old.replaceWith(el)
   el.className = 'view view-' + view
+  trackView(view)
   unmount = VIEWS[view].mount(el) || null
   $$('#nav a').forEach((a) => {
     if (a.dataset.view === view) a.setAttribute('aria-current', 'page')
