@@ -1,4 +1,4 @@
-import { getState, subscribe, setName, todayISO } from './store.js'
+import { getState, subscribe, setName, todayISO, setMood, MOODS } from './store.js'
 import { timeOfDay } from './room.js'
 import { startReminders, upcoming } from './reminders.js'
 import { $, $$, esc, dayLabel, toast } from './ui.js'
@@ -31,11 +31,18 @@ function renderSide() {
   const todays = s.events.filter((e) => e.date === today).length
   $('#count-events').textContent = todays ? todays + ' today' : ''
 
+  const mood = (s.moods || {})[today]
+  $('#mood-pick').innerHTML = `<span>${mood ? 'Today you feel ' + MOODS[mood - 1].name.toLowerCase() : 'How are you today?'}</span><div>${MOODS.map((m) => `<button class="mood-dot ${mood === m.v ? 'on' : ''}" data-mood="${m.v}" style="--m:${m.c}" aria-pressed="${mood === m.v}" aria-label="${m.name}" title="${m.name}"><i></i></button>`).join('')}</div>`
   const next = upcoming(3)
   $('#side-foot').innerHTML = next.length
     ? `<h3>Coming up</h3><ul>${next.map((e) => `<li><span>${esc(e.title)}</span><em>${esc(dayLabel(e.date))}${e.time ? ', ' + e.time : ''}</em></li>`).join('')}</ul>`
     : `<h3>Coming up</h3><p>Nothing planned. Add something in the calendar and I will remind you.</p>`
 }
+
+$('#mood-pick').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-mood]')
+  if (b) setMood(todayISO(), Number(b.dataset.mood))
+})
 
 $('#name-form').addEventListener('submit', (e) => {
   e.preventDefault()

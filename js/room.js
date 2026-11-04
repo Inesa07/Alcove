@@ -181,6 +181,28 @@ const noteBook = (i, corners) => { if (SHELF.list[i]) SHELF.spots.push({ id: SHE
 const BOOK_COLORS = ['#8E7CC3', '#E99AAE', '#7DB4A1', '#E5C36B', '#7FA3C8', '#D98F72', '#B9A3D6', '#93BFAE', '#C9788C', '#6F97C2']
 
 
+/* ---------- the mood jar: one marble for every day you told how you feel this month ---------- */
+
+function moodJar(S, x, y, z) {
+  const { d, spots, moods = [] } = S
+  const b = P(x, y, z)
+  const w = 9, h = 17
+  d.raw(`<ellipse cx="${b[0].toFixed(1)}" cy="${(b[1] + 0.5).toFixed(1)}" rx="${w}" ry="3" fill="#000" opacity=".12"/>`)
+  // marbles fill the jar from the bottom
+  const per = 4, r = 2.1
+  moods.slice(0, 32).forEach((c, i) => {
+    const row = Math.floor(i / per), col = i % per
+    const mx = b[0] - w + 2.8 + col * 4.1 + (row % 2) * 1.6, my = b[1] - 2.4 - row * 2.1
+    if (my < b[1] - h + 3) return
+    d.raw(`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${r}" fill="${c}"/><circle cx="${(mx - 0.7).toFixed(1)}" cy="${(my - 0.7).toFixed(1)}" r=".6" fill="#fff" opacity=".7"/>`)
+  })
+  // the glass, a lid and a ribbon
+  d.raw(`<path d="M${b[0] - w},${b[1] - 2} Q${b[0] - w - 1},${b[1] - h + 2} ${b[0] - w + 2},${b[1] - h} H${b[0] + w - 2} Q${b[0] + w + 1},${b[1] - h + 2} ${b[0] + w},${b[1] - 2} Q${b[0]},${b[1] + 2.5} ${b[0] - w},${b[1] - 2} Z" fill="#DDEBF4" fill-opacity=".35" stroke="#FFFFFF" stroke-opacity=".8" stroke-width=".8"/>`)
+  d.raw(`<path d="M${b[0] - w + 3},${b[1] - h + 3} q-1.5,6 0,11" stroke="#fff" stroke-width="1.2" opacity=".7" fill="none"/>`)
+  d.raw(`<rect x="${b[0] - w + 1.6}" y="${b[1] - h - 2.6}" width="${(w - 1.6) * 2}" height="3.2" rx="1.2" fill="#C9A26E"/><path d="M${b[0] - 2},${b[1] - h + 1} l-2,4 M${b[0] + 2},${b[1] - h + 1} l2,4" stroke="#E07A8F" stroke-width="1.2"/>`)
+  spots.jar = screenSpot(b[0] - w - 3, b[1] - h - 5, w * 2 + 6, h + 8)
+}
+
 /* ---------- the memory chest: a small wooden trunk that glows when there are memories inside ---------- */
 
 function memoryChest(S, x, y) {
@@ -1146,7 +1168,7 @@ function japaneseScene(S) {
   d.box(2.3, 0.05, 0, 2.9, 1.05, 1.5, [shade(dark, 0.22), shade(dark, 0.08), dark])
   ;[0.2, 0.85].forEach((z) => { d.poly([[2.45, 1.11, z], [5.05, 1.11, z], [5.05, 1.11, z + 0.55], [2.45, 1.11, z + 0.55]], shade(dark, 0.14)); ;[3.1, 4.4].forEach((x) => { const k = P(x, 1.12, z + 0.28); d.raw(`<path d="M${(k[0] - 2.6).toFixed(1)},${(k[1] - 0.6).toFixed(1)} q2.6,3 5.2,0" stroke="#1E1610" stroke-width="1.2" fill="none"/>`) }) })
   pineBonsai(d, 3.2, 0.55, 1.5)
-  d.cylinder(4.6, 0.55, 1.5, 0.2, 0.55, '#C9B79A')
+  moodJar(S, 4.6, 0.55, 1.5)
   d.line([onWall('right', 1.9, 6.15, 0.05), onWall('right', 5.1, 6.15, 0.05)], dark, 1.2)
   ;[0, 1, 2, 3, 4, 5].slice(0, Math.max(2, Math.min(notes + 1, 6))).forEach((i) => {
     const u = 2.05 + i * 0.5, z = 5.05 + (i % 2) * 0.2
@@ -1252,6 +1274,7 @@ function plantScene(S) {
   d.box(1.0, 0.05, 0, 2.2, 1.05, 2.2, [shade(dw, 0.18), dw, shade(dw, -0.12)])
   ;[0.22, 0.9, 1.55].forEach((z) => { d.poly([[1.15, 1.11, z], [3.05, 1.11, z], [3.05, 1.11, z + 0.52], [1.15, 1.11, z + 0.52]], shade(dw, -0.04)); const k = P(2.1, 1.12, z + 0.26); d.raw(`<ellipse cx="${k[0].toFixed(1)}" cy="${k[1].toFixed(1)}" rx="2" ry="1" fill="#8A6A48"/>`) })
   calendarFront(d, 2.35, 3.0, 0.9, 2.2, 0.95, events)
+  moodJar(S, 2.05, 0.45, 2.2)
   d.cylinder(1.5, 0.5, 2.2, 0.28, 0.38, '#F2EBDD')
   const pp = P(1.5, 0.5, 2.58); ;[[-6, -6], [6, -7], [0, -12], [-3, -16], [4, -15]].forEach(([dx, dy], i) => d.raw(`<ellipse cx="${(pp[0] + dx).toFixed(1)}" cy="${(pp[1] + dy).toFixed(1)}" rx="5" ry="2.6" fill="${i % 2 ? '#6FA287' : '#8DBB9B'}" transform="rotate(${dx * 6} ${(pp[0] + dx).toFixed(1)} ${(pp[1] + dy).toFixed(1)})"/>`))
   spots.desk = tagAt(bounds([[1.0, 0, 0], [3.2, 0, 0], [3.2, 1.2, 0], [1.0, 1.2, 0], [1.0, 0, 3.4], [3.2, 1.2, 3.3]], 2), [2.65, 0.9, 3.45])
@@ -1396,6 +1419,7 @@ function lofiScene(S) {
   d.box(8.7, 2.7, 0, 1.1, 1.2, 1.4, [shade(sw, 0.2), sw, shade(sw, -0.12)])
   d.box(8.85, 2.9, 1.4, 0.6, 0.5, 0.75, ['#4A4558', '#3A3546', '#2E2A3A'])
   const sp = P(9.46, 3.15, 1.75); d.raw(`<circle cx="${sp[0].toFixed(1)}" cy="${sp[1].toFixed(1)}" r="2.6" fill="#1E1B26"/>`)
+  moodJar(S, 9.35, 3.6, 1.4)
   plant(d, 9.0, 8.6, leaves)
 }
 
@@ -1512,7 +1536,7 @@ export function drawRoom(o) {
   d.box(0, 0, 0, 0.12, D, 0.35, [trim, shade(trim, -0.04), shade(trim, -0.08)])
   d.box(0, 0, 0, W, 0.12, 0.35, [trim, shade(trim, -0.06), shade(trim, -0.08)])
 
-  const S = { d, room, sky, tod, photo: o.windowPhoto, memories: o.memories || 0, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug }
+  const S = { d, room, sky, tod, photo: o.windowPhoto, memories: o.memories || 0, moods: o.moods || [], spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug }
   if (theme === 'attic') atticScene(S)
   else if (theme === 'study') studyScene(S)
   else if (theme === 'japanese') japaneseScene(S)
@@ -1533,8 +1557,7 @@ export function drawRoom(o) {
   d.cylinder(5.15, 0.3, 5.14, 0.22, 0.32, '#D98F72')
   const cac = P(5.15, 0.3, 5.46)
   d.raw(`<path d="M${(cac[0] - 2.5).toFixed(1)},${cac[1].toFixed(1)} q2.5,-9 5,0 z" fill="#7FAF8E"/>`)
-  d.box(5.5, 0.08, 5.14, 0.3, 0.38, 0.6, '#E28FA3')
-  d.box(5.82, 0.08, 5.14, 0.24, 0.38, 0.5, '#7FA3C8')
+  moodJar({ d, spots, moods: o.moods }, 5.7, 0.3, 5.14)
 
   const wx0 = 6.6, wx1 = 9.2, wz0 = 4.0, wz1 = 7.5
   const wash = P(7.9, 0, 5.6)

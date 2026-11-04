@@ -259,3 +259,23 @@ html.locked .app { visibility: hidden; }
 .ad-bars b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .ad-big { margin: 0; font-family: var(--serif); font-size: 40px; }
 html[data-theme="light"] .ad-cards div, html[data-theme="light"] .ad-grid section { background: #fff; border-color: rgba(42, 38, 56, .08); }
+
+/* ---------- mood ---------- */
+.mood-pick { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+.mood-pick > span { font-size: 12.5px; color: var(--lilac-text); }
+.mood-pick > div { display: flex; gap: 7px; }
+.mood-dot { position: relative; width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid transparent; background: var(--m); opacity: .55; cursor: pointer; transition: transform .15s, opacity .15s; }
+.mood-dot:hover { opacity: .9; transform: scale(1.1); }
+.mood-dot.on { opacity: 1; border-color: #fff; box-shadow: 0 0 0 2px var(--m); transform: scale(1.12); }
+html[data-theme="light"] .mood-dot.on { border-color: #fff; }
+.mood-dot i, .mood-big i { position: absolute; inset: 0; background: radial-gradient(circle at 35% 40%, #3a3350 0 1.4px, transparent 1.6px), radial-gradient(circle at 65% 40%, #3a3350 0 1.4px, transparent 1.6px); }
+.mood-big { display: flex; gap: 10px; justify-content: space-between; margin-bottom: 6px; }
+.mood-big button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: 16px; border: 2px solid #ece6f3; background: #fff; cursor: pointer; font: inherit; font-size: 13px; color: var(--ink); }
+.mood-big button i { position: relative; display: block; width: 34px; height: 34px; border-radius: 50%; background-color: var(--m); inset: auto; }
+.mood-big button.on { border-color: var(--m); box-shadow: 0 0 0 3px color-mix(in srgb, var(--m) 30%, transparent); }
+.mood-month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.mood-month b { text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); }
+.mood-month i { height: 34px; display: grid; place-items: center; border-radius: 9px; font-style: normal; font-size: 11.5px; color: #8a84a0; background: var(--m, #f1edf6); }
+.mood-month i[style*="--m"] { color: #3a3350; }
+.mood-month i.today { outline: 2px solid #8e74c4; }
+.mood-month .mm-empty { background: none; }

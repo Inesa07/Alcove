@@ -1,7 +1,7 @@
 // Calendar: see the month or the week, pick a day, write what you need
 // to remember and when. Things with a time get a reminder.
 
-import { getState, subscribe, add, update, remove, restore, todayISO } from '../store.js'
+import { getState, subscribe, add, update, remove, restore, todayISO, MOODS } from '../store.js'
 import { permission, askPermission } from '../reminders.js'
 import { findTime } from '../classify.js'
 import { $, esc, addDays, isoToDate, dayLabel, toast } from '../ui.js'
@@ -59,7 +59,8 @@ export function mount(el) {
       const evs = eventsOn(iso)
       const out = mode === 'month' && iso.slice(0, 7) !== cursor.slice(0, 7)
       const max = mode === 'month' ? 2 : 8
-      return `<button class="day ${iso === today ? 'today' : ''} ${iso === selected ? 'sel' : ''} ${out ? 'out' : ''}" data-date="${iso}"
+      const mv = (getState().moods || {})[iso]
+      return `<button class="day ${iso === today ? 'today' : ''} ${iso === selected ? 'sel' : ''} ${out ? 'out' : ''} ${mv ? 'has-mood' : ''}" style="${mv ? `--m:${MOODS[mv - 1].c}` : ''}" data-date="${iso}"
           aria-label="${esc(dayLabel(iso))}${evs.length ? ', ' + evs.length + ' planned' : ''}" aria-pressed="${iso === selected}">
         <span class="dn">${mode === 'week' ? WD[(isoToDate(iso).getDay() + 6) % 7] + ' ' : ''}${isoToDate(iso).getDate()}</span>
         ${evs.slice(0, max).map((e) => `<span class="ev">${e.time ? `<b>${e.time}</b> ` : ''}${esc(e.title)}</span>`).join('')}

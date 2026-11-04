@@ -107,6 +107,20 @@ export function restore(kind, { item, i }) {
 
 export function setName(name) { state = { ...state, name }; save() }
 
+// how you feel each day: 1 (sad) … 5 (great)
+export const MOODS = [
+  { v: 1, name: 'Sad', c: '#8C9BC4' }, { v: 2, name: 'Low', c: '#A9C1D6' }, { v: 3, name: 'Okay', c: '#9CC7B4' },
+  { v: 4, name: 'Good', c: '#EBC86A' }, { v: 5, name: 'Great', c: '#EDA0B4' },
+]
+export function setMood(date, v) {
+  const moods = { ...(state.moods || {}) }
+  if (moods[date] === v) delete moods[date]
+  else moods[date] = v
+  if (moods[date]) track('mood', { v })
+  state = { ...state, moods }
+  save()
+}
+
 // a few simple settings at the top level (like onboarded)
 export function setField(patch) { state = { ...state, ...patch }; save() }
 

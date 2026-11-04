@@ -838,3 +838,6 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .mem-list b { display: block; font-family: var(--serif); font-weight: 400; font-size: 17px; }
 .mem-list span span { font-size: 13.5px; color: var(--muted); }
 .mem-heart { color: #C2556B; font-size: 18px; line-height: 1.2; }
+.day.has-mood { background: color-mix(in srgb, var(--m) 26%, transparent); }
+.day.has-mood .dn::after { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; background: var(--m); vertical-align: middle; }
+.jar-spot { border-radius: 30%; }

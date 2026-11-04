@@ -2,7 +2,7 @@ import * as db from '../db.js'
 // "My room": the room fills the page. Objects open their pages,
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
-import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS } from '../store.js'
+import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS } from '../store.js'
 import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
 import { $, esc, toast } from '../ui.js'
 
@@ -85,6 +85,7 @@ export function mount(el) {
     const { svg, spots, shapes, bookSpots } = drawRoom({
       windowPhoto,
       memories: (s.diaryBook.hearts || []).length,
+      moods: Object.entries(s.moods || {}).filter(([d]) => d.slice(0, 7) === today.slice(0, 7)).sort().map(([, v]) => MOODS[v - 1].c),
       bookList: list.map((b) => ({ id: b.id, title: b.title, author: b.author, color: b.color, cover: covers.get(b.id)?.src })),
       room: room(),
       tod: timeOfDay(),
@@ -119,6 +120,7 @@ export function mount(el) {
         </a>`
       }).join('')
     }
+    if (!decorating && spots.jar) overlay += `<button class="pet-spot jar-spot" data-jar style="left:${spots.jar.l}%;top:${spots.jar.t}%;width:${spots.jar.w}%;height:${spots.jar.h}%" aria-label="Mood jar: how are you today?"></button>`
     if (!decorating && spots.pet) {
       const pn = room().petName || (room().pet === 'dog' ? 'your dog' : 'your cat')
       overlay += `<button class="pet-spot" data-pet style="left:${spots.pet.l}%;top:${spots.pet.t}%;width:${spots.pet.w}%;height:${spots.pet.h}%" aria-label="Pet ${esc(pn)}"></button>`
@@ -189,6 +191,35 @@ export function mount(el) {
 
   function render() { renderTop(); renderRoom(); renderPanel() }
 
+  /* ---------- the mood jar ---------- */
+
+  const jarDlg = document.createElement('dialog')
+  jarDlg.className = 'sheet-dialog mood-dialog'
+  el.appendChild(jarDlg)
+  function openMoodJar() {
+    const s = getState(), today = todayISO(), moods = s.moods || {}
+    const d0 = new Date(); d0.setDate(1)
+    const days = new Date(d0.getFullYear(), d0.getMonth() + 1, 0).getDate()
+    const lead = (d0.getDay() + 6) % 7
+    const cells = Array.from({ length: lead }, () => '<i class="mm-empty"></i>').join('') + Array.from({ length: days }, (_, i) => {
+      const iso = today.slice(0, 8) + String(i + 1).padStart(2, '0'), v = moods[iso]
+      return `<i class="mm-day ${iso === today ? 'today' : ''}" style="${v ? `--m:${MOODS[v - 1].c}` : ''}" title="${i + 1}${v ? ' · ' + MOODS[v - 1].name : ''}">${i + 1}</i>`
+    }).join('')
+    const mood = moods[today]
+    jarDlg.innerHTML = `<div class="book-form">
+      <h3>How are you today?</h3>
+      <div class="mood-big">${MOODS.map((m) => `<button data-jar-mood="${m.v}" class="${mood === m.v ? 'on' : ''}" style="--m:${m.c}"><i></i><span>${m.name}</span></button>`).join('')}</div>
+      <p class="acc-label">${d0.toLocaleDateString('en-GB', { month: 'long' })}</p>
+      <div class="mood-month"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b>S</b><b>S</b>${cells}</div>
+      <div class="bf-actions"><span class="grow"></span><button class="primary" data-jar-close>Done</button></div></div>`
+    if (!jarDlg.open) jarDlg.showModal()
+  }
+  jarDlg.addEventListener('click', (e) => {
+    if (e.target === jarDlg || e.target.closest('[data-jar-close]')) return jarDlg.close()
+    const m = e.target.closest('[data-jar-mood]')
+    if (m) { setMood(todayISO(), Number(m.dataset.jarMood)); openMoodJar() }
+  })
+
   /* ---------- choosing a whole room ---------- */
 
   const looks = {}
@@ -244,6 +275,7 @@ export function mount(el) {
     if (t.closest('[data-done]')) { part = null; return render() }
     if (t.closest('[data-gallery]')) return openGallery()
     if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
+    if (t.closest('[data-jar]')) return openMoodJar()
     const pt = t.closest('[data-pet]')
     if (pt) {
       // the pet is happy: a little hop, hearts, and a word
