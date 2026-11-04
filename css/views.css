@@ -669,3 +669,30 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .book-spot:hover .book-tip, .book-spot:focus-visible .book-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
 .book-spot:hover { outline: 2px solid rgba(255, 226, 150, .9); outline-offset: 1px; border-radius: 2px; }
 .page-trash { display: none !important; }
+
+/* Choosing a page to throw away */
+.pop-trash { width: min(400px, calc(100vw - 32px)); }
+.tc-title { margin: 2px 2px 12px; font-family: var(--serif); font-style: italic; font-size: 19px; color: var(--ink); }
+.trash-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.trash-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 10px 10px; border-radius: 18px;
+  border: 1.5px solid #ece6f3; background: #fff; cursor: pointer; font: inherit; color: var(--ink); transition: transform .18s, border-color .18s, box-shadow .18s;
+}
+.tc-paper {
+  position: relative; width: 92px; aspect-ratio: 3 / 4; border-radius: 4px 8px 8px 4px; padding: 10px 8px; overflow: hidden; text-align: left;
+  background: repeating-linear-gradient(180deg, transparent 0 11px, rgba(120, 100, 160, .16) 11px 12px), var(--tint, #fffcf4);
+  box-shadow: 0 6px 14px -6px rgba(60, 40, 90, .35), inset 3px 0 0 rgba(90, 70, 130, .08); transition: transform .25s;
+}
+.tc-text { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; font-family: var(--hand, Caveat, cursive); font-size: 13px; line-height: 12px; color: #4a4260; }
+.tc-empty { display: flex; height: 100%; align-items: center; justify-content: center; text-align: center; font-size: 11.5px; color: #a79fbb; }
+.tc-num { position: absolute; right: 6px; bottom: 4px; font-family: var(--serif); font-style: italic; font-size: 11px; color: #a79fbb; }
+.tc-label { font-size: 14px; font-weight: 600; }
+.tc-go { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 99px; background: #f7eef1; color: #b4475d; font-size: 13px; font-weight: 600; }
+.tc-go svg { width: 15px; height: 15px; }
+.trash-card:hover:not(.empty) { transform: translateY(-2px); border-color: #f0c4ce; box-shadow: 0 10px 22px -12px rgba(180, 70, 93, .45); }
+.trash-card:hover:not(.empty) .tc-paper { transform: rotate(-3deg) scale(.97); }
+.trash-card:hover:not(.empty) .tc-go { background: #c2556b; color: #fff; }
+.trash-card.empty { cursor: default; opacity: .6; }
+.trash-card.empty .tc-go { background: #f1eef5; color: #a79fbb; }
+.trash-card:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
+.tc-note { margin: 12px 2px 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }

@@ -413,10 +413,25 @@ export function mount(el) {
     if (popover === id) return closePop()
     popover = id
     if (kind === 'layout' && side !== undefined) layoutSide = side
+    pop.classList.remove('pop-trash')
     if (kind === 'trash') {
-      pop.innerHTML = `<p class="pop-title">Throw a page in the bin</p>
-        <div class="seg page-pick"><button data-trash="0">Left page · ${num(0) + 1}</button><button data-trash="1">Right page · ${num(1) + 1}</button></div>
-        <p class="pop-note">The page crumples into the bin. You can put it back from the bin under the book.</p>`
+      const card = (side) => {
+        const pg = pages[side]
+        const empty = !pg.items.length && !pg.ink
+        const text = empty ? '' : preview(pg)
+        return `<button class="trash-card ${empty ? 'empty' : ''}" data-trash="${side}" ${empty ? 'aria-disabled="true"' : ''} aria-label="Throw away page ${num(side) + 1}">
+          <span class="tc-paper" style="--tint:${TINTS[pg.tint] || TINTS.cream}">
+            ${empty ? '<span class="tc-empty">Empty page</span>' : `<span class="tc-text">${esc(text)}</span>`}
+            <span class="tc-num">${num(side) + 1}</span>
+          </span>
+          <span class="tc-label">${side ? 'Right page' : 'Left page'}</span>
+          <span class="tc-go"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Throw away</span>
+        </button>`
+      }
+      pop.classList.add('pop-trash')
+      pop.innerHTML = `<p class="tc-title">Which page should go in the bin?</p>
+        <div class="trash-cards">${card(0)}${card(1)}</div>
+        <p class="tc-note">Changed your mind later? Open the bin under the book and put the page back.</p>`
     } else if (kind === 'stickers') {
       pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>`
     } else {
