@@ -869,3 +869,26 @@ html[data-theme="light"] .amb section { border-bottom-color: rgba(42, 38, 56, .0
 @media (prefers-reduced-motion: reduce) { .room svg .cloud, .room svg .snow, .room svg .fog, .room svg .flash, .rain { animation: none; } }
 .room svg .balloon { animation: balloon 4s ease-in-out infinite alternate; }
 @keyframes balloon { from { transform: translateY(0) } to { transform: translateY(-3px) } }
+
+/* ---------- diary search and PDF ---------- */
+.diary-actions { display: flex; gap: 10px; }
+.search-input { width: 100%; padding: 12px 16px; border-radius: 14px; border: 1.5px solid #e4def0; font: inherit; font-size: 15px; margin-bottom: 12px; background: #fff; color: var(--ink); }
+.search-input:focus { outline: none; border-color: #8e74c4; }
+.search-list { max-height: 50vh; overflow-y: auto; }
+.search-list mark { background: #FBE3A0; color: inherit; border-radius: 3px; padding: 0 1px; }
+.search-list .mem-heart { font-size: 13px; font-weight: 700; }
+.search-hint { list-style: none; padding: 14px 4px; color: var(--muted); font-size: 14px; }
+#print-book { display: none; }
+@media print {
+  @page { size: A5; margin: 10mm; }
+  body.printing > *:not(#print-book) { display: none !important; }
+  html:has(body.printing), body.printing { background: #fff !important; }
+  body.printing #print-book { display: block; }
+  #print-book * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-cover { height: 180mm; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; break-after: page; color: #3a3350; }
+  .print-cover h1 { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 40px; margin: 0 0 10px; }
+  .print-cover p { color: #8a84a0; margin: 0; }
+  .print-page { width: 128mm; margin: 0 auto; break-after: page; break-inside: avoid; border-radius: 4px; box-shadow: none !important; }
+  .print-page .item-del, .print-page .item-size, .print-page .item-rot, .print-page .grip { display: none !important; }
+}
+@media (max-width: 720px) { .diary-actions .decorate-btn span { display: none; } }

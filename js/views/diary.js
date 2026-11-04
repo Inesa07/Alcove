@@ -91,6 +91,10 @@ export function mount(el) {
     <section class="diary-page">
       <header class="diary-head">
         <div class="day-title"><h2>My diary</h2><p id="d-pages"></p></div>
+        <div class="diary-actions">
+          <button class="decorate-btn" data-search><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>Search</span></button>
+          <button class="decorate-btn" data-pdf><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2.5 2.5L15 14M12.5 10v6.5"/></svg><span>Save as PDF</span></button>
+        </div>
       </header>
 
       <div class="toolbar" role="toolbar" aria-label="Diary tools">
@@ -143,11 +147,16 @@ export function mount(el) {
   const count = () => getState().diaryBook.count
   const num = (side) => spread * 2 + side // page index in the book (0-based)
 
-  const saveSoon = debounce(() => {
-    savePage(num(0), pages[0])
-    savePage(num(1), pages[1])
-    if (hasContent(pages[0]) || hasContent(pages[1])) markDiaryDay(todayISO(), true)
+  // remembers which pages changed at the moment of the change, so turning the page quickly cannot lose them
+  const pendingSave = new Map()
+  const flushSave = debounce(() => {
+    const list = [...pendingSave]
+    pendingSave.clear()
+    // a neighbour read ahead of time may now be old
+    list.forEach(([n, p]) => savePage(n, p).then(() => ahead.delete(Math.floor(n / 2))))
+    if (list.some(([, p]) => hasContent(p))) markDiaryDay(todayISO(), true)
   }, 400)
+  const saveSoon = () => { ahead.delete(spread); pendingSave.set(num(0), pages[0]); pendingSave.set(num(1), pages[1]); flushSave() }
 
   /* ---------- drawing the pages ---------- */
 
@@ -469,6 +478,87 @@ export function mount(el) {
     pop.hidden = false
   }
 
+  /* ---------- search, and the whole diary as a PDF ---------- */
+
+  const allText = (p) => {
+    const words = []
+    p.items.forEach((i) => {
+      if (i.type === 'text' && i.text) words.push(i.text)
+      if ((i.type === 'block' || i.type === 'title') && i.data) Object.values(i.data).forEach((v) => typeof v === 'string' && v.trim() && words.push(v))
+      if (i.type === 'title' && i.text) words.push(i.text)
+    })
+    return words.join(' · ').replace(/\s+/g, ' ').trim()
+  }
+  async function everyPage() {
+    // the pages on screen may have changes that are not saved yet
+    const list = await Promise.all(Array.from({ length: count() }, (_, n) => loadPage(n)))
+    list[num(0)] = pages[0]; list[num(1)] = pages[1]
+    return list
+  }
+
+  const searchDlg = document.createElement('dialog')
+  searchDlg.className = 'sheet-dialog bin-dialog search-dialog'
+  el.appendChild(searchDlg)
+  let searchPages = []
+  async function openSearch() {
+    searchDlg.innerHTML = `<div class="book-form">
+      <h3>Search your diary</h3>
+      <input class="search-input" type="search" placeholder="A word, a name, a place…" aria-label="Search your diary" data-search-q>
+      <ul class="mem-list search-list" aria-live="polite"></ul>
+      <div class="bf-actions"><span class="grow"></span><button type="button" class="primary" data-close-search>Done</button></div></div>`
+    searchDlg.showModal()
+    searchPages = (await everyPage()).map((p, n) => ({ n, t: allText(p) }))
+    showResults('')
+  }
+  function showResults(q) {
+    const ul = $('.search-list', searchDlg)
+    if (!ul) return
+    q = q.trim().toLowerCase()
+    if (!q) { ul.innerHTML = `<li class="search-hint">${searchPages.filter((p) => p.t).length} pages with writing. Type to find a word on any page.</li>`; return }
+    const hits = searchPages.filter((p) => p.t.toLowerCase().includes(q))
+    ul.innerHTML = hits.length ? hits.map(({ n, t }) => {
+      const i = t.toLowerCase().indexOf(q), a = Math.max(0, i - 50)
+      const snip = (a ? '…' : '') + esc(t.slice(a, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length, i + q.length + 80)) + (i + q.length + 80 < t.length ? '…' : '')
+      return `<li><button data-go-page="${n}"><span class="mem-heart">${n + 1}</span><span><b>Page ${n + 1}</b><span>${snip}</span></span></button></li>`
+    }).join('') : `<li class="search-hint">Nothing found for “${esc(q)}”.</li>`
+  }
+  searchDlg.addEventListener('input', (e) => { if (e.target.matches('[data-search-q]')) showResults(e.target.value) })
+  searchDlg.addEventListener('click', async (e) => {
+    if (e.target === searchDlg || e.target.closest('[data-close-search]')) return searchDlg.close()
+    const go = e.target.closest('[data-go-page]')
+    if (go) { searchDlg.close(); await openSpread(Math.floor(Number(go.dataset.goPage) / 2)) }
+  })
+
+  async function savePDF() {
+    const list = (await everyPage()).map((p, n) => ({ p, n })).filter(({ p }) => hasContent(p))
+    if (!list.length) return toast('Your diary is empty. Write something first')
+    document.getElementById('print-book')?.remove()
+    const out = document.createElement('div')
+    out.id = 'print-book'
+    const name = getState().name
+    out.innerHTML = `<section class="print-cover"><h1>${name ? esc(name) + '’s diary' : 'My diary'}</h1><p>${list.length} ${list.length === 1 ? 'page' : 'pages'} · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p></section>` +
+      list.map(({ p, n }) => {
+        const blocks = p.items.filter((i) => i.type === 'block' || i.type === 'title')
+        const free = p.items.filter((i) => i.type !== 'block' && i.type !== 'title')
+        return `<div class="page print-page paper-${p.paper}" style="--tint:${TINTS[p.tint] || TINTS.cream}" data-print="${n}">
+          <div class="paper"></div><div class="blocks">${blocks.map(itemHTML).join('')}</div><div class="items">${free.map(itemHTML).join('')}</div>
+          ${p.ink ? `<img class="ink-layer" src="${p.ink}" alt="">` : ''}<footer class="page-foot"><span class="page-num">${n + 1}</span></footer></div>`
+      }).join('')
+    document.body.appendChild(out)
+    list.forEach(({ p, n }) => p.items.filter((it) => it.type === 'text').forEach((it) => {
+      const t = out.querySelector(`[data-print="${n}"] [data-id="${it.id}"] .text`)
+      if (t) { t.innerText = it.text || ''; t.removeAttribute('contenteditable') }
+    }))
+    out.querySelectorAll('[contenteditable]').forEach((x) => x.removeAttribute('contenteditable'))
+    await Promise.all([...out.querySelectorAll('img')].map((im) => im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r })))
+    document.body.classList.add('printing')
+    const done = () => { document.body.classList.remove('printing'); out.remove(); window.removeEventListener('afterprint', done) }
+    window.addEventListener('afterprint', done)
+    window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'diary_pdf' } }))
+    toast('Choose “Save as PDF” in the print window')
+    setTimeout(() => window.print(), 50)
+  }
+
   /* ---------- the memory chest: pages you kept ---------- */
 
   const memDlg = document.createElement('dialog')
@@ -598,6 +688,8 @@ export function mount(el) {
     if (t.closest('[data-open-memories]')) { closePop(); return openMemories() }
     const trash = t.closest('[data-trash]')
     if (trash) return trashPage(Number(trash.dataset.trash))
+    if (t.closest('[data-search]')) return openSearch()
+    if (t.closest('[data-pdf]')) return savePDF()
     const turnBtn = t.closest('[data-turn]')
     if (turnBtn) return turn(Number(turnBtn.dataset.turn))
     const toolBtn = t.closest('[data-tool]')
