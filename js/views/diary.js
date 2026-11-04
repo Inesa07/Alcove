@@ -680,7 +680,8 @@ export function mount(el) {
     }
     if (e.target.closest('[data-del]')) return
     if (e.target.closest('.text') && !e.target.closest('[data-grip]')) return
-    action = { kind: e.target.closest('[data-resize]') ? 'resize' : 'move', it, itemEl, rect, sx: e.clientX, sy: e.clientY, x: it.x, y: it.y, w: it.w }
+    const ir = itemEl.getBoundingClientRect()
+    action = { kind: e.target.closest('[data-resize]') ? 'resize' : 'move', it, itemEl, rect, side, sx: e.clientX, sy: e.clientY + window.scrollY, x: it.x, y: it.y, w: it.w, ox: e.clientX - ir.left, oy: e.clientY - ir.top }
     itemEl.setPointerCapture(e.pointerId)
     itemEl.classList.add('dragging')
     e.preventDefault()
@@ -694,8 +695,28 @@ export function mount(el) {
       return
     }
     const dx = ((e.clientX - action.sx) / action.rect.width) * 100
-    const dy = ((e.clientY - action.sy) / action.rect.height) * 100
+    const dy = ((e.clientY + window.scrollY - action.sy) / action.rect.height) * 100
     if (action.kind === 'move') {
+      // on a phone the pages are one under the other: near the top or bottom of the screen, scroll along
+      if (stacked()) {
+        if (e.clientY > window.innerHeight - 80) window.scrollBy(0, 14)
+        else if (e.clientY < 80) window.scrollBy(0, -14)
+      }
+      // dragged over the other page: the sticker, photo or text moves to that page
+      const other = 1 - action.side
+      const or = pageEls[other].getBoundingClientRect()
+      if (e.clientX >= or.left && e.clientX <= or.right && e.clientY >= or.top && e.clientY <= or.bottom) {
+        const it = action.it
+        pages[action.side].items = pages[action.side].items.filter((i) => i !== it)
+        pages[other].items.push(it)
+        it.x = ((e.clientX - action.ox - or.left) / or.width) * 100
+        it.y = ((e.clientY - action.oy - or.top) / or.height) * 100
+        $('.items', pageEls[other]).appendChild(action.itemEl)
+        action.itemEl.style.left = it.x + '%'
+        action.itemEl.style.top = it.y + '%'
+        Object.assign(action, { side: other, rect: or, sx: e.clientX, sy: e.clientY + window.scrollY, x: it.x, y: it.y })
+        return
+      }
       action.it.x = Math.max(-4, Math.min(100 - action.it.w + 4, action.x + dx))
       action.it.y = Math.max(-2, Math.min(96, action.y + dy))
       action.itemEl.style.left = action.it.x + '%'
