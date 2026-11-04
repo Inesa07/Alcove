@@ -91,6 +91,9 @@ export function remove(kind, id) {
 
 export function setName(name) { state = { ...state, name }; save() }
 
+// How many books you want to read this year
+export function setReadingGoal(year, count) { state = { ...state, readingGoal: { ...(state.readingGoal || {}), [year]: count } }; save() }
+
 export function setRoom(patch) { state = { ...state, room: { ...state.room, ...patch } }; save() }
 
 export function setDiaryBook(patch) { state = { ...state, diaryBook: { ...state.diaryBook, ...patch } }; save() }

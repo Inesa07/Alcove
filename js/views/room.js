@@ -72,7 +72,8 @@ export function mount(el) {
     if (!box) return // the page was closed
     const s = getState()
     const today = todayISO()
-    const list = [...s.books].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    // books you are reading now come first, so they stand with their covers out on the shelf
+    const list = [...s.books].sort((a, b) => ((b.status === 'reading') - (a.status === 'reading')) || (b.createdAt || 0) - (a.createdAt || 0))
     const { svg, spots, shapes, bookSpots } = drawRoom({
       bookList: list.map((b) => ({ id: b.id, title: b.title, author: b.author, color: b.color, cover: covers.get(b.id)?.src })),
       room: room(),
@@ -114,7 +115,7 @@ export function mount(el) {
         if (!bk) return ''
         const cv = covers.get(b.id)?.src
         return `<a class="book-spot" href="#books" style="left:${b.l}%;top:${b.t}%;width:${Math.max(b.w, 1.2)}%;height:${b.h}%" aria-label="${esc(bk.title)}${bk.author ? ' by ' + esc(bk.author) : ''}">
-          <span class="book-tip">${cv ? `<img src="${cv}" alt="">` : `<i style="background:${bk.color || '#8E7CC3'}"></i>`}<span><b>${esc(bk.title)}</b>${bk.author ? `<em>${esc(bk.author)}</em>` : ''}</span></span></a>`
+          <span class="book-tip">${cv ? `<img src="${cv}" alt="">` : `<i style="background:${bk.color || '#8E7CC3'}"></i>`}<span><b>${esc(bk.title)}</b>${bk.author ? `<em>${esc(bk.author)}</em>` : ''}${bk.status === 'reading' ? `<em class="tip-reading">Reading now${bk.pages ? ` · ${Math.round(((bk.page || 0) / bk.pages) * 100)}%` : ''}</em>` : bk.rating ? `<em class="tip-stars">${'★'.repeat(bk.rating)}</em>` : ''}</span></span></a>`
       }).join('')
     }
     box.innerHTML = svg + overlay
