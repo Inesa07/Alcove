@@ -207,9 +207,16 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .polaroid img { width: 100%; height: auto; object-fit: cover; display: block; }
 .tape { position: absolute; top: -5%; left: 50%; width: 36%; height: 9%; transform: translateX(-50%) rotate(-3deg); background: rgba(242, 201, 76, .55); }
 
-.item-del, .item-size, .grip { position: absolute; display: none; }
-.item.selected .item-del, .item.selected .item-size, .item.selected .grip { display: block; }
-.book:not([data-using="hand"]) .item .item-del, .book:not([data-using="hand"]) .item .item-size, .book:not([data-using="hand"]) .item .grip { display: none; }
+.item-del, .item-size, .grip, .item-rot { position: absolute; display: none; }
+.item.selected .item-del, .item.selected .item-size, .item.selected .grip, .item.selected .item-rot { display: block; }
+.book:not([data-using="hand"]) .item .item-del, .book:not([data-using="hand"]) .item .item-size, .book:not([data-using="hand"]) .item .grip, .book:not([data-using="hand"]) .item .item-rot { display: none; }
+.item-rot {
+  left: 50%; top: -40px; width: 26px; height: 26px; margin-left: -13px; padding: 4px; border-radius: 13px; z-index: 3; cursor: grab; touch-action: none;
+  background: #fff; color: #8e74c4; border: 2px solid #8e74c4; box-shadow: 0 3px 8px rgba(0, 0, 0, .18);
+}
+.item-rot::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 14px; margin-left: -1px; background: #8e74c4; opacity: .6; }
+.item-rot svg { display: block; width: 100%; height: 100%; }
+.item.dragging .item-rot { cursor: grabbing; }
 .item-del {
   top: -14px; right: -14px; width: 28px; height: 28px; border-radius: 14px; border: none;
   background: var(--night); color: #fff; font-size: 16px; line-height: 1; z-index: 3;
@@ -696,3 +703,6 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .trash-card.empty .tc-go { background: #f1eef5; color: #a79fbb; }
 .trash-card:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
 .tc-note { margin: 12px 2px 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+/* the buttons on an item stay upright when the item is turned */
+.item-del { transform: rotate(calc(var(--rot, 0deg) * -1)); }
+.item-rot svg { transform: rotate(calc(var(--rot, 0deg) * -1)); }

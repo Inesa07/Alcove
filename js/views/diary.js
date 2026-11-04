@@ -161,6 +161,7 @@ export function mount(el) {
       ${inner}
       <button class="item-del" data-del aria-label="Remove">×</button>
       <span class="item-size" data-resize aria-hidden="true"></span>
+      <span class="item-rot" data-rotate title="Turn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg></span>
     </div>`
   }
 
@@ -679,6 +680,15 @@ export function mount(el) {
       itemEl.classList.add('selected')
     }
     if (e.target.closest('[data-del]')) return
+    if (e.target.closest('[data-rotate]')) {
+      // turning: the angle follows the finger around the middle of the item
+      const ir0 = itemEl.getBoundingClientRect()
+      const cx = ir0.left + ir0.width / 2, cy = ir0.top + ir0.height / 2
+      action = { kind: 'rotate', it, itemEl, cx, cy, start: Math.atan2(e.clientY - cy, e.clientX - cx), rot: it.rot || 0 }
+      itemEl.classList.add('dragging')
+      e.preventDefault()
+      return
+    }
     if (e.target.closest('.text') && !e.target.closest('[data-grip]')) return
     const ir = itemEl.getBoundingClientRect()
     action = { kind: e.target.closest('[data-resize]') ? 'resize' : 'move', it, itemEl, rect, side, sx: e.clientX, sy: e.clientY + window.scrollY, x: it.x, y: it.y, w: it.w, ox: e.clientX - ir.left, oy: e.clientY - ir.top }
@@ -692,6 +702,14 @@ export function mount(el) {
     if (action.kind === 'draw') {
       const [x, y] = action.at(e)
       action.ctx.lineTo(x, y); action.ctx.stroke(); action.ctx.beginPath(); action.ctx.moveTo(x, y)
+      return
+    }
+    if (action.kind === 'rotate') {
+      let deg = action.rot + ((Math.atan2(e.clientY - action.cy, e.clientX - action.cx) - action.start) * 180) / Math.PI
+      deg = ((deg + 540) % 360) - 180
+      if (Math.abs(deg) < 4) deg = 0 // a little pull towards straight
+      action.it.rot = Math.round(deg * 10) / 10
+      action.itemEl.style.setProperty('--rot', action.it.rot + 'deg')
       return
     }
     const dx = ((e.clientX - action.sx) / action.rect.width) * 100
