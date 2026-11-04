@@ -10,7 +10,7 @@ import * as db from './db.js'
 const STAMPS = 'planner.stamps'   // when each key last changed on this device
 const SYNCED = 'planner.synced'   // this device has synced at least once
 const TABLE = 'planner_data'
-const SYNCED_PREFIXES = ['bp:', 'cover:', 'bin:']
+const SYNCED_PREFIXES = ['bp:', 'cover:', 'bin:', 'dream:']
 
 let client = null
 let user = null
@@ -80,7 +80,7 @@ export async function syncNow() {
     }
 
     // 2. send what is newer here
-    const localKeys = new Set(['state', ...(await db.keys('bp:')), ...(await db.keys('cover:')), ...(await db.keys('bin:')), ...dirty])
+    const localKeys = new Set(['state', ...(await db.keys('bp:')), ...(await db.keys('cover:')), ...(await db.keys('bin:')), ...(await db.keys('dream:')), ...dirty])
     const now = stamps()
     const push = [...localKeys].filter((k) => !pull.includes(k) && (dirty.has(k) || !remote.has(k) || (now[k] || 0) > remote.get(k)))
     for (const k of push) {
@@ -201,7 +201,7 @@ export async function signOut() {
   const c = await getClient()
   await c.auth.signOut()
   user = null
-  for (const k of [...(await db.keys('bp:')), ...(await db.keys('cover:')), ...(await db.keys('bin:')), ...(await db.keys('page:'))]) await db.del(k, true)
+  for (const k of [...(await db.keys('bp:')), ...(await db.keys('cover:')), ...(await db.keys('bin:')), ...(await db.keys('dream:')), ...(await db.keys('page:'))]) await db.del(k, true)
   ;['planner.v2', 'planner.v1', STAMPS, SYNCED].forEach((k) => localStorage.removeItem(k))
   setStatus('signed-out')
 }

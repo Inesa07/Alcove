@@ -118,6 +118,8 @@ export function mount(el) {
           </label>
           <button class="tool" data-pop="layout" title="How the pages look">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 8h3M5.5 11h3M15.5 8h3M15.5 11h3"/></svg><span>Page</span></button>
+          <button class="tool" data-pop="keep" title="Keep a page in your memory chest">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>Keep</span></button>
           <button class="tool" data-pop="trash" title="Throw a page away">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Delete</span></button>
         </div>
@@ -180,6 +182,7 @@ export function mount(el) {
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
       <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
+      ${page.heart ? '<span class="page-ribbon" aria-label="Kept in your memory chest">♥</span>' : ''}
 
       ${side === 0
         ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
@@ -415,7 +418,21 @@ export function mount(el) {
     popover = id
     if (kind === 'layout' && side !== undefined) layoutSide = side
     pop.classList.remove('pop-trash')
-    if (kind === 'trash') {
+    if (kind === 'keep') {
+      const card = (side) => {
+        const pg = pages[side]
+        const on = !!pg.heart
+        return `<button class="trash-card keep-card ${on ? 'on' : ''}" data-keep="${side}" aria-pressed="${on}">
+          <span class="tc-paper" style="--tint:${TINTS[pg.tint] || TINTS.cream}">${pg.items.length || pg.ink ? `<span class="tc-text">${esc(preview(pg))}</span>` : '<span class="tc-empty">Empty page</span>'}<span class="tc-num">${num(side) + 1}</span>${on ? '<span class="tc-heart">♥</span>' : ''}</span>
+          <span class="tc-label">${side ? 'Right page' : 'Left page'}</span>
+          <span class="tc-go keep-go">${on ? '♥ Kept' : '♡ Keep'}</span>
+        </button>`
+      }
+      pop.classList.add('pop-trash')
+      pop.innerHTML = `<p class="tc-title">Keep a page in your memory chest</p>
+        <div class="trash-cards">${card(0)}${card(1)}</div>
+        <p class="tc-note">Special days go in the chest in your room. <button class="link-btn" data-open-memories>Open the memory chest</button></p>`
+    } else if (kind === 'trash') {
       const card = (side) => {
         const pg = pages[side]
         const empty = !pg.items.length && !pg.ink
@@ -451,6 +468,27 @@ export function mount(el) {
     }
     pop.hidden = false
   }
+
+  /* ---------- the memory chest: pages you kept ---------- */
+
+  const memDlg = document.createElement('dialog')
+  memDlg.className = 'sheet-dialog bin-dialog memories'
+  el.appendChild(memDlg)
+  async function openMemories() {
+    const list = (getState().diaryBook.hearts || []).filter((n) => n < count())
+    const rows = await Promise.all(list.map(async (n) => ({ n, p: await loadPage(n) })))
+    memDlg.innerHTML = `<div class="book-form">
+      <h3>Memory chest</h3>
+      ${rows.length ? `<ul class="mem-list">${rows.map(({ n, p }) => `<li><button data-go-page="${n}"><span class="mem-heart">♥</span><span><b>Page ${n + 1}</b><span>${esc(preview(p))}</span></span></button></li>`).join('')}</ul>`
+        : '<p class="bin-empty">Your chest is empty for now. On a page you want to remember, press <b>Keep</b> in the toolbar.</p>'}
+      <div class="bf-actions"><span class="grow"></span><button type="button" class="primary" data-close-mem>Done</button></div></div>`
+    if (!memDlg.open) memDlg.showModal()
+  }
+  memDlg.addEventListener('click', async (e) => {
+    if (e.target === memDlg || e.target.closest('[data-close-mem]')) return memDlg.close()
+    const go = e.target.closest('[data-go-page]')
+    if (go) { memDlg.close(); await openSpread(Math.floor(Number(go.dataset.goPage) / 2)) }
+  })
 
   /* ---------- the recycle bin ---------- */
 
@@ -544,6 +582,20 @@ export function mount(el) {
 
   el.addEventListener('click', (e) => {
     const t = e.target
+    const keep = t.closest('[data-keep]')
+    if (keep) {
+      const side = Number(keep.dataset.keep)
+      const pg = pages[side]
+      if (!pg.items.length && !pg.ink) return toast('Write something on this page first')
+      pg.heart = !pg.heart
+      const hearts = new Set(getState().diaryBook.hearts || [])
+      pg.heart ? hearts.add(num(side)) : hearts.delete(num(side))
+      setDiaryBook({ hearts: [...hearts].sort((a, b) => a - b) })
+      saveSoon(); render(); popover = null; openPop('keep')
+      if (pg.heart) toast('Kept in your memory chest ♥')
+      return
+    }
+    if (t.closest('[data-open-memories]')) { closePop(); return openMemories() }
     const trash = t.closest('[data-trash]')
     if (trash) return trashPage(Number(trash.dataset.trash))
     const turnBtn = t.closest('[data-turn]')
@@ -829,6 +881,8 @@ export function mount(el) {
   ensureBook().then(() => {
     const { count: c, spread: s } = getState().diaryBook
     openSpread(Math.min(s, Math.max(0, c / 2 - 1)))
+    // coming from the chest in the room
+    if (location.hash.endsWith('/memories')) { history.replaceState(null, '', '#diary'); openMemories() }
   })
   return () => { document.removeEventListener('keydown', onKey); trimEnd() }
 }

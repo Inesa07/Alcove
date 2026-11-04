@@ -180,6 +180,67 @@ const bookAt = (i, fallback) => SHELF.list[i]?.color || fallback
 const noteBook = (i, corners) => { if (SHELF.list[i]) SHELF.spots.push({ id: SHELF.list[i].id, ...bounds(corners, 0) }) }
 const BOOK_COLORS = ['#8E7CC3', '#E99AAE', '#7DB4A1', '#E5C36B', '#7FA3C8', '#D98F72', '#B9A3D6', '#93BFAE', '#C9788C', '#6F97C2']
 
+
+/* ---------- the memory chest: a small wooden trunk that glows when there are memories inside ---------- */
+
+function memoryChest(S, x, y) {
+  const { d, spots, memories } = S
+  const wood = '#9A6A44', band = '#C9A26E'
+  d.shadow(x - 0.1, y - 0.1, x + 1.4, y + 0.95, 0.16)
+  d.box(x, y, 0, 1.3, 0.85, 0.7, [shade(wood, 0.15), wood, shade(wood, -0.14)])
+  // the rounded lid
+  const lid = []
+  for (let i = 0; i <= 8; i++) { const a = Math.PI * (i / 8); lid.push([x, y + 0.425 - 0.425 * Math.cos(a), 0.7 + 0.32 * Math.sin(a)]) }
+  d.poly([...lid.map(([, yy, z]) => [x + 1.3, yy, z])], shade(wood, -0.18))
+  d.poly([[x, y + 0.85, 0.7], [x + 1.3, y + 0.85, 0.7], ...lid.slice().reverse().map(([, yy, z]) => [x + 1.3, yy, z]).slice(0, 1), [x, y + 0.85, 0.7]], wood)
+  for (let i = 0; i < 8; i++) d.poly([[x, lid[i][1], lid[i][2]], [x + 1.3, lid[i][1], lid[i][2]], [x + 1.3, lid[i + 1][1], lid[i + 1][2]], [x, lid[i + 1][1], lid[i + 1][2]]], shade(wood, 0.05 + 0.02 * Math.sin((i / 8) * Math.PI)))
+  ;[0.22, 1.08].forEach((dx) => { d.poly([[x + dx, y + 0.86, 0], [x + dx + 0.1, y + 0.86, 0], [x + dx + 0.1, y + 0.86, 0.7], [x + dx, y + 0.86, 0.7]], band); d.line(lid.map(([, yy, z]) => [x + dx + 0.05, yy, z + 0.01]), band, 1.6) })
+  const lock = P(x + 0.65, y + 0.87, 0.55)
+  d.raw(`<path d="M${lock[0] - 2.6},${lock[1] - 1} q2.6,-3 5.2,0 v3 h-5.2z" fill="${band}"/><text x="${lock[0]}" y="${(lock[1] + 1.4).toFixed(1)}" font-size="3" fill="#B4475D" text-anchor="middle">♥</text>`)
+  if (memories > 0) {
+    const g = P(x + 0.65, y + 0.42, 1.05)
+    d.raw(`<circle cx="${g[0].toFixed(1)}" cy="${g[1].toFixed(1)}" r="14" fill="url(#halo)" opacity=".8"/>`)
+  }
+  spots.chest = bounds([[x, y, 0], [x + 1.3, y, 0], [x + 1.3, y + 0.85, 0], [x, y + 0.85, 0], [x, y + 0.42, 1.05]], 3)
+}
+
+/* ---------- your own photo as the view out of a window (on the right wall) ---------- */
+
+function wallImage(d, u0, u1, z0, z1, src) {
+  const id = 'wi' + ++softN
+  const y = 0.035
+  const tl = P(u0, y, z1), tr = P(u1, y, z1), bl = P(u0, y, z0)
+  const asp = (u1 - u0) / (z1 - z0)
+  d.raw(`<clipPath id="${id}"><polygon points="${pts([[u0, y, z0], [u1, y, z0], [u1, y, z1], [u0, y, z1]])}"/></clipPath>`)
+  d.raw(`<g clip-path="url(#${id})"><image href="${src}" x="0" y="0" width="${asp.toFixed(3)}" height="1" preserveAspectRatio="xMidYMid slice" transform="matrix(${((tr[0] - tl[0]) / asp).toFixed(3)} ${((tr[1] - tl[1]) / asp).toFixed(3)} ${(bl[0] - tl[0]).toFixed(3)} ${(bl[1] - tl[1]).toFixed(3)} ${tl[0].toFixed(2)} ${tl[1].toFixed(2)})"/></g>`)
+  // a soft reflection so it still feels like glass
+  d.poly([[u0, y + 0.002, z0], [u0 + (u1 - u0) * 0.35, y + 0.002, z1], [u0 + (u1 - u0) * 0.5, y + 0.002, z1], [u0 + (u1 - u0) * 0.15, y + 0.002, z0]], '#FFFFFF', ' opacity=".12"')
+}
+
+/* ---------- the live pet: where it is depends on the time of day ---------- */
+
+const screenSpot = (x, y, w, h) => ({ l: ((x - VB.x) / VB.w) * 100, t: ((y - VB.y) / VB.h) * 100, w: (w / VB.w) * 100, h: (h / VB.h) * 100 })
+// places: bed = [x, y, z] on the bed, floor = [x, y] on the rug, sill = [x, y, z] by a window (cats only)
+function livePet(S, { bed, floor, sill }) {
+  const { d, room, spots, tod } = S
+  if (room.pet !== 'cat' && room.pet !== 'dog') return
+  const c = PET_COLORS[room.petColor] || PET_COLORS[room.pet === 'dog' ? 'golden' : 'black']
+  let where = tod === 'evening' ? 'floor' : tod === 'morning' ? (room.pet === 'cat' && sill ? 'sill' : 'floor') : 'bed'
+  if (where === 'floor' && !floor) where = 'bed'
+  d.raw('<g class="pet-g">')
+  if (where === 'sill') {
+    const at = P(...sill)
+    d.raw(sittingCat(c, at[0], at[1]))
+    spots.pet = screenSpot(at[0] - 12, at[1] - 32, 24, 34)
+  } else {
+    const at = where === 'bed' ? P(...bed) : P(floor[0], floor[1], 0.02)
+    if (where === 'floor') d.raw(`<ellipse cx="${at[0].toFixed(1)}" cy="${(at[1] + 1).toFixed(1)}" rx="20" ry="6" fill="#3a2a22" opacity=".18" filter="url(#soft)"/>`)
+    d.raw(pet(room.pet, c, at[0] - 21, at[1] - 21, 0.42))
+    spots.pet = screenSpot(at[0] - 22, at[1] - 22, 44, 28)
+  }
+  d.raw('</g>')
+}
+
 /* ---------- the pet: drawn in detail, then scaled down onto the bed ---------- */
 
 export const PET_COLORS = {
@@ -555,7 +616,7 @@ function roundWindow(d, sky, blanket) {
 
 let seed = 7
 const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280
-function cityWindow(d, sky, blanket, x0 = 6.0, x1 = 9.6, z0 = 3.2, z1 = 8.0, rainy = true) {
+function cityWindow(d, sky, blanket, x0 = 6.0, x1 = 9.6, z0 = 3.2, z1 = 8.0, rainy = true, photo = null) {
   const frame = '#3A3350'
   d.poly([[x0 - 0.18, 0.01, z0 - 0.18], [x1 + 0.18, 0.01, z0 - 0.18], [x1 + 0.18, 0.01, z1 + 0.18], [x0 - 0.18, 0.01, z1 + 0.18]], frame)
   d.raw(`<clipPath id="cityw"><polygon points="${pts([[x0, 0.02, z0], [x1, 0.02, z0], [x1, 0.02, z1], [x0, 0.02, z1]])}"/></clipPath><g clip-path="url(#cityw)">`)
@@ -584,6 +645,7 @@ function cityWindow(d, sky, blanket, x0 = 6.0, x1 = 9.6, z0 = 3.2, z1 = 8.0, rai
     rain += `<path d="M${rx.toFixed(1)},${ry.toFixed(1)} l-1.2,6" />`
   }
   if (rainy) d.raw(`<g class="rain" stroke="#BFD0FF" stroke-width=".6" opacity=".55" stroke-linecap="round">${rain}</g>`)
+  if (photo) wallImage(d, x0, x1, z0, z1, photo)
   if (rainy) d.raw(`<g class="rain rain2" stroke="#BFD0FF" stroke-width=".6" opacity=".55" stroke-linecap="round">${rain}</g>`)
   d.raw('</g>')
   const mid = (x0 + x1) / 2
@@ -1104,7 +1166,8 @@ function japaneseScene(S) {
   soft(d, 7.4, 0.9, 0.42, 1.6, 0.7, 0.3, ['#FFFFFF', '#F3EFE8', '#E5DFD5'], 0.3, 1)
   duvet(d, 6.72, 1.8, 9.68, 4.38, 0.5, 0.4, blanket)
   openDiary(d, 7.35, 2.55, 0.6, diaryToday)
-  if (room.pet === 'cat' || room.pet === 'dog') { const at = P(8.95, 3.05, 0.6); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.white, at[0] - 21, at[1] - 21, 0.42)) }
+  livePet(S, { bed: [8.95, 3.05, 0.6], floor: [7.6, 7.6] })
+  memoryChest(S, 7.3, 4.75)
   spots.bed = bounds([[6.6, 0.6, 0], [9.8, 0.6, 0], [9.8, 4.6, 0], [6.6, 4.6, 0], [6.6, 0.6, 1.2]], 0)
   E()
   const cc = (FABRICS[room.chairColor] || FABRICS.peach).c
@@ -1154,6 +1217,8 @@ function plantScene(S) {
   d.poly([onWall('right', x0, z0, 0.04), onWall('right', x0, 4.2, 0.04), onWall('right', 5.2, 4.9, 0.04), onWall('right', 6.9, 4.3, 0.04), onWall('right', 8.4, 5.1, 0.04), onWall('right', x1, 4.5, 0.04), onWall('right', x1, z0, 0.04)], '#9DC4A0', ' opacity=".9"')
   ;[4.2, 5.8, 7.4, 9.1].forEach((u, i) => { const c = P(...onWall('right', u, 4.7 + (i % 2) * 0.5, 0.05)); d.raw(`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${10 + (i % 2) * 4}" fill="#7FB08A" opacity=".8"/>`) })
   d.raw('</g>')
+  if (S.photo) wallImage(d, x0, x1, z0, z1, S.photo)
+  spots.window = bounds([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], 1)
   ;[5.65, 7.7].forEach((u) => d.poly(quad('right', u - 0.08, u + 0.08, z0, z1, 0.05), shade(wood, 0.05)))
   d.poly(quad('right', x0, x1, 6.1, 6.25, 0.05), shade(wood, 0.05))
   // two macramé planters hanging in the window
@@ -1232,7 +1297,8 @@ function plantScene(S) {
   soft(d, 0.45, by0 + 1.7, mt, 0.95, 1.4, 0.48, ['#FFFFFF', '#F4F0EA', '#E6E0D6'], 0.38, 2)
   duvet(d, 1.5, by0 + 0.1, bx1 - 0.02, by1 - 0.03, mt + 0.08, 0.72, blanket)
   openDiary(d, 2.1, by0 + 0.9, mt + 0.12, diaryToday)
-  if (room.pet === 'cat' || room.pet === 'dog') { const at = P(3.4, by0 + 2.3, mt + 0.12); d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.ginger, at[0] - 21, at[1] - 21, 0.42)) }
+  livePet(S, { bed: [3.4, by0 + 2.3, mt + 0.12], floor: [6.9, 6.4], sill: [6.6, 0.3, 2.45] })
+  memoryChest(S, 1.6, 6.1)
   nightstand(d, 0.15, 6.05, bw, sky.lights, glow, '#C9C2B6')
   spots.bed = bounds([[0, by0 - 0.1, 0], [bx1 + 0.2, by0 - 0.1, 0], [bx1 + 0.2, by1 + 0.2, 0], [0, by1 + 0.2, 0], [0, by0, 3.0]], 0)
   E()
@@ -1273,7 +1339,8 @@ function lofiScene(S) {
   const dk = room.deskWood === 'oak' ? '#8A5E40' : deskWood
   const sw = room.shelfWood === 'oak' ? '#7A5238' : shelfWood
   // the big window, the city at dusk outside
-  cityWindow(d, sky, blanket, 2.9, 8.5, 2.9, 8.1, false)
+  cityWindow(d, sky, blanket, 2.9, 8.5, 2.9, 8.1, false, S.photo)
+  spots.window = bounds([[2.9, 0, 2.9], [8.5, 0, 2.9], [8.5, 0, 8.1], [2.9, 0, 8.1]], 1)
   // fairy lights along the top of the window
   const fl = []
   for (let i = 0; i <= 14; i++) fl.push([2.8 + i * 0.41, 0.15, 8.35 - 0.3 * Math.sin((Math.PI * i) / 7)])
@@ -1315,14 +1382,14 @@ function lofiScene(S) {
   spots.desk = tagAt(bounds([[2.6, 0, 0], [8.8, 0, 0], [8.8, 2.0, 0], [2.6, 2.0, 0], [2.6, 0, 4.4], [8.8, 2.0, 3.7]], 2), [7.95, 1.65, 3.9])
   E()
   // a cat on the desk looking out at the city
-  if (room.pet === 'cat') { const at = P(8.2, 0.5, 2.52); d.raw(sittingCat(PET_COLORS[room.petColor] || PET_COLORS.black, at[0], at[1])) }
   // a soft desk chair
   G('chair'); spots.chair = chairFacingWall(d, 5.4, 3.0, { color: (FABRICS[room.chairColor] || FABRICS.lilac).c, wood: dk, style: 'swivel' }); E()
   // the bed under the notes board (opens the Diary)
   G('bed')
   const mt = wallBed(d, { y0: 5.9, len: 3.9, depth: 3.1, base: 0.45, blanket, wood: room.bedWood === 'oak' ? '#8A5E40' : bedWood, mattressZ: 1.25, cushions: [[0.5, '#E9C46A'], [1.5, '#B9A3E0']] })
   openDiary(d, 0.6, 7.9, mt + 0.02, diaryToday)
-  if (room.pet === 'dog') { const at = P(2.2, 8.6, mt + 0.05); d.raw(pet('dog', PET_COLORS[room.petColor] || PET_COLORS.golden, at[0] - 21, at[1] - 21, 0.42)) }
+  livePet(S, { bed: [2.2, 8.6, mt + 0.05], floor: [6.0, 6.4], sill: [8.2, 0.5, 2.52] })
+  memoryChest(S, 3.5, 8.5)
   spots.bed = bounds([[0, 5.6, 0], [3.2, 5.6, 0], [3.2, 9.8, 0], [0, 9.8, 0], [0, 5.6, 2.8], [3.2, 9.8, 1.7]], 0)
   E()
   // a little cabinet with plants and a speaker
@@ -1445,7 +1512,7 @@ export function drawRoom(o) {
   d.box(0, 0, 0, 0.12, D, 0.35, [trim, shade(trim, -0.04), shade(trim, -0.08)])
   d.box(0, 0, 0, W, 0.12, 0.35, [trim, shade(trim, -0.06), shade(trim, -0.08)])
 
-  const S = { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug }
+  const S = { d, room, sky, tod, photo: o.windowPhoto, memories: o.memories || 0, spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug }
   if (theme === 'attic') atticScene(S)
   else if (theme === 'study') studyScene(S)
   else if (theme === 'japanese') japaneseScene(S)
@@ -1486,6 +1553,8 @@ export function drawRoom(o) {
       })
     }
     d.poly([[wx0, 0.03, wz0], [7.0, 0.03, 4.6], [7.7, 0.03, 4.35], [8.4, 0.03, 4.8], [wx1, 0.03, 4.4], [wx1, 0.03, wz0]], sky.hills, ' opacity=".6"')
+    if (o.windowPhoto) wallImage(d, wx0, wx1, wz0, wz1, o.windowPhoto)
+    spots.window = bounds([[wx0, 0, wz0], [wx1, 0, wz0], [wx1, 0, wz1], [wx0, 0, wz1]], 1)
     const mid = (wx0 + wx1) / 2
     d.poly([[mid - 0.06, 0.04, wz0], [mid + 0.06, 0.04, wz0], [mid + 0.06, 0.04, wz1], [mid - 0.06, 0.04, wz1]], '#FBF8FD')
     d.poly([[wx0, 0.04, 5.75], [wx1, 0.04, 5.75], [wx1, 0.04, 5.87], [wx0, 0.04, 5.87]], '#FBF8FD')
@@ -1674,13 +1743,8 @@ export function drawRoom(o) {
   const pen = P(8.0, 3.6, dz + 0.02)
   d.raw(`<path d="M${(pen[0] - 7).toFixed(1)},${(pen[1] + 4).toFixed(1)} l12,-7" stroke="#E07A8F" stroke-width="2" stroke-linecap="round"/>`)
   // the pet sleeping on the bed
-  if (theme === 'city' && room.pet === 'cat') {
-    const at = P(7.2, 0.3, 3.05)
-    d.raw(sittingCat(PET_COLORS[room.petColor] || PET_COLORS.black, at[0], at[1]))
-  } else if (room.pet === 'cat' || room.pet === 'dog') {
-    const at = P(9.0, 3.3, mt + 0.1)
-    d.raw(pet(room.pet, PET_COLORS[room.petColor] || PET_COLORS.black, at[0] - 21, at[1] - 21, 0.42))
-  }
+  livePet(S, { bed: [9.0, 3.3, mt + 0.1], floor: [4.6, 6.6], sill: [7.9, 0.25, 3.84] })
+  memoryChest(S, 8.3, 5.75)
   if (canopy) {
     ;[[5.85, 5.1], [9.6, 5.1]].forEach(([x, y]) => d.box(x, y, 0, 0.14, 0.14, 7.6, bedWood))
     d.box(5.85, 0.05, 7.6, 3.9, 0.12, 0.12, bedWood)

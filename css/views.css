@@ -815,3 +815,26 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
   .spot { min-width: 44px; min-height: 44px; }
   .decorate-btn { height: 44px; }
 }
+
+/* the pet you can pet */
+.pet-spot { position: absolute; z-index: 4; padding: 0; border: none; background: transparent; cursor: pointer; border-radius: 40%; }
+.pet-spot:focus-visible { outline: 2px solid var(--honey); }
+.pet-heart { position: absolute; bottom: 60%; color: #E07A8F; font-size: 16px; pointer-events: none; animation: heart-up 1.4s ease-out forwards; }
+@keyframes heart-up { from { opacity: 0; transform: translateY(0) scale(.6) } 20% { opacity: 1 } to { opacity: 0; transform: translateY(-46px) scale(1.2) } }
+.room svg .pet-g { transform-box: fill-box; }
+.decor-input { width: 100%; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .06); color: inherit; font-size: 15px; }
+.photo-row { display: flex; gap: 8px; align-items: center; } .photo-pick { display: inline-flex; align-items: center; cursor: pointer; }
+
+/* Memory chest */
+.page-ribbon { position: absolute; z-index: 4; top: -2px; right: 16%; width: 7cqw; min-width: 22px; padding: 1.2cqw 0 2.4cqw; text-align: center; color: #fff; font-size: 3cqw; background: #C2556B; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); pointer-events: none; }
+.page[data-side="0"] .page-ribbon { right: auto; left: 16%; }
+.keep-card.on { border-color: #f0c4ce; }
+.keep-go { background: #f7eef1; color: #b4475d; }
+.keep-card.on .keep-go { background: #c2556b; color: #fff; }
+.tc-heart { position: absolute; top: 4px; right: 6px; color: #C2556B; font-size: 14px; }
+.mem-list { list-style: none; margin: 0 0 8px; padding: 0; max-height: 56vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.mem-list button { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #eee6f2; background: #fff; text-align: left; color: var(--ink); cursor: pointer; }
+.mem-list button:hover { border-color: #f0c4ce; background: #fff8f9; }
+.mem-list b { display: block; font-family: var(--serif); font-weight: 400; font-size: 17px; }
+.mem-list span span { font-size: 13.5px; color: var(--muted); }
+.mem-heart { color: #C2556B; font-size: 18px; line-height: 1.2; }

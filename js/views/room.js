@@ -7,21 +7,22 @@ import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_C
 import { $, esc, toast } from '../ui.js'
 
 // Normal mode: objects open pages.
-const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['notes', 'Notes'], desk: ['calendar', 'Calendar'] }
+const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['notes', 'Notes'], desk: ['calendar', 'Calendar'], chest: ['diary/memories', 'Memories'] }
 
 // Decorate mode: what you can change on each part of the room.
 const PARTS = {
-  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket and curtains', 'blanket', FABRICS], ['Pet on the bed', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS]] },
+  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket and curtains', 'blanket', FABRICS], ['Pet', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS], ['Pet name', 'petName', 'text']] },
   shelf: { name: 'Bookshelf', options: [['Style', 'shelfStyle', 'styles'], ['Colour', 'shelfWood', WOODS]] },
   desk: { name: 'Desk', options: [['Style', 'deskStyle', 'styles'], ['Colour', 'deskWood', WOODS]] },
   chair: { name: 'Chair', options: [['Style', 'chairStyle', 'styles'], ['Colour', 'chairColor', FABRICS]] },
   rug: { name: 'Rug', options: [['Colour', 'rug', RUGS]] },
   art: { name: 'Picture', options: [['Picture on the wall', 'art', 'styles']] },
+  window: { name: 'Window', options: [['Your own view', 'windowPhoto', 'photo']] },
   walls: { name: 'Walls', options: [['Colour', 'wall', WALLS], ['Texture', 'wallStyle', 'styles']] },
   floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS], ['Pattern', 'floorStyle', 'styles']] },
 }
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
-const DECOR_ORDER = ['art', 'rug', 'desk', 'chair', 'shelf', 'bed']
+const DECOR_ORDER = ['window', 'art', 'rug', 'desk', 'chair', 'shelf', 'bed']
 
 const swatchColor = (v) => v.c ?? v.l?.[0] ?? v.a ?? v.base ?? null
 
@@ -49,6 +50,23 @@ export function mount(el) {
 
   /* ---------- the room ---------- */
 
+  // your own window view, kept in IndexedDB
+  let windowPhoto = null
+  db.get('dream:window').then((v) => { if (v) { windowPhoto = v; renderRoom() } })
+  el.addEventListener('change', async (e) => {
+    if (!e.target.matches('[data-window-photo]')) return
+    const f = e.target.files[0]
+    e.target.value = ''
+    if (!f) return
+    try {
+      const { src } = await db.shrinkImage(f, 1200)
+      windowPhoto = src
+      await db.set('dream:window', src)
+      renderRoom(); renderPanel()
+      toast('Your view is in the window')
+    } catch (err) { toast(err.message) }
+  })
+
   // book covers live in IndexedDB; read the ones the shelf shows, then draw again
   const covers = new Map()
   ;(async () => {
@@ -65,6 +83,8 @@ export function mount(el) {
     // books you are reading now come first, so they stand with their covers out on the shelf
     const list = [...s.books].sort((a, b) => ((b.status === 'reading') - (a.status === 'reading')) || (b.createdAt || 0) - (a.createdAt || 0))
     const { svg, spots, shapes, bookSpots } = drawRoom({
+      windowPhoto,
+      memories: (s.diaryBook.hearts || []).length,
       bookList: list.map((b) => ({ id: b.id, title: b.title, author: b.author, color: b.color, cover: covers.get(b.id)?.src })),
       room: room(),
       tod: timeOfDay(),
@@ -84,18 +104,24 @@ export function mount(el) {
         shapes.walls.map((p) => shape('walls', p)).join('') +
         DECOR_ORDER.map((id) => {
           const b = spots[id]
+          if (!b) return '' // this room has no such part (no window in the Japanese room)
           return `<button class="spot decor-spot ${part === id ? 'on' : ''}" data-part="${id}" aria-label="Change the ${PARTS[id].name.toLowerCase()}"
             style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%"><span class="tag">${PARTS[id].name}</span></button>`
         }).join('')
     } else {
-      const counts = { shelf: s.books.length, board: s.notes.length, desk: s.events.filter((e) => e.date === today).length, bed: '' }
+      const counts = { shelf: s.books.length, board: s.notes.length, desk: s.events.filter((e) => e.date === today).length, bed: '', chest: (s.diaryBook.hearts || []).length || '' }
       overlay = Object.entries(PAGES).map(([id, [view, label]]) => {
         const b = spots[id]
+        if (!b) return ''
         return `<a class="spot ${flash === id ? 'flash' : ''}" href="#${view}" aria-label="Open ${label}"
           style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%">
           <span class="tag" style="${b.tx != null ? `left:${b.tx}%;top:${b.ty}%` : ''}">${label}${counts[id] ? `<b>${counts[id]}</b>` : ''}</span>
         </a>`
       }).join('')
+    }
+    if (!decorating && spots.pet) {
+      const pn = room().petName || (room().pet === 'dog' ? 'your dog' : 'your cat')
+      overlay += `<button class="pet-spot" data-pet style="left:${spots.pet.l}%;top:${spots.pet.t}%;width:${spots.pet.w}%;height:${spots.pet.h}%" aria-label="Pet ${esc(pn)}"></button>`
     }
     if (!decorating) {
       // every book on the shelf shows its title and author when you point at it
@@ -114,7 +140,7 @@ export function mount(el) {
   /* ---------- top bar ---------- */
 
   function renderTop() {
-    $('#room-hint', el).textContent = decorating ? 'Tap the bed, bookshelf, desk, chair, picture, rug, walls or floor to change it' : 'Tap something in your room'
+    $('#room-hint', el).textContent = decorating ? 'Tap the bed, shelf, desk, chair, picture, window, rug, walls or floor to change it' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-gallery>
@@ -138,6 +164,14 @@ export function mount(el) {
     const r = draft
     const own = (draft.theme || 'cozy') !== 'cozy' // furniture in the other rooms has its own design
     const rows = PARTS[part].options.filter(([, key]) => !(own && /Style$/.test(key) && key !== 'wallStyle' && key !== 'floorStyle')).map(([label, key, list]) => {
+      if (list === 'photo') {
+        return `<section><p class="sub">Put a photo of a place you love outside the window: the sea, your city, mountains…</p>
+          <div class="photo-row"><label class="primary small photo-pick">Choose a photo<input type="file" accept="image/*" class="sr-only" data-window-photo></label>
+          ${windowPhoto ? '<button class="ghost-dark small" data-window-clear>Remove</button>' : ''}</div></section>`
+      }
+      if (list === 'text') {
+        return `<section><h3>${label}</h3><input class="decor-input" data-set-text="${key}" maxlength="20" placeholder="Mochi" value="${esc(r[key] || '')}"></section>`
+      }
       if (list === 'styles') {
         return `<section><h3>${label}</h3><div class="chips">${Object.entries(STYLES[key]).map(([id, name]) =>
           `<button class="chip ${r[key] === id ? 'on' : ''}" data-set="${key}" data-val="${id}" aria-pressed="${r[key] === id}">${esc(name)}</button>`).join('')}</div></section>`
@@ -208,8 +242,31 @@ export function mount(el) {
     if (p) { part = p.dataset.part; return render() }
     if (t.closest('[data-done]')) { part = null; return render() }
     if (t.closest('[data-gallery]')) return openGallery()
+    if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
+    const pt = t.closest('[data-pet]')
+    if (pt) {
+      // the pet is happy: a little hop, hearts, and a word
+      const r = room(), name = r.petName || (r.pet === 'dog' ? 'Your dog' : 'Your cat')
+      $('.room svg .pet-g', el)?.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 700, easing: 'ease-out' })
+      for (let i = 0; i < 3; i++) {
+        const h = document.createElement('span')
+        h.className = 'pet-heart'
+        h.textContent = '♥'
+        h.style.left = 30 + i * 20 + '%'
+        h.style.animationDelay = i * 0.15 + 's'
+        pt.appendChild(h)
+        setTimeout(() => h.remove(), 1600)
+      }
+      toast(r.pet === 'dog' ? `${name} wags happily` : `${name} purrs`)
+      return
+    }
     const opt = t.closest('[data-set]')
     if (opt && decorating) { draft = { ...draft, [opt.dataset.set]: opt.dataset.val }; renderRoom(); renderPanel() }
+  })
+
+  el.addEventListener('input', (e) => {
+    const k = e.target.dataset?.setText
+    if (k && decorating) { draft = { ...draft, [k]: e.target.value.trim() }; renderRoom() }
   })
 
   render()
