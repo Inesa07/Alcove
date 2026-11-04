@@ -5,7 +5,7 @@
 import * as sync from './sync.js'
 import { getState, setName } from './store.js'
 import { drawRoom, DEFAULT_ROOM } from './room.js'
-import { $, esc, toast } from './ui.js'
+import { $, esc, toast, themeMode, setTheme } from './ui.js'
 
 let gate, mode = 'in', note = '', notice = ''
 
@@ -136,6 +136,8 @@ function setupMenu() {
       <h3 id="acc-title">${esc(getState().name || sync.nameOf() || 'Your account')}</h3>
       <p class="acc-who">${esc(i.email)}</p>
       <p class="acc-msg ${i.status === 'error' ? 'bad' : ''}">${line}</p>
+      <p class="acc-label">Look</p>
+      <div class="seg acc-theme" role="radiogroup" aria-label="Look">${[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Like my device']].map(([k, v]) => `<button type="button" role="radio" aria-checked="${themeMode() === k}" data-theme-pick="${k}">${v}</button>`).join('')}</div>
       <div class="bf-actions">
         <button type="button" class="ghost danger" id="acc-out">Sign out</button>
         <span class="grow"></span>
@@ -145,6 +147,8 @@ function setupMenu() {
   btn.addEventListener('click', () => { paint(); dlg.showModal() })
   dlg.addEventListener('click', async (e) => {
     if (e.target === dlg || e.target.closest('[data-close]')) dlg.close()
+    const tp = e.target.closest('[data-theme-pick]')
+    if (tp) { setTheme(tp.dataset.themePick); paint() }
     if (e.target.closest('#acc-out')) {
       try { await sync.signOut(); location.reload() } catch (err) { toast(err.message) }
     }

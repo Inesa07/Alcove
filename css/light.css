@@ -1,0 +1,70 @@
+/* Light theme: made from the dark styles, white-on-dark becomes ink-on-light */
+html[data-theme="light"] { --lilac-text: #6b6488; --muted-dark: #8a84a0; color-scheme: light; }
+html[data-theme="light"], html[data-theme="light"] body { background: #F4EFE8; color: #2a2638; }
+html[data-theme="light"] .side { background: #FBF8F3; border-right-color: rgba(42, 38, 56, .08); }
+html[data-theme="light"] .room-page { background: radial-gradient(70% 70% at 55% 50%, #FFFFFF 0%, #F3EDE6 55%, #EAE3EE 100%); }
+html[data-theme="light"] .view-diary { background: radial-gradient(80% 60% at 50% 40%, #FFFFFF 0%, #F1ECF4 75%); }
+html[data-theme="light"] .view-books, html[data-theme="light"] .view-notes, html[data-theme="light"] .view-calendar { background: linear-gradient(180deg, #FBF8F3 0%, #F4EFE8 60%); }
+html[data-theme="light"] html, html[data-theme="light"] body { color: #2a2638 }
+html[data-theme="light"] .side { border-right: 1px solid rgba(42, 38, 56, 0.042) }
+html[data-theme="light"] .name-row input { border: 1px solid rgba(42, 38, 56, 0.098); background: rgba(42, 38, 56, 0.042); color: #2a2638 }
+html[data-theme="light"] .nav a:hover { background: rgba(42, 38, 56, 0.035); color: #2a2638 }
+html[data-theme="light"] .nav a[aria-current="page"] { background: rgba(42, 38, 56, 0.063); color: #2a2638 }
+html[data-theme="light"] .side-foot { background: rgba(42, 38, 56, 0.032) }
+html[data-theme="light"] .icon-btn { background: rgba(42, 38, 56, 0.056) }
+html[data-theme="light"] .icon-btn:hover { background: rgba(42, 38, 56, 0.098) }
+html[data-theme="light"] .pill { border: 1px solid rgba(42, 38, 56, 0.098); background: rgba(42, 38, 56, 0.042); color: #2a2638 }
+html[data-theme="light"] .chip { border: 1px solid rgba(42, 38, 56, 0.112) }
+@media (max-width: 860px) { html[data-theme="light"] .nav { border-top: 1px solid rgba(42, 38, 56, 0.056) } }
+html[data-theme="light"] .decorate-btn { border: 1px solid rgba(42, 38, 56, 0.112); background: rgba(42, 38, 56, 0.049); color: #2a2638 }
+html[data-theme="light"] .spot::before { border: 1.5px dashed rgba(42, 38, 56, 0.000) }
+html[data-theme="light"] .spot:hover::before, html[data-theme="light"] .spot:focus-visible::before { border-color: rgba(42, 38, 56, 0.560); background: rgba(42, 38, 56, 0.042) }
+html[data-theme="light"] .capture { background: rgba(42, 38, 56, 0.063); border: 1px solid rgba(42, 38, 56, 0.105) }
+html[data-theme="light"] .capture input { color: #2a2638 }
+html[data-theme="light"] .ghost-dark { border: 1px solid rgba(42, 38, 56, 0.140); color: #2a2638 }
+html[data-theme="light"] .ghost-dark:hover { background: rgba(42, 38, 56, 0.056) }
+html[data-theme="light"] .room-page.decorating .room-hint { color: #2a2638 }
+html[data-theme="light"] .decor { border: 1px solid rgba(42, 38, 56, 0.084) }
+html[data-theme="light"] .decor section { border-bottom: 1px solid rgba(42, 38, 56, 0.056) }
+html[data-theme="light"] .reset { border: 1px solid rgba(42, 38, 56, 0.112) }
+html[data-theme="light"] .toolbar { background: rgba(42, 38, 56, 0.049); border: 1px solid rgba(42, 38, 56, 0.070) }
+html[data-theme="light"] .tool:hover { background: rgba(42, 38, 56, 0.049); color: #2a2638 }
+html[data-theme="light"] .inks { border-right: 1px solid rgba(42, 38, 56, 0.070) }
+html[data-theme="light"] .size.on { background: rgba(42, 38, 56, 0.084) }
+html[data-theme="light"] .empty-shelf { border: 1.5px dashed rgba(42, 38, 56, 0.126) }
+html[data-theme="light"] .search { background: rgba(42, 38, 56, 0.049); border: 1px solid rgba(42, 38, 56, 0.084) }
+html[data-theme="light"] .search input { color: #2a2638 }
+html[data-theme="light"] .seg { background: rgba(42, 38, 56, 0.056) }
+html[data-theme="light"] .day { border: 1px solid rgba(42, 38, 56, 0.049); background: rgba(42, 38, 56, 0.032); color: #2a2638 }
+html[data-theme="light"] .day:hover { background: rgba(42, 38, 56, 0.056) }
+html[data-theme="light"] .day.sel { border-color: rgba(42, 38, 56, 0.490); background: rgba(42, 38, 56, 0.070) }
+html[data-theme="light"] .layout-hint { background: rgba(42, 38, 56, 0.490) }
+html[data-theme="light"] .mrow { border-top: .3cqw solid rgba(42, 38, 56, 0.490) }
+html[data-theme="light"] .dot { background: rgba(42, 38, 56, 0.595) }
+html[data-theme="light"] .dot[aria-pressed="true"] { box-shadow: inset 0 0 0 .6cqw rgba(42, 38, 56, 0.595) }
+html[data-theme="light"] .leaf-next .leaf-front .leaf-dim { background: linear-gradient(to right, rgba(40, 25, 70, .55), rgba(40, 25, 70, .15) 45%, rgba(42, 38, 56, 0.140)) }
+html[data-theme="light"] .leaf-prev .leaf-front .leaf-dim { background: linear-gradient(to left, rgba(40, 25, 70, .55), rgba(40, 25, 70, .15) 45%, rgba(42, 38, 56, 0.140)) }
+html[data-theme="light"] .gallery { color: #2a2638 }
+html[data-theme="light"] .room-card { border: 2px solid rgba(42, 38, 56, 0.056); background: rgba(42, 38, 56, 0.028) }
+html[data-theme="light"] .room-card:hover { background: rgba(42, 38, 56, 0.049) }
+html[data-theme="light"] .goal-card, html[data-theme="light"] .time-card, html[data-theme="light"] .live-card { background: rgba(42, 38, 56, 0.042); border: 1px solid rgba(42, 38, 56, 0.070); color: #2a2638 }
+html[data-theme="light"] .goal-form input { border: 1px solid rgba(42, 38, 56, 0.126); background: rgba(42, 38, 56, 0.042); color: #2a2638 }
+html[data-theme="light"] .live-card #b-live-clock { color: #2a2638 }
+/* hand-tuned parts of the light theme */
+html[data-theme="light"] .book-group h3, html[data-theme="light"] .book-card, html[data-theme="light"] .page-head h2, html[data-theme="light"] .goal-card, html[data-theme="light"] .time-card, html[data-theme="light"] .live-card, html[data-theme="light"] .live-card #b-live-clock { color: #2a2638; }
+html[data-theme="light"] .search input { background: transparent; color: #2a2638; }
+html[data-theme="light"] .goal-form input, html[data-theme="light"] .note-new textarea { color: #2a2638; background: #fff; border-color: rgba(42, 38, 56, .14); }
+html[data-theme="light"] .ghost-dark { color: #2a2638; border-color: rgba(42, 38, 56, .2); }
+html[data-theme="light"] .gr-back { stroke: rgba(42, 38, 56, .1); }
+html[data-theme="light"] .shelves .book-grid { background: rgba(42, 38, 56, .03); }
+html[data-theme="light"] .decor { background: rgba(255, 255, 255, .94); color: #2a2638; border-color: rgba(42, 38, 56, .1); }
+html[data-theme="light"] .decor section { border-bottom-color: rgba(42, 38, 56, .08); }
+html[data-theme="light"] .gallery { background: linear-gradient(180deg, #FFFFFF, #F4EFE8); color: #2a2638; }
+html[data-theme="light"] .room-card { background: #fff; border-color: rgba(42, 38, 56, .08); }
+html[data-theme="light"] .room-card-img { background: radial-gradient(ellipse at 50% 45%, #FFFFFF, #ECE5EF 75%); }
+html[data-theme="light"] .room-card-use { background: rgba(42, 38, 56, .07); }
+html[data-theme="light"] .toast { background: rgba(255, 255, 255, .96); color: #2a2638; border-color: rgba(42, 38, 56, .1); }
+html[data-theme="light"] .toast-action { color: #8e5ac4; }
+html[data-theme="light"] .day { color: #2a2638; }
+html[data-theme="light"] .empty-shelf { color: #6b6488; border-color: rgba(42, 38, 56, .2); }
+html[data-theme="light"] .name-row input { background: #fff; }

@@ -49,9 +49,11 @@ function show() {
   if (view === current) return
   if (unmount) unmount()
   current = view
-  const el = $('#view')
+  // a fresh page element each time, so listeners from the page before do not stay behind
+  const old = $('#view')
+  const el = old.cloneNode(false)
+  old.replaceWith(el)
   el.className = 'view view-' + view
-  el.innerHTML = ''
   unmount = VIEWS[view].mount(el) || null
   $$('#nav a').forEach((a) => {
     if (a.dataset.view === view) a.setAttribute('aria-current', 'page')

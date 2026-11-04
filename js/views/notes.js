@@ -1,7 +1,7 @@
 // Notes: anything you want to remember, on coloured paper notes.
 
-import { getState, subscribe, add, update, remove, pick, NOTE_COLORS } from '../store.js'
-import { $, esc } from '../ui.js'
+import { getState, subscribe, add, update, remove, restore, pick, NOTE_COLORS } from '../store.js'
+import { $, esc, toast } from '../ui.js'
 
 export function mount(el) {
   let query = ''
@@ -60,7 +60,7 @@ export function mount(el) {
     const card = e.target.closest('[data-note]')
     if (!card) return
     const id = card.dataset.note
-    if (e.target.closest('[data-del]')) return remove('notes', id)
+    if (e.target.closest('[data-del]')) { const gone = remove('notes', id); return gone && toast('Note deleted', { label: 'Undo', run: () => restore('notes', gone) }) }
     if (e.target.closest('[data-recolor]')) {
       const n = getState().notes.find((x) => x.id === id)
       update('notes', id, { color: NOTE_COLORS[(NOTE_COLORS.indexOf(n.color) + 1) % NOTE_COLORS.length] })
@@ -69,7 +69,8 @@ export function mount(el) {
   el.addEventListener('focusout', (e) => {
     const box = e.target.closest?.('.note-text')
     if (!box) return
-    const id = box.closest('[data-note]').dataset.note
+    const id = box.closest('[data-note]')?.dataset.note
+    if (!id) return
     const text = box.innerText.trim()
     const n = getState().notes.find((x) => x.id === id)
     if (!text) remove('notes', id)

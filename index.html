@@ -22,10 +22,17 @@
       // Before anything is drawn the app stays hidden until we know who is signed in,
       // so it never flashes before the welcome screen. (If something fails, it shows after 8 s anyway.)
       document.documentElement.classList.add('locked')
+      // light or dark, as chosen (or as the device prefers)
+      try {
+        var t = localStorage.getItem('planner.theme') || 'dark'
+        if (t === 'auto') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        document.documentElement.dataset.theme = t
+      } catch (e) {}
       setTimeout(function () { if (!document.querySelector('.auth')) document.documentElement.classList.remove('locked') }, 8000)
     </script>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/views.css" />
+    <link rel="stylesheet" href="css/light.css" />
   </head>
   <body>
     <div class="app">

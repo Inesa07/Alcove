@@ -1,7 +1,7 @@
 // Lets the app open without internet once it has been visited.
-const CACHE = 'planner-v40'
+const CACHE = 'planner-v42'
 const FILES = [
-  './', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'css/views.css',
+  './', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'css/views.css', 'css/light.css',
   'js/app.js', 'js/store.js', 'js/db.js', 'js/ui.js', 'js/room.js', 'js/classify.js', 'js/reminders.js', 'js/stickers.js', 'js/templates.js', 'js/config.js', 'js/sync.js', 'js/account.js', 'js/bin.js',
   'js/views/room.js', 'js/views/diary.js', 'js/views/books.js', 'js/views/notes.js', 'js/views/calendar.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',

@@ -4,8 +4,6 @@ import * as db from '../db.js'
 
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS } from '../store.js'
 import { drawRoom, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
-import { classify } from '../classify.js'
-import { appendDiaryText } from './diary.js'
 import { $, esc, toast } from '../ui.js'
 
 // Normal mode: objects open pages.
@@ -25,7 +23,6 @@ const PARTS = {
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
 const DECOR_ORDER = ['art', 'rug', 'desk', 'chair', 'shelf', 'bed']
 
-const DONE = { event: 'Added to your calendar', book: 'Added to your bookshelf', diary: 'Written in your diary', note: 'Pinned to your notes' }
 const swatchColor = (v) => v.c ?? v.l?.[0] ?? v.a ?? v.base ?? null
 
 export function mount(el) {
@@ -38,13 +35,6 @@ export function mount(el) {
       <div class="room-stage">
         <div class="room" id="room"></div>
       </div>
-      <form class="capture" id="capture" autocomplete="off">
-        <label for="capture-input" class="sr-only">Write anything</label>
-        <input id="capture-input" placeholder="Write anything… “dentist Friday 11:00”, “read Dune”" />
-        <button type="submit" aria-label="Add to my room">
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-      </form>
       <aside class="decor" id="decor" hidden aria-live="polite"></aside>
       <dialog class="gallery" id="gallery" aria-labelledby="gallery-title"></dialog>
     </section>`
@@ -137,7 +127,6 @@ export function mount(el) {
         </button>`
     page.classList.toggle('decorating', decorating)
     document.body.classList.toggle('decorating', decorating)
-    $('#capture', el).hidden = decorating
   }
 
   /* ---------- options for one part ---------- */
@@ -221,24 +210,6 @@ export function mount(el) {
     if (t.closest('[data-gallery]')) return openGallery()
     const opt = t.closest('[data-set]')
     if (opt && decorating) { draft = { ...draft, [opt.dataset.set]: opt.dataset.val }; renderRoom(); renderPanel() }
-  })
-
-  /* ---------- quick capture ---------- */
-
-  $('#capture', el).addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const input = $('#capture-input', el)
-    const text = input.value.trim()
-    if (!text) return
-    const r = classify(text)
-    if (r.kind === 'event') { add('events', r.item); flash = 'desk' }
-    if (r.kind === 'book') { add('books', { title: r.title, author: '', color: pick(COVER_COLORS), hasCover: false, finishedOn: todayISO(), createdAt: Date.now() }); flash = 'shelf' }
-    if (r.kind === 'note') { add('notes', { text: r.text, color: pick(NOTE_COLORS), createdAt: Date.now() }); flash = 'board' }
-    if (r.kind === 'diary') { await appendDiaryText(todayISO(), r.text); flash = 'bed' }
-    input.value = ''
-    renderRoom()
-    toast(DONE[r.kind])
-    setTimeout(() => { flash = ''; renderRoom() }, 2400)
   })
 
   render()

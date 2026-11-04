@@ -20,15 +20,36 @@ export const longDate = (iso) => isoToDate(iso).toLocaleDateString('en-GB', { da
 export const weekday = (iso) => isoToDate(iso).toLocaleDateString('en-GB', { weekday: 'long' })
 
 let toastTimer
-export function toast(text) {
+// A short message at the top. With an action (like Undo) it stays a little longer and has a button.
+export function toast(text, action) {
   const el = $('#toast')
-  el.textContent = text
+  el.innerHTML = ''
+  const span = document.createElement('span')
+  span.textContent = text
+  el.appendChild(span)
+  if (action) {
+    const b = document.createElement('button')
+    b.className = 'toast-action'
+    b.type = 'button'
+    b.textContent = action.label
+    b.addEventListener('click', () => { el.hidden = true; clearTimeout(toastTimer); action.run() }, { once: true })
+    el.appendChild(b)
+  }
   el.hidden = false
   clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { el.hidden = true }, 3000)
+  toastTimer = setTimeout(() => { el.hidden = true; action?.expire?.() }, action ? 6000 : 3000)
 }
 
 export function debounce(fn, ms) {
   let t
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms) }
+}
+
+// Light or dark look. 'auto' follows the device.
+export const themeMode = () => { try { return localStorage.getItem('planner.theme') || 'dark' } catch { return 'dark' } }
+export function setTheme(mode) {
+  try { localStorage.setItem('planner.theme', mode) } catch {}
+  const t = mode === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : mode
+  document.documentElement.dataset.theme = t
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F4EFE8' : '#1D1A30')
 }

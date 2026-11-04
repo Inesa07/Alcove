@@ -2,7 +2,7 @@
 // Each book keeps its progress, reading time, a rating, a short review and your favourite quotes.
 // Every book also appears on the shelf in your room.
 
-import { getState, subscribe, add, update, remove, pick, uid, COVER_COLORS, todayISO, markDiaryDay, setReadingGoal } from '../store.js'
+import { getState, subscribe, add, update, remove, restore, pick, uid, COVER_COLORS, todayISO, markDiaryDay, setReadingGoal } from '../store.js'
 import * as db from '../db.js'
 import { appendDiaryText } from './diary.js'
 import { $, esc, toast, isoToDate } from '../ui.js'
@@ -363,10 +363,11 @@ export function mount(el) {
   $('#b-cancel', el).addEventListener('click', () => dialog.close())
   $('#b-delete', el).addEventListener('click', async () => {
     if (!editing) return
-    remove('books', editing.id)
-    db.del(coverKey(editing.id)).catch(() => {})
-    covers.delete(editing.id)
+    const id = editing.id
+    const gone = remove('books', id)
     dialog.close()
+    // the cover is only thrown away when the Undo button has gone
+    toast(`Removed “${gone.item.title}”`, { label: 'Undo', run: () => restore('books', gone), expire: () => { if (!getState().books.some((b) => b.id === id)) { db.del(coverKey(id)).catch(() => {}); covers.delete(id) } } })
   })
   $('#b-add', el).addEventListener('click', () => openForm())
 

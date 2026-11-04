@@ -1,10 +1,10 @@
 // Calendar: see the month or the week, pick a day, write what you need
 // to remember and when. Things with a time get a reminder.
 
-import { getState, subscribe, add, update, remove, todayISO } from '../store.js'
+import { getState, subscribe, add, update, remove, restore, todayISO } from '../store.js'
 import { permission, askPermission } from '../reminders.js'
 import { findTime } from '../classify.js'
-import { $, esc, addDays, isoToDate, dayLabel } from '../ui.js'
+import { $, esc, addDays, isoToDate, dayLabel, toast } from '../ui.js'
 
 const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const byTime = (a, b) => (a.time || '99').localeCompare(b.time || '99')
@@ -137,7 +137,7 @@ export function mount(el) {
     const bell = t.closest('[data-bell]')
     if (bell) { const ev = getState().events.find((x) => x.id === bell.dataset.bell); return update('events', ev.id, { remind: !ev.remind, notified: false }) }
     const del = t.closest('[data-del]')
-    if (del) return remove('events', del.dataset.del)
+    if (del) { const gone = remove('events', del.dataset.del); return gone && toast(`Deleted “${gone.item.title}”`, { label: 'Undo', run: () => restore('events', gone) }) }
   })
 
   el.addEventListener('submit', (e) => {

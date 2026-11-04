@@ -803,3 +803,15 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .bd-q-foot span { flex: 1; }
 @media (max-width: 860px) { .bd { padding: 20px 18px; } .bd-cover { width: 84px; } .bd-info h3 { font-size: 22px; } .goal-form { margin-left: 0; } }
 .book-tip .tip-reading { color: #7a5fc0; font-weight: 600; } .book-tip .tip-stars { color: #E0A92E; }
+
+/* Phone: the room fills the screen and its labels are easy to tap */
+@media (max-width: 860px) {
+  .room-page { padding: 6px 0 14px; }
+  .room-top { padding: 0 16px; }
+  .room-stage { overflow: hidden; }
+  .room { width: 118%; max-width: none; margin: -4% -9% 0; }
+  .spot .tag { font-size: 13.5px; padding: 7px 13px; border-radius: 14px; }
+  .spot .tag b { font-size: 13px; }
+  .spot { min-width: 44px; min-height: 44px; }
+  .decorate-btn { height: 44px; }
+}

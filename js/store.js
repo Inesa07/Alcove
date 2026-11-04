@@ -85,7 +85,19 @@ export function update(kind, id, patch) {
 }
 
 export function remove(kind, id) {
+  const i = state[kind].findIndex((x) => x.id === id)
+  const item = state[kind][i]
   state = { ...state, [kind]: state[kind].filter((x) => x.id !== id) }
+  save()
+  return item ? { item, i } : null
+}
+
+// Puts a removed item back where it was (for Undo)
+export function restore(kind, { item, i }) {
+  if (state[kind].some((x) => x.id === item.id)) return
+  const list = [...state[kind]]
+  list.splice(Math.min(i, list.length), 0, item)
+  state = { ...state, [kind]: list }
   save()
 }
 
