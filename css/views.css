@@ -907,7 +907,7 @@ html[data-theme="light"] .amb section { border-bottom-color: rgba(42, 38, 56, .0
 .pn-go input { width: 52px; height: 30px; text-align: center; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); color: #fff; font: inherit; font-weight: 700; -moz-appearance: textfield; }
 .pn-go input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .pn-go b { color: #fff; }
-.page-nav .bin { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 46px; height: 52px; padding: 2px; }
+.page-nav .bin { position: absolute; right: -6px; top: 50%; transform: translateY(-56%); width: 66px; height: 74px; padding: 2px; }
 .page-nav .bin .bin-count { top: -2px; right: -4px; }
 html[data-theme="light"] .page-nav nav { background: rgba(255, 255, 255, .8); border-color: rgba(42, 38, 56, .1); }
 html[data-theme="light"] .pn-btn:hover { background: rgba(42, 38, 56, .06); color: #2a2638; }
@@ -949,3 +949,13 @@ html[data-theme="light"] .pn-go b { color: #2a2638; }
 .lc-todo { background: linear-gradient(#a8b9e3 1px, transparent 1px) 4px 6px / 36px 4px no-repeat, repeating-linear-gradient(#fff 0 4px, #e2dcec 4px 5px) 4px 8px / 36px 32px no-repeat, linear-gradient(#fbe7a6, #fbe7a6) 4px 44px / 36px 8px no-repeat, #fff; }
 .lc-goals { background: linear-gradient(#f9d3dc, #f9d3dc) 4px 8px / 17px 14px no-repeat, linear-gradient(#d6e6f5, #d6e6f5) 23px 8px / 17px 14px no-repeat, linear-gradient(#dae9dc, #dae9dc) 4px 25px / 17px 14px no-repeat, linear-gradient(#fbe7a6, #fbe7a6) 23px 25px / 17px 14px no-repeat, #fff; }
 .lc-month { background: repeating-linear-gradient(#fff 0 2px, #e2dcec 2px 3px) 4px 8px / 17px 44px no-repeat, repeating-linear-gradient(#fff 0 2px, #e2dcec 2px 3px) 23px 8px / 17px 44px no-repeat, #fff; }
+
+/* the toolbar is one row: each tool is an icon with a small word under it */
+.toolbar { flex-wrap: nowrap; gap: 6px; padding: 6px 8px; }
+@media (max-width: 1100px) { .toolbar { flex-wrap: wrap; } }
+.toolbar .tool { flex-direction: column; justify-content: center; gap: 3px; height: 54px; min-width: 56px; padding: 0 8px; font-size: 11.5px; border-radius: 14px; flex-shrink: 0; }
+.toolbar .tool svg { width: 20px; height: 20px; }
+.toolbar .tool-group { flex-shrink: 0; gap: 2px; }
+.toolbar .inks { flex-shrink: 0; display: flex; align-items: center; padding: 0 8px; }
+.toolbar .ink { width: 26px; height: 26px; }
+.page-nav .bin .bin-count { top: 0; right: 0; }

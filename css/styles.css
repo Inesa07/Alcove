@@ -409,3 +409,7 @@ html[data-theme="light"] .fr-back:hover { color: #2a2638; }
 .tour-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
 .tour-actions .grow { flex: 1; }
 .tour-actions .link-btn { color: #8a84a0; }
+.fr-list li { position: relative; }
+.fr-card-remove { position: absolute; right: 14px; bottom: 14px; padding: 6px 10px; border: none; border-radius: 999px; background: transparent; color: #F09A9A; font: inherit; font-size: 13px; cursor: pointer; }
+.fr-card-remove:hover { background: rgba(240, 154, 154, .12); }
+.fr-card-remove[data-sure] { background: #E07A7A; color: #fff; }

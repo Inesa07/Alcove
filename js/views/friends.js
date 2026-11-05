@@ -62,7 +62,7 @@ export function mount(el) {
           <span class="fr-img"><img src="${thumb(x.room)}" alt=""></span>
           <span class="fr-text"><b>${esc(x.name || 'Your friend')}</b><span>${(x.books || []).length} books on the shelf</span></span>
           <span class="fr-go">Visit</span>
-        </a></li>`).join('')}</ul>`
+        </a><button class="fr-card-remove" data-remove="${x.user_id}">Remove friend</button></li>`).join('')}</ul>`
         : '<p class="fr-empty">No friends here yet. Add one with their code, or send them yours.</p>'}`
   }
 
@@ -116,7 +116,13 @@ export function mount(el) {
     const rm = t.closest('[data-remove]')
     if (rm) {
       if (!confirmRemove(rm)) return
-      try { await F.removeFriend(rm.dataset.remove); toast('Removed'); location.hash = '#friends' } catch (err) { toast(err.message) }
+      try {
+        await F.removeFriend(rm.dataset.remove)
+        toast('Removed from your friends')
+        friends = await F.listFriends()
+        if (location.hash !== '#friends') location.hash = '#friends'
+        else render(await F.getMyProfile())
+      } catch (err) { toast(err.message) }
     }
   })
   // two taps to remove, instead of a browser dialog
