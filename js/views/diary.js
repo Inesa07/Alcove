@@ -7,7 +7,7 @@ import { getState, setDiaryBook, markDiaryDay, todayISO, uid } from '../store.js
 import * as db from '../db.js'
 import { BIN_SVG, binKeys, throwAway, getBinned, forget, crumpleInto } from '../bin.js'
 import { STICKERS, sticker } from '../stickers.js'
-import { LAYOUTS, blockHTML } from '../templates.js'
+import { LAYOUTS, blockHTML, rowsOf, maxRows } from '../templates.js'
 import { $, $$, esc, debounce, toast } from '../ui.js'
 
 const INKS = [['Ink', '#3B3450'], ['Rose', '#D9637F'], ['Blue', '#4F79AC'], ['Green', '#4F8A6D'], ['Honey', '#C9902F'], ['Lilac', '#8E74C4']]
@@ -128,7 +128,6 @@ export function mount(el) {
           <button class="tool" data-pop="trash" title="Throw a page away">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Delete</span></button>
         </div>
-        <button class="bin" id="d-bin" aria-label="Recycle bin" title="Recycle bin: pages you threw away">${BIN_SVG}<b class="bin-count" id="d-bin-count" hidden></b></button>
         <div class="popover" id="d-pop" hidden></div>
       </div>
 
@@ -136,6 +135,16 @@ export function mount(el) {
         <div class="page" data-side="0"></div>
         <div class="spine" aria-hidden="true"></div>
         <div class="page" data-side="1"></div>
+      </div>
+      <div class="page-nav" id="d-nav">
+        <nav aria-label="Pages">
+          <button class="pn-btn" data-jump="first" title="Go to the first page">« First</button>
+          <button class="pn-btn pn-arrow" data-turn="-1" aria-label="Previous pages">‹</button>
+          <label class="pn-go">Page <input id="d-goto" type="number" min="1" inputmode="numeric" aria-label="Go to page"> <span>of <b id="d-total"></b></span></label>
+          <button class="pn-btn pn-arrow" data-turn="1" aria-label="Next pages">›</button>
+          <button class="pn-btn" data-jump="last" title="Go to the last page you wrote on">Last »</button>
+        </nav>
+        <button class="bin" id="d-bin" aria-label="Recycle bin" title="Recycle bin: pages you threw away">${BIN_SVG}<b class="bin-count" id="d-bin-count" hidden></b></button>
       </div>
       <p class="sr-only" id="d-tip" aria-live="polite"></p>
       <dialog class="sheet-dialog bin-dialog" id="d-bin-dialog" aria-labelledby="bin-title"></dialog>
@@ -147,11 +156,13 @@ export function mount(el) {
   // the open book always fits on the screen, so you never scroll to see it
   function fitBook() {
     if (!book.isConnected) return window.removeEventListener('resize', fitBook)
-    book.style.maxWidth = ''
+    const nav = $('#d-nav', el)
+    book.style.maxWidth = nav.style.maxWidth = ''
     if (window.innerWidth <= 720) return
     const pad = parseFloat(getComputedStyle(book.parentElement).paddingBottom) || 0
-    const h = window.innerHeight - (book.getBoundingClientRect().top + window.scrollY) - pad - 4
-    book.style.maxWidth = Math.max(520, ((h - 28) / 1.3) * 2 + 46) + 'px' // the width that gives a book of height h
+    const h = window.innerHeight - (book.getBoundingClientRect().top + window.scrollY) - pad - nav.offsetHeight - 14
+    const w = Math.max(520, ((h - 28) / 1.3) * 2 + 46) + 'px' // the width that gives a book of height h
+    book.style.maxWidth = nav.style.maxWidth = w
   }
   window.addEventListener('resize', fitBook)
   requestAnimationFrame(fitBook)
@@ -218,6 +229,10 @@ export function mount(el) {
 
   function render() {
     $('#d-pages', el).textContent = `Pages ${num(0) + 1}–${num(1) + 1}`
+    $('#d-total', el).textContent = count()
+    const go = $('#d-goto', el)
+    if (document.activeElement !== go) go.value = num(0) + 1
+    go.max = count()
     $('#d-mem-count', el).textContent = (getState().diaryBook.hearts || []).filter((n) => n < count()).length || ''
     renderPage(0)
     renderPage(1)
@@ -683,7 +698,7 @@ export function mount(el) {
     if (t.closest('[data-empty-bin]')) { for (const k of await binKeys()) await forget(k); paintBinCount(); return openBin() }
   })
 
-  el.addEventListener('click', (e) => {
+  el.addEventListener('click', async (e) => {
     const t = e.target
     const keep = t.closest('[data-keep]')
     if (keep) {
@@ -701,6 +716,16 @@ export function mount(el) {
     if (t.closest('[data-open-memories]')) { closePop(); return openMemories() }
     const trash = t.closest('[data-trash]')
     if (trash) return trashPage(Number(trash.dataset.trash))
+    const jump = t.closest('[data-jump]')
+    if (jump) {
+      if (jump.dataset.jump === 'first') return spread === 0 ? toast('This is the first page') : openSpread(0)
+      // the last page you wrote on (or the end of the book when it is all empty)
+      const list = await everyPage()
+      let n = list.length - 1
+      while (n > 0 && !hasContent(list[n])) n--
+      const s2 = Math.floor(n / 2)
+      return s2 === spread ? toast(n ? 'This is the last page you wrote on' : 'Nothing is written yet') : openSpread(s2)
+    }
     if (t.closest('[data-search]')) return openSearch()
     if (t.closest('[data-memories]')) return openMemories()
     if (t.closest('[data-pdf]')) return savePDF()
@@ -742,6 +767,14 @@ export function mount(el) {
       tk.setAttribute('aria-pressed', String(!!it.data[tk.dataset.tick]))
       return saveSoon()
     }
+    const rows = t.closest('[data-rows]')
+    if (rows) {
+      // a box on a ready-made page gets one more line (or one less)
+      const it = findItem(rows.closest('[data-id]').dataset.id)
+      it.n = Math.max(1, Math.min(maxRows(it), rowsOf(it) + Number(rows.dataset.rows)))
+      saveSoon()
+      return render()
+    }
     const cyc = t.closest('[data-cycle]')
     if (cyc) {
       const it = findItem(cyc.closest('[data-id]').dataset.id)
@@ -770,6 +803,18 @@ export function mount(el) {
   })
 
   const findItem = (id) => pages[0].items.find((i) => i.id === id) || pages[1].items.find((i) => i.id === id)
+
+  // type a page number and press Enter
+  const goTo = () => {
+    const n = Math.round(Number($('#d-goto', el).value))
+    if (!n) return
+    const p = Math.max(1, Math.min(count(), n))
+    $('#d-goto', el).blur()
+    if (Math.floor((p - 1) / 2) !== spread) openSpread(Math.floor((p - 1) / 2))
+    else render()
+  }
+  $('#d-goto', el).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); goTo() } })
+  $('#d-goto', el).addEventListener('change', goTo)
 
   $('#d-photo', el).addEventListener('change', (e) => {
     const f = e.target.files[0]

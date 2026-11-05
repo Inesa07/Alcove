@@ -61,6 +61,39 @@ export const LAYOUTS = {
       { kind: 'free', x: 6, y: 71, w: 88, h: 24, title: 'Tomorrow I want to' },
     ],
   },
+  tracker: {
+    name: 'Monthly tracker', paper: 'plain',
+    blocks: [
+      { kind: 'title', x: 8, y: 3, w: 84, h: 7, text: 'Habit tracker' },
+      { kind: 'tracker', x: 5, y: 12, w: 90, h: 84, n: 10 },
+    ],
+  },
+  todo: {
+    name: 'To-do list', paper: 'plain',
+    blocks: [
+      { kind: 'title', x: 8, y: 3, w: 84, h: 7, text: 'To do' },
+      { kind: 'checks', x: 8, y: 12, w: 84, h: 62, title: 'Things to do', n: 10, bg: '#F6F2FD' },
+      { kind: 'checks', x: 8, y: 77, w: 84, h: 19, title: 'Most important', n: 2, star: true, bg: '#FBE7A6' },
+    ],
+  },
+  goals: {
+    name: 'Goals', paper: 'plain',
+    blocks: [
+      { kind: 'title', x: 8, y: 3, w: 84, h: 7, text: 'My goals' },
+      { kind: 'checks', x: 6, y: 12, w: 42, h: 27, title: 'Goal 1 · steps', n: 4, bg: '#F9D3DC' },
+      { kind: 'checks', x: 52, y: 12, w: 42, h: 27, title: 'Goal 2 · steps', n: 4, bg: '#D6E6F5' },
+      { kind: 'checks', x: 6, y: 42, w: 42, h: 27, title: 'Goal 3 · steps', n: 4, bg: '#DAE9DC' },
+      { kind: 'lines', x: 52, y: 42, w: 42, h: 27, title: 'Why it matters', n: 4, bg: '#FBE7A6' },
+      { kind: 'free', x: 6, y: 72, w: 88, h: 24, title: 'How I will celebrate', scribble: true },
+    ],
+  },
+  month: {
+    name: 'Month at a glance', paper: 'plain',
+    blocks: [
+      { kind: 'title', x: 8, y: 3, w: 84, h: 7, text: new Date().toLocaleDateString('en-GB', { month: 'long' }) },
+      { kind: 'days', x: 5, y: 12, w: 90, h: 84 },
+    ],
+  },
   reading: {
     name: 'Reading log', paper: 'plain',
     blocks: [
@@ -72,13 +105,22 @@ export const LAYOUTS = {
   },
 }
 
-const DEFAULT_TITLES = { water: 'Water', schedule: 'Schedule', meals: 'Meal planner', shopping: 'Shopping list', note: 'Note', habits: 'Habit tracker', moodweek: 'Mood this week', sleep: 'Sleep', reading: 'Books I read' }
+const DEFAULT_TITLES = { tracker: '', days: '', water: 'Water', schedule: 'Schedule', meals: 'Meal planner', shopping: 'Shopping list', note: 'Note', habits: 'Habit tracker', moodweek: 'Mood this week', sleep: 'Sleep', reading: 'Books I read' }
 const BGS = { meals: '#C9D6F2', note: '#F2B95A', habits: '#DCC8EE', moodweek: '#FCE4D6' }
 const HOURS = Array.from({ length: 16 }, (_, i) => String(7 + i).padStart(2, '0') + ':00')
 const MEALS = ['Breakfast', 'Lunch', 'Dinner', 'Snack']
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 export const MOOD_COLORS = ['', '#8C9BC4', '#A9C1D6', '#9CC7B4', '#EBC86A', '#EDA0B4'] // tap a day to go through them
+
+// how many rows a box starts with, and how many fit in it at most
+const ROWS = { lines: 4, checks: 5, habits: 6, shopping: 10, tracker: 10 }
+const ROW_HEIGHT = { lines: 5.6, checks: 5.4, habits: 5.2, shopping: 5.2, tracker: 4.2 } // in % of the page width
+export const rowsOf = (b) => b.n || ROWS[b.kind]
+export const maxRows = (b) => Math.max(rowsOf(b), Math.floor((b.h * 1.3 - 8) / ROW_HEIGHT[b.kind]))
+const rowButtons = (b) => ROWS[b.kind]
+  ? `<div class="blk-rows" aria-label="Lines">${rowsOf(b) > 1 ? '<button class="blk-row-btn" data-rows="-1" aria-label="Remove the last line" title="Remove a line">−</button>' : ''}${rowsOf(b) < maxRows(b) ? '<button class="blk-row-btn" data-rows="1" aria-label="Add a line" title="Add a line">+</button>' : ''}</div>`
+  : ''
 
 const field = (data, k, placeholder = '') =>
   `<input class="bf" data-k="${k}" value="${esc(data[k] || '')}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder || 'Write here')}">`
@@ -99,13 +141,13 @@ export function blockHTML(b) {
     case 'title':
       return `<div class="blk-title" data-id="${b.id}" style="${style}">${esc(b.text)}</div>`
     case 'lines':
-      body = `<div class="lines">${Array.from({ length: b.n || 4 }, (_, i) => field(d, 'g' + i)).join('')}</div>`
+      body = `<div class="lines">${Array.from({ length: rowsOf(b) }, (_, i) => field(d, 'g' + i)).join('')}</div>`
       break
     case 'water':
       body = `<div class="drops">${Array.from({ length: 8 }, (_, i) => tick(d, 'w' + i, `Glass ${i + 1}`, 'drop')).join('')}</div>`
       break
     case 'checks':
-      body = `<div class="checks">${Array.from({ length: b.n || 5 }, (_, i) => `<div class="crow">${tick(d, 'c' + i, 'Done', b.star ? 'tick star' : 'tick')}${field(d, 't' + i)}</div>`).join('')}</div>`
+      body = `<div class="checks">${Array.from({ length: rowsOf(b) }, (_, i) => `<div class="crow">${tick(d, 'c' + i, 'Done', b.star ? 'tick star' : 'tick')}${field(d, 't' + i)}</div>`).join('')}</div>`
       break
     case 'schedule':
       body = `<div class="hours">${HOURS.map((h) => `<label class="hrow"><span>${h}</span>${field(d, 'h' + h)}</label>`).join('')}</div>`
@@ -114,7 +156,7 @@ export function blockHTML(b) {
       body = `<div class="meals">${MEALS.map((m) => `<label class="mrow"><span>${m}</span>${field(d, 'm' + m)}</label>`).join('')}</div>`
       break
     case 'shopping':
-      body = `<div class="checks shop">${Array.from({ length: 10 }, (_, i) => `<div class="crow">${tick(d, 'c' + i, 'Bought')}${field(d, 't' + i)}</div>`).join('')}</div>`
+      body = `<div class="checks shop">${Array.from({ length: rowsOf(b) }, (_, i) => `<div class="crow">${tick(d, 'c' + i, 'Bought')}${field(d, 't' + i)}</div>`).join('')}</div>`
       break
     case 'note':
     case 'free':
@@ -123,7 +165,7 @@ export function blockHTML(b) {
     case 'habits':
       body = `<div class="habits">
         <div class="hab-head"><span></span>${DAYS.map((x) => `<span>${x}</span>`).join('')}</div>
-        ${Array.from({ length: 6 }, (_, r) => `<div class="hab-row">${field(d, 'n' + r, r === 0 ? 'Read 20 pages' : r === 1 ? 'Drink water' : '')}${DAYS.map((_, c) => tick(d, `x${r}_${c}`, `Day ${c + 1}`, 'dot')).join('')}</div>`).join('')}
+        ${Array.from({ length: rowsOf(b) }, (_, r) => `<div class="hab-row">${field(d, 'n' + r, r === 0 ? 'Read 20 pages' : r === 1 ? 'Drink water' : '')}${DAYS.map((_, c) => tick(d, `x${r}_${c}`, `Day ${c + 1}`, 'dot')).join('')}</div>`).join('')}
       </div>`
       break
     case 'moodweek':
@@ -136,6 +178,24 @@ export function blockHTML(b) {
     case 'sleep':
       body = `<div class="sleep">${DAY_NAMES.map((n, i) => `<label class="srow"><span>${n.slice(0, 3)}</span>${field(d, 's' + i, '')}<em>h</em></label>`).join('')}</div>`
       break
+    case 'tracker': {
+      const now = new Date(), days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+      const nums = Array.from({ length: days }, (_, i) => i + 1)
+      const ideas = ['Read', 'Drink water', 'Walk', 'Sleep by 23:00', 'No sugar', 'Stretch', 'Journal', 'Learn something']
+      body = `<div class="tracker" style="--days:${days}">
+        <div class="tr-head"><span class="tr-month">${now.toLocaleDateString('en-GB', { month: 'long' })}</span>${nums.map((n) => `<span>${n}</span>`).join('')}</div>
+        ${Array.from({ length: rowsOf(b) }, (_, r) => `<div class="tr-row">${field(d, 'n' + r, ideas[r] || '')}${nums.map((n) => tick(d, `x${r}_${n}`, `Day ${n}`, 'tr-dot')).join('')}</div>`).join('')}
+      </div>`
+      break
+    }
+    case 'days': {
+      const now = new Date(), days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+      body = `<div class="days">${Array.from({ length: days }, (_, i) => {
+        const dt = new Date(now.getFullYear(), now.getMonth(), i + 1), wd = dt.toLocaleDateString('en-GB', { weekday: 'short' }).slice(0, 2)
+        return `<label class="day-row ${dt.getDay() === 0 || dt.getDay() === 6 ? 'we' : ''}"><span><b>${i + 1}</b>${wd}</span>${field(d, 'd' + (i + 1))}</label>`
+      }).join('')}</div>`
+      break
+    }
     case 'reading':
       body = `<div class="reading">
         <div class="rd-head"><span>Title</span><span>Author</span><span>Rating</span></div>
@@ -143,5 +203,5 @@ export function blockHTML(b) {
       </div>`
       break
   }
-  return `<section class="blk blk-${b.kind}" data-id="${b.id}" style="${style}">${head}${body}</section>`
+  return `<section class="blk blk-${b.kind}" data-id="${b.id}" style="${style}">${head}${body}${rowButtons(b)}</section>`
 }
