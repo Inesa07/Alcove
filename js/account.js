@@ -10,6 +10,7 @@ import { $, esc, toast, themeMode, setTheme } from './ui.js'
 import { maybeOnboard } from './onboarding.js'
 import { track, trackDaily, flush } from './analytics.js'
 import { checkInbox, publishSoon } from './friends.js'
+import { startTour, maybeTour } from './tour.js'
 
 let gate, mode = 'in', note = '', notice = ''
 
@@ -86,6 +87,7 @@ function closeGate() {
   checkInbox()
   publishSoon()
   maybeOnboard(n)
+  maybeTour()
 }
 
 const friendly = (e) => {
@@ -148,7 +150,7 @@ function setupMenu() {
       <p class="acc-who">${esc(i.email)}</p>
       <p class="acc-msg ${i.status === 'error' ? 'bad' : ''}">${line}</p>
       <p class="acc-privacy">We collect anonymous usage statistics (like which pages are opened) to improve the app. What you write is never part of them.</p>
-      <p><a class="link-btn" href="#year" data-close>See your year in Planner</a></p>
+      <p><a class="link-btn" href="#year" data-close>See your year in Planner</a> · <button type="button" class="link-btn" data-close data-tour>Show me around again</button></p>
       ${i.email === OWNER ? '<p><a class="link-btn" href="#admin" data-close>Open your app statistics</a></p>' : ''}
       <p class="acc-label">Look</p>
       <div class="seg acc-theme" role="radiogroup" aria-label="Look">${[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Like my device']].map(([k, v]) => `<button type="button" role="radio" aria-checked="${themeMode() === k}" data-theme-pick="${k}">${v}</button>`).join('')}</div>
@@ -160,6 +162,7 @@ function setupMenu() {
   }
   btn.addEventListener('click', () => { paint(); dlg.showModal() })
   dlg.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-tour]')) setTimeout(startTour, 200)
     if (e.target === dlg || e.target.closest('[data-close]')) dlg.close()
     const tp = e.target.closest('[data-theme-pick]')
     if (tp) { setTheme(tp.dataset.themePick); paint() }

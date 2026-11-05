@@ -108,9 +108,10 @@ export function restore(kind, { item, i }) {
 export function setName(name) { state = { ...state, name }; save() }
 
 // how you feel each day: 1 (sad) … 5 (great)
+// from red (a hard day) to green (a great day)
 export const MOODS = [
-  { v: 1, name: 'Sad', c: '#8C9BC4' }, { v: 2, name: 'Low', c: '#A9C1D6' }, { v: 3, name: 'Okay', c: '#9CC7B4' },
-  { v: 4, name: 'Good', c: '#EBC86A' }, { v: 5, name: 'Great', c: '#EDA0B4' },
+  { v: 1, name: 'Sad', c: '#E98B8B' }, { v: 2, name: 'Low', c: '#F2AF74' }, { v: 3, name: 'Okay', c: '#F1D06A' },
+  { v: 4, name: 'Good', c: '#A8D58E' }, { v: 5, name: 'Great', c: '#5FBF85' },
 ]
 export function setMood(date, v) {
   const moods = { ...(state.moods || {}) }

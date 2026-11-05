@@ -1339,7 +1339,6 @@ function japaneseScene(S) {
   duvet(d, 6.72, 1.8, 9.68, 4.38, 0.5, 0.4, blanket)
   openDiary(d, 7.35, 2.55, 0.6, diaryToday)
   livePet(S, { bed: [8.95, 3.05, 0.6], floor: [7.6, 7.6] })
-  memoryChest(S, 7.3, 4.75)
   spots.bed = bounds([[6.6, 0.6, 0], [9.8, 0.6, 0], [9.8, 4.6, 0], [6.6, 4.6, 0], [6.6, 0.6, 1.2]], 0)
   E()
   const cc = (FABRICS[room.chairColor] || FABRICS.peach).c
@@ -1472,7 +1471,6 @@ function plantScene(S) {
   duvet(d, 1.5, by0 + 0.1, bx1 - 0.02, by1 - 0.03, mt + 0.08, 0.72, blanket)
   openDiary(d, 2.1, by0 + 0.9, mt + 0.12, diaryToday)
   livePet(S, { bed: [3.4, by0 + 2.3, mt + 0.12], floor: [6.9, 6.4], sill: [6.6, 0.3, 2.45] })
-  memoryChest(S, 1.6, 6.1)
   nightstand(d, 0.15, 6.05, bw, sky.lights, glow, '#C9C2B6')
   spots.bed = bounds([[0, by0 - 0.1, 0], [bx1 + 0.2, by0 - 0.1, 0], [bx1 + 0.2, by1 + 0.2, 0], [0, by1 + 0.2, 0], [0, by0, 3.0]], 0)
   E()
@@ -1563,7 +1561,6 @@ function lofiScene(S) {
   const mt = wallBed(d, { y0: 5.9, len: 3.9, depth: 3.1, base: 0.45, blanket, wood: room.bedWood === 'oak' ? '#8A5E40' : bedWood, mattressZ: 1.25, cushions: [[0.5, '#E9C46A'], [1.5, '#B9A3E0']] })
   openDiary(d, 0.6, 7.9, mt + 0.02, diaryToday)
   livePet(S, { bed: [2.2, 8.6, mt + 0.05], floor: [6.0, 6.4], sill: [8.2, 0.5, 2.52] })
-  memoryChest(S, 3.5, 8.5)
   spots.bed = bounds([[0, 5.6, 0], [3.2, 5.6, 0], [3.2, 9.8, 0], [0, 9.8, 0], [0, 5.6, 2.8], [3.2, 9.8, 1.7]], 0)
   E()
   // a little cabinet with plants and a speaker
@@ -1921,7 +1918,6 @@ export function drawRoom(o) {
   d.raw(`<path d="M${(pen[0] - 7).toFixed(1)},${(pen[1] + 4).toFixed(1)} l12,-7" stroke="#E07A8F" stroke-width="2" stroke-linecap="round"/>`)
   // the pet sleeping on the bed
   livePet(S, { bed: [9.0, 3.3, mt + 0.1], floor: [4.6, 6.6], sill: [7.9, 0.25, 3.84] })
-  memoryChest(S, 8.3, 5.75)
   if (canopy) {
     ;[[5.85, 5.1], [9.6, 5.1]].forEach(([x, y]) => d.box(x, y, 0, 0.14, 0.14, 7.6, bedWood))
     d.box(5.85, 0.05, 7.6, 3.9, 0.12, 0.12, bedWood)

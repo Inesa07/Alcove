@@ -4,6 +4,7 @@ import { getState, setName, setRoom, setField, add, pick, COVER_COLORS, todayISO
 import { drawRoom, THEMES, THEME_PRESETS, DEFAULT_ROOM } from './room.js'
 import { appendDiaryText } from './views/diary.js'
 import { track } from './analytics.js'
+import { startTour } from './tour.js'
 import { $, esc, toast } from './ui.js'
 
 const look = (id) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id }, tod: 'day', books: 6, notes: 3, leaves: 6 }).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
@@ -50,6 +51,7 @@ export function maybeOnboard(nameHint = '') {
     box.classList.add('bye')
     setTimeout(() => box.remove(), 350)
     toast(`Welcome, ${getState().name || 'friend'}!`)
+    setTimeout(startTour, 700)
   }
 
   box.addEventListener('submit', async (e) => {

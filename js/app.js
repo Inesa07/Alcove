@@ -1,7 +1,7 @@
 import { getState, subscribe, setName, todayISO, setMood, MOODS } from './store.js'
 import { timeOfDay } from './room.js'
 import { startReminders, upcoming } from './reminders.js'
-import { $, $$, esc, dayLabel, toast } from './ui.js'
+import { $, $$, esc, dayLabel, toast, moodFace } from './ui.js'
 import * as roomView from './views/room.js'
 import * as diaryView from './views/diary.js'
 import * as booksView from './views/books.js'
@@ -34,7 +34,7 @@ function renderSide() {
   $('#count-events').textContent = todays ? todays + ' today' : ''
 
   const mood = (s.moods || {})[today]
-  $('#mood-pick').innerHTML = `<span>${mood ? 'Today you feel ' + MOODS[mood - 1].name.toLowerCase() : 'How are you today?'}</span><div>${MOODS.map((m) => `<button class="mood-dot ${mood === m.v ? 'on' : ''}" data-mood="${m.v}" style="--m:${m.c}" aria-pressed="${mood === m.v}" aria-label="${m.name}" title="${m.name}"><i></i></button>`).join('')}</div>`
+  $('#mood-pick').innerHTML = `<span>${mood ? 'Today you feel ' + MOODS[mood - 1].name.toLowerCase() : 'How are you today?'}</span><div>${MOODS.map((m) => `<button class="mood-dot ${mood === m.v ? 'on' : ''}" data-mood="${m.v}" style="--m:${m.c}" aria-pressed="${mood === m.v}" aria-label="${m.name}">${moodFace(m.v, m.c)}<small>${m.name}</small></button>`).join('')}</div>`
   const next = upcoming(3)
   $('#side-foot').innerHTML = next.length
     ? `<h3>Coming up</h3><ul>${next.map((e) => `<li><span>${esc(e.title)}</span><em>${esc(dayLabel(e.date))}${e.time ? ', ' + e.time : ''}</em></li>`).join('')}</ul>`

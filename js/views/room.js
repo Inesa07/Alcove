@@ -4,12 +4,12 @@ import * as db from '../db.js'
 
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS } from '../store.js'
 import { drawRoom, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
-import { $, esc, toast } from '../ui.js'
+import { $, esc, toast, moodFace } from '../ui.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
 
 // Normal mode: objects open pages.
-const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['notes', 'Notes'], desk: ['calendar', 'Calendar'], chest: ['diary/memories', 'Memories'] }
+const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['notes', 'Notes'], desk: ['calendar', 'Calendar'] }
 
 // Decorate mode: what you can change on each part of the room.
 const PARTS = {
@@ -120,7 +120,7 @@ export function mount(el) {
             style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%"><span class="tag">${PARTS[id].name}</span></button>`
         }).join('')
     } else {
-      const counts = { shelf: s.books.length, board: s.notes.length, desk: s.events.filter((e) => e.date === today).length, bed: '', chest: (s.diaryBook.hearts || []).length || '' }
+      const counts = { shelf: s.books.length, board: s.notes.length, desk: s.events.filter((e) => e.date === today).length, bed: '' }
       overlay = Object.entries(PAGES).map(([id, [view, label]]) => {
         const b = spots[id]
         if (!b) return ''
@@ -257,7 +257,7 @@ export function mount(el) {
     const mood = moods[today]
     jarDlg.innerHTML = `<div class="book-form">
       <h3>How are you today?</h3>
-      <div class="mood-big">${MOODS.map((m) => `<button data-jar-mood="${m.v}" class="${mood === m.v ? 'on' : ''}" style="--m:${m.c}"><i></i><span>${m.name}</span></button>`).join('')}</div>
+      <div class="mood-big">${MOODS.map((m) => `<button data-jar-mood="${m.v}" class="${mood === m.v ? 'on' : ''}" style="--m:${m.c}">${moodFace(m.v, m.c)}<span>${m.name}</span></button>`).join('')}</div>
       <p class="acc-label">${d0.toLocaleDateString('en-GB', { month: 'long' })}</p>
       <div class="mood-month"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b>S</b><b>S</b>${cells}</div>
       <div class="bf-actions"><span class="grow"></span><button class="primary" data-jar-close>Done</button></div></div>`

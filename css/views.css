@@ -892,3 +892,11 @@ html[data-theme="light"] .amb section { border-bottom-color: rgba(42, 38, 56, .0
   .print-page .item-del, .print-page .item-size, .print-page .item-rot, .print-page .grip { display: none !important; }
 }
 @media (max-width: 720px) { .diary-actions .decorate-btn span { display: none; } }
+.add-optional { display: block; width: 100%; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1.5px dashed #ddd6ea; background: transparent; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; margin-top: 8px; }
+.add-optional:hover { border-color: #8e74c4; color: #5b4c8c; }
+.add-optional em, .bd-block h4 em { font-style: normal; font-size: 12px; opacity: .7; margin-left: 4px; }
+.mem-count:not(:empty) { margin-left: 2px; padding: 1px 7px; border-radius: 999px; background: var(--honey); color: #2a2638; font-size: 12px; }
+/* the bin sits at the end of the toolbar, always in view */
+.toolbar .bin { position: relative; right: auto; top: auto; margin-left: auto; width: 44px; height: 50px; padding: 2px; flex-shrink: 0; }
+.toolbar .bin .bin-count { top: -2px; right: -4px; }
+.diary-page .book { margin-bottom: 0; }

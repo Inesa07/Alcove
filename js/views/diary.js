@@ -92,6 +92,7 @@ export function mount(el) {
       <header class="diary-head">
         <div class="day-title"><h2>My diary</h2><p id="d-pages"></p></div>
         <div class="diary-actions">
+          <button class="decorate-btn" data-memories><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>Memories</span><b class="mem-count" id="d-mem-count"></b></button>
           <button class="decorate-btn" data-search><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>Search</span></button>
           <button class="decorate-btn" data-pdf><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2.5 2.5L15 14M12.5 10v6.5"/></svg><span>Save as PDF</span></button>
         </div>
@@ -122,11 +123,12 @@ export function mount(el) {
           </label>
           <button class="tool" data-pop="layout" title="How the pages look">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 8h3M5.5 11h3M15.5 8h3M15.5 11h3"/></svg><span>Page</span></button>
-          <button class="tool" data-pop="keep" title="Keep a page in your memory chest">
+          <button class="tool" data-pop="keep" title="Keep a page in your Memories">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>Keep</span></button>
           <button class="tool" data-pop="trash" title="Throw a page away">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Delete</span></button>
         </div>
+        <button class="bin" id="d-bin" aria-label="Recycle bin" title="Recycle bin: pages you threw away">${BIN_SVG}<b class="bin-count" id="d-bin-count" hidden></b></button>
         <div class="popover" id="d-pop" hidden></div>
       </div>
 
@@ -135,15 +137,25 @@ export function mount(el) {
         <div class="spine" aria-hidden="true"></div>
         <div class="page" data-side="1"></div>
       </div>
-      <div class="diary-under">
-        <p class="diary-tip" id="d-tip"></p>
-        <button class="bin" id="d-bin" aria-label="Recycle bin">${BIN_SVG}<b class="bin-count" id="d-bin-count" hidden></b></button>
-      </div>
+      <p class="sr-only" id="d-tip" aria-live="polite"></p>
       <dialog class="sheet-dialog bin-dialog" id="d-bin-dialog" aria-labelledby="bin-title"></dialog>
     </section>`
 
   const book = $('#book', el)
   const pageEls = $$('.page', book)
+
+  // the open book always fits on the screen, so you never scroll to see it
+  function fitBook() {
+    if (!book.isConnected) return window.removeEventListener('resize', fitBook)
+    book.style.maxWidth = ''
+    if (window.innerWidth <= 720) return
+    const pad = parseFloat(getComputedStyle(book.parentElement).paddingBottom) || 0
+    const h = window.innerHeight - (book.getBoundingClientRect().top + window.scrollY) - pad - 4
+    book.style.maxWidth = Math.max(520, ((h - 28) / 1.3) * 2 + 46) + 'px' // the width that gives a book of height h
+  }
+  window.addEventListener('resize', fitBook)
+  requestAnimationFrame(fitBook)
+  setTimeout(fitBook, 400) // again once the fonts are in
   const count = () => getState().diaryBook.count
   const num = (side) => spread * 2 + side // page index in the book (0-based)
 
@@ -191,7 +203,7 @@ export function mount(el) {
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
       <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
-      ${page.heart ? '<span class="page-ribbon" aria-label="Kept in your memory chest">♥</span>' : ''}
+      ${page.heart ? '<span class="page-ribbon" aria-label="Kept in your Memories">♥</span>' : ''}
 
       ${side === 0
         ? (spread > 0 ? `<button class="edge edge-prev" data-turn="-1" aria-label="Previous page"><span class="curl" aria-hidden="true"></span></button>` : '')
@@ -206,6 +218,7 @@ export function mount(el) {
 
   function render() {
     $('#d-pages', el).textContent = `Pages ${num(0) + 1}–${num(1) + 1}`
+    $('#d-mem-count', el).textContent = (getState().diaryBook.hearts || []).filter((n) => n < count()).length || ''
     renderPage(0)
     renderPage(1)
     book.dataset.using = tool
@@ -438,9 +451,9 @@ export function mount(el) {
         </button>`
       }
       pop.classList.add('pop-trash')
-      pop.innerHTML = `<p class="tc-title">Keep a page in your memory chest</p>
+      pop.innerHTML = `<p class="tc-title">Keep a page in your Memories</p>
         <div class="trash-cards">${card(0)}${card(1)}</div>
-        <p class="tc-note">Special days go in the chest in your room. <button class="link-btn" data-open-memories>Open the memory chest</button></p>`
+        <p class="tc-note">Special days are kept together in Memories, at the top of your diary. <button class="link-btn" data-open-memories>Open Memories</button></p>`
     } else if (kind === 'trash') {
       const card = (side) => {
         const pg = pages[side]
@@ -568,9 +581,9 @@ export function mount(el) {
     const list = (getState().diaryBook.hearts || []).filter((n) => n < count())
     const rows = await Promise.all(list.map(async (n) => ({ n, p: await loadPage(n) })))
     memDlg.innerHTML = `<div class="book-form">
-      <h3>Memory chest</h3>
+      <h3>Memories</h3>
       ${rows.length ? `<ul class="mem-list">${rows.map(({ n, p }) => `<li><button data-go-page="${n}"><span class="mem-heart">♥</span><span><b>Page ${n + 1}</b><span>${esc(preview(p))}</span></span></button></li>`).join('')}</ul>`
-        : '<p class="bin-empty">Your chest is empty for now. On a page you want to remember, press <b>Keep</b> in the toolbar.</p>'}
+        : '<p class="bin-empty">No memories yet. On a page you want to remember, press <b>Keep</b> in the toolbar.</p>'}
       <div class="bf-actions"><span class="grow"></span><button type="button" class="primary" data-close-mem>Done</button></div></div>`
     if (!memDlg.open) memDlg.showModal()
   }
@@ -682,13 +695,14 @@ export function mount(el) {
       pg.heart ? hearts.add(num(side)) : hearts.delete(num(side))
       setDiaryBook({ hearts: [...hearts].sort((a, b) => a - b) })
       saveSoon(); render(); popover = null; openPop('keep')
-      if (pg.heart) toast('Kept in your memory chest ♥')
+      if (pg.heart) toast('Kept in your Memories ♥')
       return
     }
     if (t.closest('[data-open-memories]')) { closePop(); return openMemories() }
     const trash = t.closest('[data-trash]')
     if (trash) return trashPage(Number(trash.dataset.trash))
     if (t.closest('[data-search]')) return openSearch()
+    if (t.closest('[data-memories]')) return openMemories()
     if (t.closest('[data-pdf]')) return savePDF()
     const turnBtn = t.closest('[data-turn]')
     if (turnBtn) return turn(Number(turnBtn.dataset.turn))

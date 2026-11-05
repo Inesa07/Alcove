@@ -153,6 +153,8 @@ export function mount(el) {
     const keepQuote = $('#bd-quote', detail)?.value || ''
     const keepQPage = $('#bd-qpage', detail)?.value || ''
     const keepReview = document.activeElement?.id === 'bd-review' ? $('#bd-review', detail).value : null
+    const quoteOpen = !!$('#bd-qform', detail) || (b.quotes || []).length > 0
+    const reviewOpen = !!$('#bd-review', detail) || !!b.review
     detail.innerHTML = `<div class="bd">
       <button class="icon-btn bd-close" data-close-detail aria-label="Close">×</button>
       <div class="bd-head">
@@ -183,15 +185,17 @@ export function mount(el) {
         <h4>Your rating</h4>
         <div class="bd-stars">${stars(b.rating, 'data-rate')}</div>
         <label class="bd-finished">Finished on <input id="bd-finished" type="date" value="${b.finishedOn || todayISO()}"></label>
-        <textarea id="bd-review" rows="3" placeholder="What did you think? A few words for later…">${esc(b.review || '')}</textarea>
+        ${reviewOpen || openPart === 'review' ? `<textarea id="bd-review" rows="3" placeholder="What did you think? A few words for later…">${esc(b.review || '')}</textarea>`
+          : '<button class="add-optional" data-open-part="review">+ Write a few words about it <em>optional</em></button>'}
       </section>` : ''}
 
       <section class="bd-block">
-        <h4>Quotes and thoughts <em>${(b.quotes || []).length || ''}</em></h4>
+        <h4>Quotes and thoughts <em>${(b.quotes || []).length || 'optional'}</em></h4>
+        ${!quoteOpen && openPart !== 'quote' ? '<button class="add-optional" data-open-part="quote">+ Save a line you love, or a thought</button>' : `
         <form class="bd-quote-form" id="bd-qform">
           <textarea id="bd-quote" rows="2" placeholder="A line you love, or a thought…" required></textarea>
           <div><input id="bd-qpage" type="number" min="1" placeholder="page" inputmode="numeric" aria-label="Page"><button class="primary small" type="submit">Save</button></div>
-        </form>
+        </form>`}
         <ul class="bd-quotes">${(b.quotes || []).map((q) => `<li>
           <blockquote>${esc(q.text)}</blockquote>
           <div class="bd-q-foot"><span>${q.page ? 'p. ' + q.page + ' · ' : ''}${new Date(q.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
@@ -200,12 +204,13 @@ export function mount(el) {
         </li>`).join('')}</ul>
       </section>
     </div>`
-    $('#bd-quote', detail).value = keepQuote
-    $('#bd-qpage', detail).value = keepQPage
+    if ($('#bd-quote', detail)) { $('#bd-quote', detail).value = keepQuote; $('#bd-qpage', detail).value = keepQPage }
+    if (openPart) { (openPart === 'quote' ? $('#bd-quote', detail) : $('#bd-review', detail))?.focus(); openPart = '' }
     if (keepReview !== null) { const r = $('#bd-review', detail); r.value = keepReview; r.focus() }
   }
 
-  function openDetail(id) { openId = id; paintDetail(); if (!detail.open) detail.showModal() }
+  let openPart = '' // 'quote' or 'review' when you just asked to write one
+  function openDetail(id) { if (id !== openId) detail.innerHTML = ''; openId = id; paintDetail(); if (!detail.open) detail.showModal() }
 
   const setStatus = (b, st) => {
     const patch = { status: st }
@@ -243,6 +248,8 @@ export function mount(el) {
   }, 1000)
 
   detail.addEventListener('click', async (e) => {
+    const op = e.target.closest('[data-open-part]')
+    if (op) { openPart = op.dataset.openPart; return paintDetail() }
     const t = e.target
     const b = book(openId)
     if (t === detail || t.closest('[data-close-detail]')) return detail.close()
