@@ -2,7 +2,7 @@
 // Everything is counted here on your device from your own data.
 
 import { getState, MOODS, todayISO } from '../store.js'
-import { drawRoom, THEMES, DEFAULT_ROOM } from '../room.js'
+import { drawRoom, THEMES, DEFAULT_ROOM, roomTheme } from '../room.js'
 import { $, esc, moodFace } from '../ui.js'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -106,7 +106,7 @@ function cards(t) {
   const room = drawRoom({ room: { ...DEFAULT_ROOM, ...t.room }, tod: 'evening', books: Math.max(t.books, 4), notes: 3, events: 1, leaves: 3 + Math.min(t.run, 12) }).svg
   list.push({ cls: 'c0', art: 'stars', summary: true, html: `<p class="yr-kicker">${t.year} · ${name ? esc(name) : 'your year'}</p><div class="yr-room">${room}</div>
     <div class="yr-sum"><span><b>${t.days}</b>diary days</span><span><b>${t.books}</b>books</span><span><b>${t.events}</b>plans</span><span><b>${t.topMood ? t.topMood.name : '–'}</b>mood</span></div>
-    <h2 class="yr-h-small">${p[0]} ${p[2]}</h2><p>See you in ${t.year + 1} in your ${(THEMES[t.room.theme] || THEMES.cozy).name.toLowerCase()}.</p>
+    <h2 class="yr-h-small">${p[0]} ${p[2]}</h2><p>See you in ${t.year + 1} in your ${THEMES[roomTheme(t.room.theme)].name.toLowerCase()}.</p>
     <button class="yr-save" data-save-img>Save as a picture</button>` })
   return list
 }

@@ -34,7 +34,7 @@ Turn the app into a **place** instead of a list. The home screen is a small isom
 | Decision | Why |
 | --- | --- |
 | **The room is the navigation** | It makes the app feel like a place you visit, not a tool you use. It also teaches the app without a tutorial: every object has a label. |
-| **Four rooms with their own furniture** (Cozy, Japanese, Plant, Lo-fi study) instead of colour themes | Testing showed that recoloured furniture felt fake. Each room now has its own design and layout, and every piece can still be decorated. |
+| **Four rooms with their own shape** (a Nordic cabin with a pointed roof, a night observatory with a dome, a seaside studio with a deck, a pastel room with a raised platform) | The first rooms were the same box in different colours, and users said they all looked alike. Now every room has its own silhouette and furniture; the blanket, picture, window view and pet can still be changed. |
 | **A reading tracker, not an e-reader** | Reading inside a planner competes with Kindle and has copyright problems. Tracking (progress, a reading timer, quotes, a yearly goal) fits the diary and the shelf. |
 | **A paper diary, not a text editor** | Pages turn like a book, you can drag stickers, photos and text between pages, rotate them and draw. Deleted pages are crumpled into a recycle bin and can be brought back. |
 | **Undo instead of "Are you sure?"** | Deleting is quick, and a toast with *Undo* fixes mistakes without slowing everyone down. |

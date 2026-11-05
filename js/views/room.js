@@ -3,7 +3,7 @@ import * as db from '../db.js'
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS } from '../store.js'
-import { drawRoom, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
+import { drawRoom, roomTheme, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
 import { $, esc, toast, moodFace } from '../ui.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
@@ -13,7 +13,7 @@ const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['not
 
 // Decorate mode: what you can change on each part of the room.
 const PARTS = {
-  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket and curtains', 'blanket', FABRICS], ['Pet', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS], ['Pet name', 'petName', 'text']] },
+  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket', 'blanket', FABRICS], ['Pet', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS], ['Pet name', 'petName', 'text']] },
   shelf: { name: 'Bookshelf', options: [['Style', 'shelfStyle', 'styles'], ['Colour', 'shelfWood', WOODS]] },
   desk: { name: 'Desk', options: [['Style', 'deskStyle', 'styles'], ['Colour', 'deskWood', WOODS]] },
   chair: { name: 'Chair', options: [['Style', 'chairStyle', 'styles'], ['Colour', 'chairColor', FABRICS]] },
@@ -23,6 +23,8 @@ const PARTS = {
   walls: { name: 'Walls', options: [['Colour', 'wall', WALLS], ['Texture', 'wallStyle', 'styles']] },
   floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS], ['Pattern', 'floorStyle', 'styles']] },
 }
+// Every room has its own furniture; these are the things you can still change in it
+const CAN = { bed: ['blanket', 'pet', 'petColor', 'petName'], art: ['art'], window: ['windowPhoto'] }
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
 const DECOR_ORDER = ['window', 'art', 'rug', 'desk', 'chair', 'shelf', 'bed']
 
@@ -111,11 +113,9 @@ export function mount(el) {
     if (decorating) {
       const shape = (id, poly) => `<button class="spot shape ${part === id ? 'on' : ''}" data-part="${id}" aria-label="Change the ${PARTS[id].name.toLowerCase()}" style="clip-path:polygon(${poly})"></button>`
       overlay =
-        shapes.floor.map((p) => shape('floor', p)).join('') +
-        shapes.walls.map((p) => shape('walls', p)).join('') +
         DECOR_ORDER.map((id) => {
           const b = spots[id]
-          if (!b) return '' // this room has no such part (no window in the Japanese room)
+          if (!b || !CAN[id]) return '' // this room has no such part (no window in the Japanese room)
           return `<button class="spot decor-spot ${part === id ? 'on' : ''}" data-part="${id}" aria-label="Change the ${PARTS[id].name.toLowerCase()}"
             style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%"><span class="tag">${PARTS[id].name}</span></button>`
         }).join('')
@@ -152,7 +152,7 @@ export function mount(el) {
   /* ---------- top bar ---------- */
 
   function renderTop() {
-    $('#room-hint', el).textContent = decorating ? 'Tap the bed, shelf, desk, chair, picture, window, rug, walls or floor to change it' : 'Tap something in your room'
+    $('#room-hint', el).textContent = decorating ? 'Tap the bed (blanket and pet), the picture or the window to change them' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-amb aria-expanded="${!$('#amb', el).hidden}" aria-label="Weather and sounds">
@@ -178,8 +178,7 @@ export function mount(el) {
     page.classList.toggle('has-part', !!(decorating && part))
     if (!decorating || !part) { panel.hidden = true; return }
     const r = draft
-    const own = (draft.theme || 'cozy') !== 'cozy' // furniture in the other rooms has its own design
-    const rows = PARTS[part].options.filter(([, key]) => !(own && /Style$/.test(key) && key !== 'wallStyle' && key !== 'floorStyle')).map(([label, key, list]) => {
+    const rows = PARTS[part].options.filter(([, key]) => (CAN[part] || []).includes(key)).map(([label, key, list]) => {
       if (list === 'photo') {
         return `<section><p class="sub">Put a photo of a place you love outside the window: the sea, your city, mountains…</p>
           <div class="photo-row"><label class="primary small photo-pick">Choose a photo<input type="file" accept="image/*" class="sr-only" data-window-photo></label>
@@ -278,11 +277,11 @@ export function mount(el) {
 
   function openGallery() {
     const g = $('#gallery', el)
-    const t0 = (decorating ? draft : getState().room).theme || 'cozy'
-    const now = THEMES[t0] ? t0 : 'cozy'
+    const t0 = (decorating ? draft : getState().room).theme
+    const now = roomTheme(t0)
     g.innerHTML = `
       <div class="gallery-head">
-        <div><h2 id="gallery-title">Choose your room</h2><p>Every room can still be decorated the way you like.</p></div>
+        <div><h2 id="gallery-title">Choose your room</h2><p>Each room has its own shape and furniture. You can still change the blanket, the picture, the window view and your pet.</p></div>
         <button class="icon-btn" data-close-gallery aria-label="Close">×</button>
       </div>
       <div class="gallery-list">${Object.entries(THEMES).map(([id, t]) => `

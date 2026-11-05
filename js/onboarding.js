@@ -14,7 +14,7 @@ export function maybeOnboard(nameHint = '') {
   if (s.onboarded) return
   // people who already use the app do not need the tour
   if (s.books.length || s.notes.length || s.events.length || s.diaryDays.length) { setField({ onboarded: true }); return }
-  let step = 1, theme = s.room.theme || 'cozy'
+  let step = 1, theme = s.room.theme || 'cabin'
   const box = document.createElement('div')
   box.className = 'onboard'
   document.body.appendChild(box)

@@ -3,7 +3,7 @@
 
 import * as sync from '../sync.js'
 import { OWNER_EMAIL } from '../config.js'
-import { THEMES } from '../room.js'
+import { THEMES, roomTheme } from '../room.js'
 import { $, esc } from '../ui.js'
 
 const day = (t) => new Date(t).toISOString().slice(0, 10)
@@ -44,7 +44,7 @@ export function mount(el) {
       const count = (name, key) => { const m = new Map(); data.filter((e) => e.name === name).forEach((e) => { const k = e.props?.[key] || '—'; m.set(k, (m.get(k) || 0) + 1) }); return [...m].sort((a, b) => b[1] - a[1]) }
       const usersWith = (pred) => new Set(data.filter(pred).map((e) => e.user_id)).size
       const lastRoom = new Map(); data.filter((e) => e.name === 'room' || e.name === 'onboarding_done').forEach((e) => e.props?.theme && lastRoom.set(e.user_id, e.props.theme))
-      const rooms = [...Object.keys(THEMES)].map((t) => [THEMES[t].name, [...lastRoom.values()].filter((x) => x === t).length])
+      const rooms = [...Object.keys(THEMES)].map((t) => [THEMES[t].name, [...lastRoom.values()].filter((x) => roomTheme(x) === t).length])
       const newPerDay = Array.from({ length: 14 }, (_, i) => { const d = addD(today, i - 13); return [d.slice(5), [...users.values()].filter((u) => u.first === d).length] })
       const funnel = [['Started', usersWith((e) => e.name === 'onboarding_step' && e.props?.step === 1)], ['Chose a name', usersWith((e) => e.name === 'onboarding_step' && e.props?.step === 2)], ['Chose a room', usersWith((e) => e.name === 'onboarding_step' && e.props?.step === 3)], ['Finished', usersWith((e) => e.name === 'onboarding_done')]]
       body.innerHTML = `

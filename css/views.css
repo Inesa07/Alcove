@@ -601,7 +601,7 @@ button.spot { padding: 0; border: none; background: transparent; cursor: pointer
 .gallery-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 26px 28px 8px; }
 .gallery-head h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-style: italic; font-size: 32px; }
 .gallery-head p { margin: 4px 0 0; color: var(--lilac-text); font-size: 14px; }
-.gallery-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 14px 28px 28px; }
+.gallery-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 14px 28px 28px; }
 .room-card {
   display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; cursor: pointer; font: inherit; color: inherit;
   border-radius: 22px; border: 2px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .04); transition: transform .2s, border-color .2s, background .2s;
