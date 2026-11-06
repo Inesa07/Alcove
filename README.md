@@ -6,7 +6,7 @@ Instead of menus and lists, you get a small room. Every object in it opens one p
 
 ### 👉 [Open Planner](https://inesa07.github.io/Planner/)
 
-Free, works in any browser on a computer or a phone, and you can install it like an app. Your diary is private: friends can visit your room, but never read your diary.
+Nothing to download or install: just open the link in any browser on your computer or phone. Sign up with your email and your room is ready. Your diary is private: friends can visit your room, but never read your diary.
 
 <p align="center"><img src="docs/rooms.gif" width="560" alt="The four rooms: a Nordic cabin, a night observatory, a seaside studio and a pastel room"></p>
 
@@ -138,18 +138,6 @@ These answer the main questions of the product: *does the room make people come 
 
 Plain HTML, CSS and JavaScript modules, no build step. The room is drawn as SVG on an isometric grid in code (no images). Data lives in `localStorage` and IndexedDB, and syncs through **Supabase** (auth, Postgres, row level security).
 
-### Run it
-
-```bash
-python3 -m http.server 8000
-```
-
-Open http://localhost:8000. Settings for Supabase are in `js/config.js`; run the files in `supabase/` once in the Supabase SQL Editor:
-
-- `setup.sql`: your data and sync
-- `analytics.sql`: anonymous usage events, readable only by the owner
-- `friends.sql`: friend codes, friendships and notes
-
 ### Project structure
 
 ```
@@ -172,3 +160,9 @@ js/views/*.js           the pages: room, diary, books, notes, calendar, friends,
 sw.js                   offline support
 supabase/*.sql          database tables and access rules
 ```
+
+---
+
+### 👉 [Open Planner](https://inesa07.github.io/Planner/)
+
+Nothing to install: open the link in any browser on your computer or phone.
