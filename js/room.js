@@ -222,7 +222,7 @@ export function seasonOf(d = new Date()) {
   return null
 }
 // a free place on the floor near the front of each room
-const SEASON_SPOT = { cabin: [6.3, 9.1], observatory: [2.6, 9.6], seaside: [5.0, 9.4], pastel: [4.2, 9.3] }
+const SEASON_SPOT = { cabin: [7.2, 9.6], observatory: [2.6, 9.6], seaside: [5.0, 9.4], pastel: [2.8, 9.6] }
 const f1 = (n) => n.toFixed(1)
 
 function seasonal(d, season, x, y, lights) {
@@ -2266,22 +2266,22 @@ function cabinScene(S) {
   E()
   // a writing desk on the right wall with a pinboard above it
   G('desk')
-  wallDesk(d, { x0: 1.7, x1: 4.9, depth: 1.7, top: 2.5, wood: S.deskWood, drawers: 'none' })
-  calendarFront(d, 2.0, 2.7, 1.25, 2.5, 0.85, events)
-  spots.desk = bounds([[1.9, 1.0, 2.5], [2.9, 1.0, 2.5], [2.9, 1.3, 3.4], [1.9, 1.3, 3.4]], 3)
-  mug(d, 3.4, 1.0, 2.5, '#C9564F', !lit)
+  wallDesk(d, { x0: 2.2, x1: 4.9, depth: 1.7, top: 2.5, wood: S.deskWood, drawers: 'none' })
+  calendarFront(d, 2.5, 3.2, 1.25, 2.5, 0.85, events)
+  spots.desk = bounds([[2.4, 1.0, 2.5], [3.4, 1.0, 2.5], [3.4, 1.3, 3.4], [2.4, 1.3, 3.4]], 3)
+  mug(d, 3.8, 1.0, 2.5, '#C9564F', !lit)
   deskLamp(d, 4.3, 0.4, 2.5, lit, glow, '#2F3A44')
   E()
   G('board')
-  d.box(1.9, 0, 3.6, 2.8, 0.1, 1.7, ['#BC9A6E', '#C9A77A', '#AE8D62'])
+  d.box(2.3, 0, 3.6, 2.5, 0.1, 1.7, ['#BC9A6E', '#C9A77A', '#AE8D62'])
   ;[0, 1, 2, 3].slice(0, Math.max(2, Math.min(notes + 1, 4))).forEach((i) => {
-    const u = 2.1 + i * 0.62
+    const u = 2.45 + i * 0.58
     d.poly([[u, 0.12, 4.0 + (i % 2) * 0.25], [u + 0.48, 0.12, 4.0 + (i % 2) * 0.25], [u + 0.48, 0.12, 4.65 + (i % 2) * 0.25], [u, 0.12, 4.65 + (i % 2) * 0.25]], ['#FFFFFF', '#F7D9C4', '#E9EEF4', '#FBE7A6'][i])
   })
-  spots.board = bounds([[1.9, 0, 3.6], [4.7, 0, 3.6], [4.7, 0, 5.3], [1.9, 0, 5.3]], 2)
+  spots.board = bounds([[2.3, 0, 3.6], [4.8, 0, 3.6], [4.8, 0, 5.3], [2.3, 0, 5.3]], 2)
   E()
   G('chair')
-  spots.chair = chairFacingWall(d, 3.2, 2.4, { color: S.chair, wood: shade(S.deskWood, -0.15), style: 'classic' })
+  spots.chair = chairFacingWall(d, 3.6, 2.4, { color: S.chair, wood: shade(S.deskWood, -0.15), style: 'classic' })
   E()
 
 
@@ -2329,7 +2329,7 @@ function cabinScene(S) {
   const fl = P(1.0, 9.85, 0)
   d.raw(`<path d="M${f(fl[0])},${f(fl[1])} V${f(fl[1] - 70)}" stroke="#2F3A44" stroke-width="1.6"/><path d="M${f(fl[0] - 9)},${f(fl[1] - 70)} h18 l-4,-12 h-10z" fill="${lit ? '#FDEBC4' : '#F3EADB'}"/>`)
   if (lit) glow(fl[0], fl[1] - 64, 40)
-  plant(d, 9.7, 8.1, leaves)
+  plant(d, 9.6, 9.6, leaves)
   if (sky.beam) d.poly([[6.4, 0.6, 0.02], [9.4, 0.6, 0.02], [8.6, 4.8, 0.02], [5.6, 4.8, 0.02]], 'url(#beam)')
   // a shelf over the armchair with plants and candles, books on the floor, a lantern by the fire
   d.box(0, 7.1, 4.5, 0.6, 2.4, 0.12, [shade(S.shelfWood, 0.15), S.shelfWood, shade(S.shelfWood, -0.1)])
@@ -2347,8 +2347,8 @@ function cabinScene(S) {
 
 function observatoryScene(S) {
   const { d, room, sky, spots, G, E, glow, books, notes, events, diaryToday, leaves } = S
-  const left = () => 10.8 // the left wall is straight; the dome curves down the right one
-  const right = (x) => 7.6 + 3.2 * Math.cos((Math.PI / 2) * (x / 10))
+  // straight walls, tall like a tower
+  const left = () => 9.6, right = () => 9.6
   shell(S, { left, right })
   // stars and a constellation painted on the walls (on dark walls only)
   if (['starry', 'night'].includes(room.wall)) {
@@ -2386,7 +2386,13 @@ function observatoryScene(S) {
   spots.window = bounds([[cx - rw, 0, cz - rw], [cx + rw, 0, cz - rw], [cx + rw, 0, cz + rw], [cx - rw, 0, cz + rw]], 1)
   E()
 
-  // a curved bookcase with a globe on top
+  G('board')
+  // a chart of the moon's phases on the wall above the bookcase
+  d.box(0, 0.5, 4.9, 0.08, 2.8, 1.5, ['#1A2044', '#151B3B', '#11162F'])
+  ;[0, 1, 2, 3, 4].forEach((i) => { const c = P(0.1, 0.85 + i * 0.53, 5.65); d.raw(`<circle cx="${f(c[0])}" cy="${f(c[1])}" r="3.4" fill="#3A4170"/><path d="M${f(c[0])},${f(c[1] - 3.4)} a3.4,3.4 0 0 ${i < 2 ? 1 : 0} 0,6.8 a${f(Math.abs(2 - i) * 1.7)},3.4 0 0 ${i < 2 ? 0 : 1} 0,-6.8" fill="#FFF3D0"/>`) })
+  spots.board = bounds([[0, 0.5, 4.9], [0, 3.3, 4.9], [0, 3.3, 6.4], [0, 0.5, 6.4]], 2)
+  E()
+  // a bookcase with a globe on top
   G('shelf')
   spots.shelf = bookcase(d, { y0: 0.4, len: 3.0, depth: 1.1, h: 3.9, levels: [0.12, 1.15, 2.2, 3.1], wood: S.shelfWood, books })
   const gb = P(0.55, 1.9, 4.05)
@@ -2394,34 +2400,29 @@ function observatoryScene(S) {
   moodJar(S, 0.55, 2.95, 3.92)
   E()
 
+  // a desk on the right wall with a glowing moon lamp and star charts
+  G('desk')
+  wallDesk(d, { x0: 2.9, x1: 5.7, depth: 1.8, top: 2.5, wood: S.deskWood, drawers: 'left' })
+  calendarFront(d, 4.2, 4.9, 1.3, 2.5, 0.85, events)
+  spots.desk = bounds([[4.1, 1.1, 2.5], [5.1, 1.1, 2.5], [5.1, 1.4, 3.4], [4.1, 1.4, 3.4]], 3)
+  d.poly([[3.1, 0.3, 2.51], [4.0, 0.3, 2.51], [4.0, 1.3, 2.51], [3.1, 1.3, 2.51]], '#E9DFC6')
+  d.line([[3.3, 0.6, 2.52], [3.6, 0.9, 2.52], [3.8, 0.5, 2.52]], '#5F86B3', 0.8)
+  const ml = P(5.35, 0.6, 2.5)
+  d.raw(`<circle cx="${f(ml[0])}" cy="${f(ml[1] - 8)}" r="8" fill="#FFF0C4"/><circle cx="${f(ml[0] + 2)}" cy="${f(ml[1] - 10)}" r="1.4" fill="#EADBA6"/><rect x="${f(ml[0] - 3)}" y="${f(ml[1] - 1)}" width="6" height="2" fill="#C9A55A"/>`)
+  glow(ml[0], ml[1] - 8, 40)
+  E()
+
+  G('chair')
+  spots.chair = chairFacingWall(d, 4.3, 2.5, { color: S.chair, wood: shade(S.deskWood, -0.1), style: 'classic' })
+  E()
+
+  nightstand(d, 0.12, 4.55, S.bedWood, sky.lights, glow, '#FFF0C4')
   // the telescope on its tripod, looking at the moon
-  const tb = P(6.8, 2.4, 0), tt = P(6.8, 2.4, 2.6)
+  const tb = P(7.9, 3.4, 0), tt = P(7.9, 3.4, 2.6)
   d.raw(`<ellipse cx="${f(tb[0])}" cy="${f(tb[1] + 1)}" rx="16" ry="5" fill="#000" opacity=".2" filter="url(#soft)"/>`)
   ;[[-13, 4], [12, 4], [2, 9]].forEach(([dx, dy]) => d.raw(`<path d="M${f(tt[0])},${f(tt[1])} L${f(tb[0] + dx)},${f(tb[1] + dy)}" stroke="#4A3A2E" stroke-width="1.6"/>`))
   d.raw(`<g transform="translate(${f(tt[0])} ${f(tt[1])}) rotate(-38)"><rect x="-10" y="-4" width="34" height="8" rx="2" fill="#C9A55A"/><rect x="22" y="-5.5" width="7" height="11" rx="2" fill="#B38F44"/><rect x="-14" y="-2.5" width="6" height="5" rx="1" fill="#3A3350"/><rect x="0" y="-4" width="3" height="8" fill="#9C7C3A"/></g>`)
 
-  // a desk on the right wall with a glowing moon lamp and star charts
-  G('desk')
-  wallDesk(d, { x0: 1.6, x1: 4.6, depth: 1.8, top: 2.5, wood: S.deskWood, drawers: 'left' })
-  calendarFront(d, 3.0, 3.7, 1.3, 2.5, 0.85, events)
-  spots.desk = bounds([[2.9, 1.1, 2.5], [3.9, 1.1, 2.5], [3.9, 1.4, 3.4], [2.9, 1.4, 3.4]], 3)
-  d.poly([[1.9, 0.3, 2.51], [2.8, 0.3, 2.51], [2.8, 1.3, 2.51], [1.9, 1.3, 2.51]], '#E9DFC6')
-  d.line([[2.1, 0.6, 2.52], [2.4, 0.9, 2.52], [2.6, 0.5, 2.52]], '#5F86B3', 0.8)
-  const ml = P(4.2, 0.6, 2.5)
-  d.raw(`<circle cx="${f(ml[0])}" cy="${f(ml[1] - 8)}" r="8" fill="#FFF0C4"/><circle cx="${f(ml[0] + 2)}" cy="${f(ml[1] - 10)}" r="1.4" fill="#EADBA6"/><rect x="${f(ml[0] - 3)}" y="${f(ml[1] - 1)}" width="6" height="2" fill="#C9A55A"/>`)
-  glow(ml[0], ml[1] - 8, 40)
-  E()
-  G('board')
-  // a chart of the moon's phases above the desk
-  d.box(1.6, 0, 3.7, 3.0, 0.08, 1.6, ['#1A2044', '#151B3B', '#11162F'])
-  ;[0, 1, 2, 3, 4].forEach((i) => { const c = P(1.95 + i * 0.58, 0.1, 4.5); d.raw(`<circle cx="${f(c[0])}" cy="${f(c[1])}" r="3.6" fill="#3A4170"/><path d="M${f(c[0])},${f(c[1] - 3.6)} a3.6,3.6 0 0 ${i < 2 ? 1 : 0} 0,7.2 a${f(Math.abs(2 - i) * 1.8)},3.6 0 0 ${i < 2 ? 0 : 1} 0,-7.2" fill="#FFF3D0"/>`) })
-  spots.board = bounds([[1.6, 0, 3.7], [4.6, 0, 3.7], [4.6, 0, 5.3], [1.6, 0, 5.3]], 2)
-  E()
-  G('chair')
-  spots.chair = chairFacingWall(d, 3.1, 2.5, { color: S.chair, wood: shade(S.deskWood, -0.1), style: 'classic' })
-  E()
-
-  nightstand(d, 0.12, 4.55, S.bedWood, sky.lights, glow, '#FFF0C4')
   // a daybed along the left wall with a star blanket
   G('bed')
   const mt = bedHeadLeft(d, { y0: 5.6, y1: 8.9, len: 4.4, base: 0.7, mattressZ: 1.45, blanket: S.blanket, wood: S.bedWood, head: shade(S.bedWood, 0.12) })
