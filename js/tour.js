@@ -64,24 +64,13 @@ export function startTour() {
       <h3>${esc(s.title)}</h3>
       <p>${esc(s.text)}</p>
       <div class="tour-actions">
-        <button class="link-btn" data-tour-skip>${i === list.length - 1 ? '' : 'Skip the tour'}</button>
+        <button class="link-btn" data-tour-skip ${i === list.length - 1 ? 'style="visibility:hidden"' : ''}>Skip the tour</button>
         <span class="grow"></span>
-        ${i ? '<button class="ghost small" data-tour-back>Back</button>' : ''}
-        <button class="primary small" data-tour-next>${i === list.length - 1 ? 'Start using Planner' : 'Next'}</button>
+        <button class="ghost small" data-tour-back ${i ? '' : 'style="visibility:hidden"'}>Back</button>
+        <button class="primary small tour-next" data-tour-next>${i === list.length - 1 ? 'Start!' : 'Next'}</button>
       </div>`
-    // the card goes next to the highlighted part, wherever there is room
-    const cw = Math.min(340, window.innerWidth - 24)
-    card.style.width = cw + 'px'
-    const ch = card.offsetHeight
-    let left, top
-    const big = r.width * r.height > window.innerWidth * window.innerHeight * 0.3
-    if (big) { left = r.left + r.width / 2 - cw / 2; top = Math.min(window.innerHeight - ch - 16, r.bottom - ch - 30) }
-    else if (r.right + cw + 24 < window.innerWidth) { left = r.right + 18; top = r.top + r.height / 2 - ch / 2 }
-    else if (r.left - cw - 24 > 0) { left = r.left - cw - 18; top = r.top + r.height / 2 - ch / 2 }
-    else if (r.bottom + ch + 24 < window.innerHeight) { left = r.left + r.width / 2 - cw / 2; top = r.bottom + 16 }
-    else { left = r.left + r.width / 2 - cw / 2; top = r.top - ch - 16 }
-    card.style.left = Math.max(12, Math.min(window.innerWidth - cw - 12, left)) + 'px'
-    card.style.top = Math.max(12, Math.min(window.innerHeight - ch - 12, top)) + 'px'
+    // the card always stays in the same corner, so Next is always under your finger;
+    // only the highlight moves around the screen
     card.querySelector('[data-tour-next]').focus({ preventScroll: true })
   }
 

@@ -13,7 +13,7 @@ const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['not
 
 // Decorate mode: what you can change on each part of the room.
 const PARTS = {
-  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Frame', 'bedWood', WOODS], ['Blanket', 'blanket', FABRICS], ['Pet', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS], ['Pet name', 'petName', 'text']] },
+  bed: { name: 'Bed', options: [['Style', 'bedStyle', 'styles'], ['Bed colour', 'bedWood', WOODS], ['Blanket', 'blanket', FABRICS], ['Pet', 'pet', 'styles'], ['Pet colour', 'petColor', PET_COLORS], ['Pet name', 'petName', 'text']] },
   shelf: { name: 'Bookshelf', options: [['Style', 'shelfStyle', 'styles'], ['Colour', 'shelfWood', WOODS]] },
   desk: { name: 'Desk', options: [['Style', 'deskStyle', 'styles'], ['Colour', 'deskWood', WOODS]] },
   chair: { name: 'Chair', options: [['Style', 'chairStyle', 'styles'], ['Colour', 'chairColor', FABRICS]] },
@@ -23,8 +23,12 @@ const PARTS = {
   walls: { name: 'Walls', options: [['Colour', 'wall', WALLS], ['Texture', 'wallStyle', 'styles']] },
   floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS], ['Pattern', 'floorStyle', 'styles']] },
 }
-// Every room has its own furniture; these are the things you can still change in it
-const CAN = { bed: ['blanket', 'pet', 'petColor', 'petName'], art: ['art'], window: ['windowPhoto'] }
+// Every room has its own furniture; in each one you can change the colours of everything
+const CAN = {
+  bed: ['bedWood', 'blanket', 'pet', 'petColor', 'petName'], shelf: ['shelfWood'], desk: ['deskWood'], chair: ['chairColor'],
+  rug: ['rug'], art: ['art'], window: ['windowPhoto'], walls: ['wall'], floor: ['floor'],
+}
+const canIn = (theme, id) => !(theme === 'seaside' && id === 'desk') && CAN[id] // the seaside studio has a wall calendar, not a desk
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
 const DECOR_ORDER = ['window', 'art', 'rug', 'desk', 'chair', 'shelf', 'bed']
 
@@ -112,10 +116,13 @@ export function mount(el) {
     let overlay
     if (decorating) {
       const shape = (id, poly) => `<button class="spot shape ${part === id ? 'on' : ''}" data-part="${id}" aria-label="Change the ${PARTS[id].name.toLowerCase()}" style="clip-path:polygon(${poly})"></button>`
+      const th = roomTheme(room().theme)
       overlay =
+        shapes.floor.map((p) => shape('floor', p)).join('') +
+        shapes.walls.map((p) => shape('walls', p)).join('') +
         DECOR_ORDER.map((id) => {
           const b = spots[id]
-          if (!b || !CAN[id]) return '' // this room has no such part (no window in the Japanese room)
+          if (!b || !canIn(th, id)) return '' // this room has no such part (no window in the Japanese room)
           return `<button class="spot decor-spot ${part === id ? 'on' : ''}" data-part="${id}" aria-label="Change the ${PARTS[id].name.toLowerCase()}"
             style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%"><span class="tag">${PARTS[id].name}</span></button>`
         }).join('')
@@ -152,7 +159,7 @@ export function mount(el) {
   /* ---------- top bar ---------- */
 
   function renderTop() {
-    $('#room-hint', el).textContent = decorating ? 'Tap the bed (blanket and pet), the picture or the window to change them' : 'Tap something in your room'
+    $('#room-hint', el).textContent = decorating ? 'Tap the bed, shelf, desk, chair, rug, picture, window, walls or floor to change it' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-amb aria-expanded="${!$('#amb', el).hidden}" aria-label="Weather and sounds">
@@ -272,7 +279,7 @@ export function mount(el) {
 
   const looks = {}
   const lookOf = (id) => looks[id] || (looks[id] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
-    drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id }, tod: 'day', books: 8, notes: 3, events: 1, leaves: 7 }).svg
+    drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id, v: 2 }, tod: 'day', books: 8, notes: 3, events: 1, leaves: 7 }).svg
       .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')))
 
   function openGallery() {
@@ -300,8 +307,8 @@ export function mount(el) {
     const pick = e.target.closest('[data-pick-room]')
     if (!pick) return
     const id = pick.dataset.pickRoom
-    if (decorating) { draft = { ...draft, ...THEME_PRESETS[id], theme: id }; renderRoom(); renderPanel() }
-    else { setRoom({ ...THEME_PRESETS[id], theme: id }); renderRoom(); toast(`Welcome to your ${THEMES[id].name.toLowerCase()}`) }
+    if (decorating) { draft = { ...draft, ...THEME_PRESETS[id], theme: id, v: 2 }; renderRoom(); renderPanel() }
+    else { setRoom({ ...THEME_PRESETS[id], theme: id, v: 2 }); renderRoom(); toast(`Welcome to your ${THEMES[id].name.toLowerCase()}`) }
     window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'room', props: { theme: id } } }))
     g.close()
   })

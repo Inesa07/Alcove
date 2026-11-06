@@ -7,6 +7,7 @@ import { NOTE_COLORS } from '../store.js'
 import { drawRoom, seasonOf, timeOfDay, DEFAULT_ROOM } from '../room.js'
 import { $, esc, toast } from '../ui.js'
 
+const petName = (f) => f?.room?.petName || (f?.room?.pet === 'dog' ? 'The dog' : 'The cat')
 const thumb = (room) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
   drawRoom({ room: { ...DEFAULT_ROOM, ...(room || {}) }, tod: 'day', books: 6, notes: 2, events: 0, leaves: 6 }).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
 
@@ -68,7 +69,7 @@ export function mount(el) {
 
   function renderVisit(f) {
     const books = f.books || []
-    const { svg } = drawRoom({
+    const { svg, spots } = drawRoom({
       room: { ...DEFAULT_ROOM, ...(f.room || {}) },
       tod: timeOfDay(),
       season: f.room?.seasonal === 'off' ? null : seasonOf(),
@@ -80,7 +81,8 @@ export function mount(el) {
     box.innerHTML = `
       <header class="page-head"><div><a class="fr-back" href="#friends">‹ Friends</a><h2>${name}’s room</h2></div></header>
       <div class="fr-visit">
-        <div class="room fr-room">${svg}</div>
+        <div><div class="room fr-room">${svg}${spots.pet ? `<button class="pet-spot" data-fpet style="left:${spots.pet.l}%;top:${spots.pet.t}%;width:${spots.pet.w}%;height:${spots.pet.h}%" aria-label="Play with ${esc(petName(f))}"></button>` : ''}</div>
+        ${spots.pet ? `<p class="fr-pet-hint">Tap ${esc(petName(f))} to play</p>` : ''}</div>
         <aside class="fr-side">
           <form class="fr-card fr-note" id="fr-note">
             <h3>Leave a note on ${name}’s board</h3>
@@ -101,6 +103,8 @@ export function mount(el) {
 
   el.addEventListener('click', async (e) => {
     const t = e.target
+    const pt = t.closest('[data-fpet]')
+    if (pt) return playWithPet(pt)
     if (t.closest('[data-copy]')) {
       const code = $('.code', el).textContent
       try { await navigator.clipboard.writeText(code); toast('Code copied') } catch { toast('Your code: ' + code) }
@@ -125,6 +129,28 @@ export function mount(el) {
       } catch (err) { toast(err.message) }
     }
   })
+  // a friend's pet is happy to see you too: it hops, hearts float up, and it does something sweet
+  let plays = 0
+  function playWithPet(pt) {
+    const f = friends.find((x) => x.user_id === visiting())
+    const name = petName(f), dog = f?.room?.pet === 'dog'
+    $('.fr-room svg .pet-g', el)?.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-7px)' }, { transform: 'translateY(0)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 700, easing: 'ease-out' })
+    for (let i = 0; i < 3; i++) {
+      const h = document.createElement('span')
+      h.className = 'pet-heart'
+      h.textContent = '♥'
+      h.style.left = 30 + i * 20 + '%'
+      h.style.animationDelay = i * 0.15 + 's'
+      pt.appendChild(h)
+      setTimeout(() => h.remove(), 1600)
+    }
+    const lines = dog
+      ? [`${name} wags happily`, `${name} brings you a ball`, `${name} wants belly rubs`, `${name} licks your hand`, `${name} thinks you are the best guest`]
+      : [`${name} purrs`, `${name} rubs against your leg`, `${name} chases a ribbon`, `${name} gives you a slow blink`, `${name} rolls over for you`]
+    toast(lines[plays++ % lines.length])
+    if (plays === 1) window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'friend_pet' } }))
+  }
+
   // two taps to remove, instead of a browser dialog
   function confirmRemove(b) {
     if (b.dataset.sure) return true

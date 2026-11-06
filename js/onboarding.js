@@ -7,7 +7,7 @@ import { track } from './analytics.js'
 import { startTour } from './tour.js'
 import { $, esc, toast } from './ui.js'
 
-const look = (id) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id }, tod: 'day', books: 6, notes: 3, leaves: 6 }).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
+const look = (id) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id, v: 2 }, tod: 'day', books: 6, notes: 3, leaves: 6 }).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
 
 export function maybeOnboard(nameHint = '') {
   const s = getState()
@@ -71,7 +71,7 @@ export function maybeOnboard(nameHint = '') {
   })
   box.addEventListener('click', (e) => {
     const r = e.target.closest('[data-ob-room]')
-    if (r) { theme = r.dataset.obRoom; setRoom({ ...THEME_PRESETS[theme], theme }); return paint() }
+    if (r) { theme = r.dataset.obRoom; setRoom({ ...THEME_PRESETS[theme], theme, v: 2 }); return paint() }
     if (e.target.closest('[data-ob-next]')) { step = 3; track('onboarding_step', { step: 3, theme }); return paint() }
     if (e.target.closest('[data-ob-done]')) done()
   })

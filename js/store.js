@@ -2,7 +2,7 @@
 // Big data (diary pages with drawings and photos, book covers) lives in IndexedDB, see db.js.
 // Later this file is the only place that changes when we move to Supabase.
 
-import { DEFAULT_ROOM } from './room.js'
+import { DEFAULT_ROOM, upgradeRoom } from './room.js'
 
 const KEY = 'planner.v2'
 const OLD_KEY = 'planner.v1'
@@ -25,7 +25,7 @@ function load() {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const s = { ...empty(), ...JSON.parse(raw) }
-      s.room = { ...DEFAULT_ROOM, ...s.room }
+      s.room = upgradeRoom({ ...DEFAULT_ROOM, ...s.room })
       s.diaryBook = { ...empty().diaryBook, ...s.diaryBook }
       return s
     }
@@ -54,7 +54,7 @@ function save(fromCloud = false) {
 // Used by sync: the version from the cloud replaces this one.
 export function replaceState(next) {
   state = { ...empty(), ...next }
-  state.room = { ...DEFAULT_ROOM, ...state.room }
+  state.room = upgradeRoom({ ...DEFAULT_ROOM, ...state.room })
   state.diaryBook = { ...empty().diaryBook, ...state.diaryBook, spread: state.diaryBook?.spread ?? 0 }
   save(true)
 }

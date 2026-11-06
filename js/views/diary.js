@@ -157,12 +157,12 @@ export function mount(el) {
   function fitBook() {
     if (!book.isConnected) return window.removeEventListener('resize', fitBook)
     const nav = $('#d-nav', el)
-    book.style.maxWidth = nav.style.maxWidth = ''
+    book.style.maxWidth = ''
     if (window.innerWidth <= 720) return
     const pad = parseFloat(getComputedStyle(book.parentElement).paddingBottom) || 0
     const h = window.innerHeight - (book.getBoundingClientRect().top + window.scrollY) - pad - nav.offsetHeight - 14
     const w = Math.max(520, ((h - 28) / 1.3) * 2 + 46) + 'px' // the width that gives a book of height h
-    book.style.maxWidth = nav.style.maxWidth = w
+    book.style.maxWidth = w
   }
   window.addEventListener('resize', fitBook)
   requestAnimationFrame(fitBook)

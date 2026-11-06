@@ -898,7 +898,7 @@ html[data-theme="light"] .amb section { border-bottom-color: rgba(42, 38, 56, .0
 .mem-count:not(:empty) { margin-left: 2px; padding: 1px 7px; border-radius: 999px; background: var(--honey); color: #2a2638; font-size: 12px; }
 /* the bin sits at the end of the toolbar, always in view */
 /* under the book: page numbers in the middle, the bin on the right */
-.page-nav { position: relative; display: flex; align-items: center; justify-content: center; margin: 10px auto 0; min-height: 50px; }
+.page-nav { position: relative; display: flex; align-items: center; justify-content: center; margin: 10px 0 0; min-height: 50px; }
 .page-nav nav { display: flex; align-items: center; gap: 6px; padding: 5px; border-radius: 999px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .1); }
 .pn-btn { height: 34px; padding: 0 14px; border: none; border-radius: 999px; background: transparent; color: var(--lilac-text); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .pn-btn:hover { background: rgba(255, 255, 255, .08); color: #fff; }
