@@ -8,6 +8,7 @@ import * as db from '../db.js'
 import { BIN_SVG, binKeys, throwAway, getBinned, forget, crumpleInto } from '../bin.js'
 import { STICKERS, sticker } from '../stickers.js'
 import { LAYOUTS, blockHTML, rowsOf, maxRows } from '../templates.js'
+import { chapterHTML, isChapter, PROMPTS } from '../chapters.js'
 import { $, $$, esc, debounce, toast } from '../ui.js'
 
 const INKS = [['Ink', '#3B3450'], ['Rose', '#D9637F'], ['Blue', '#4F79AC'], ['Green', '#4F8A6D'], ['Honey', '#C9902F'], ['Lilac', '#8E74C4']]
@@ -115,6 +116,8 @@ export function mount(el) {
           ${SIZES.map(([n, s], i) => `<button class="size ${i === 1 ? 'on' : ''}" data-size="${s}" aria-label="${n} line" title="${n}"><span style="--s:${Math.max(3, s * 0.9)}px"></span></button>`).join('')}
         </div>
         <div class="tool-group">
+          <button class="tool" data-pop="idea" title="An idea for what to write">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg><span>Idea</span></button>
           <button class="tool" data-pop="stickers" title="Stickers">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 9-9c0 1-1 2-2 2h-3a4 4 0 0 0-4 4v3"/><path d="M12 21c0-5 4-9 9-9"/></svg><span>Stickers</span></button>
           <label class="tool" title="Add a photo">
@@ -203,13 +206,14 @@ export function mount(el) {
     const p = pageEls[side]
     const page = pages[side]
     const n = num(side)
-    p.className = `page paper-${page.paper}`
+    p.className = `page paper-${page.paper} ${isChapter(n) ? 'is-chapter' : ''}`
     p.setAttribute('style', `--tint:${TINTS[page.tint] || TINTS.cream}`)
     const blocks = page.items.filter((i) => i.type === 'block' || i.type === 'title')
     const free = page.items.filter((i) => i.type !== 'block' && i.type !== 'title')
     const lastSpread = num(1) >= count() - 1
     p.innerHTML = `
       <div class="paper" aria-hidden="true"></div>
+      ${chapterHTML(n)}
       <div class="blocks">${blocks.map(itemHTML).join('')}</div>
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
@@ -448,6 +452,8 @@ export function mount(el) {
 
   function closePop() { $('#d-pop', el).hidden = true; popover = null }
 
+  // the writing ideas start at a different one every day
+  let ideaAt = Math.floor(Date.now() / 86400000)
   function openPop(kind, side) {
     const pop = $('#d-pop', el)
     const id = kind + (side ?? '')
@@ -487,6 +493,11 @@ export function mount(el) {
       pop.innerHTML = `<p class="tc-title">Which page should go in the bin?</p>
         <div class="trash-cards">${card(0)}${card(1)}</div>
         <p class="tc-note">Changed your mind later? Open the bin under the book and put the page back.</p>`
+    } else if (kind === 'idea') {
+      const q = PROMPTS[ideaAt % PROMPTS.length]
+      pop.innerHTML = `<p class="pop-title">Not sure what to write?</p>
+        <div class="idea-card"><span aria-hidden="true">✦</span><p>${esc(q)}</p></div>
+        <div class="idea-actions"><button class="ghost small" data-idea-next>Another idea</button><button class="primary small" data-idea-use>Write about it</button></div>`
     } else if (kind === 'stickers') {
       pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>`
     } else {
@@ -716,6 +727,18 @@ export function mount(el) {
     if (t.closest('[data-open-memories]')) { closePop(); return openMemories() }
     const trash = t.closest('[data-trash]')
     if (trash) return trashPage(Number(trash.dataset.trash))
+    if (t.closest('[data-idea-next]')) { ideaAt++; popover = null; return openPop('idea') }
+    if (t.closest('[data-idea-use]')) {
+      const q = PROMPTS[ideaAt % PROMPTS.length]
+      closePop()
+      const side = pages[0].items.filter((i) => i.type === 'text').length < 4 ? 0 : 1
+      const used = pages[side].items.filter((i) => i.type === 'text').length
+      const y = Math.min(8 + used * 13, 76)
+      pages[side].items.push({ id: uid(), rot: 0, type: 'text', x: 8, y, w: 84, text: q, color: '#8E74C4', fs: 4.4 })
+      addItem(side, { type: 'text', x: 8, y: y + (q.length > 42 ? 13 : 8), w: 84, text: '', color, fs: 5.6 })
+      window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'idea_used' } }))
+      return
+    }
     const jump = t.closest('[data-jump]')
     if (jump) {
       if (jump.dataset.jump === 'first') return spread === 0 ? toast('This is the first page') : openSpread(0)

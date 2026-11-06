@@ -107,7 +107,7 @@ function cards(t) {
   list.push({ id: 'summary', cls: 'c0', art: 'stars', summary: true, html: `<p class="yr-kicker">${t.year} · ${name ? esc(name) : 'your year'}</p><div class="yr-room">${room}</div>
     <div class="yr-sum"><span><b>${t.days}</b>diary days</span><span><b>${t.books}</b>books</span><span><b>${t.events}</b>plans</span><span><b>${t.topMood ? t.topMood.name : '–'}</b>mood</span></div>
     <h2 class="yr-h-small">${p[0]} ${p[2]}</h2><p>See you in ${t.year + 1} in your ${THEMES[roomTheme(t.room.theme)].name.toLowerCase()}.</p>
-    <div class="yr-share-row"><button class="yr-save" data-share-card>Share my year</button><button class="yr-save ghosty" data-save-img>Save picture</button></div>` })
+    <div class="yr-share-row"><button class="yr-save" data-share-all>Share all my cards</button><button class="yr-save ghosty" data-save-img>Save the summary</button></div>` })
   return list
 }
 
@@ -274,6 +274,30 @@ async function shareCard(id, t) {
   toast('Saved the picture. Share it from your photos or downloads')
 }
 
+// all the cards at once: the phone's share sheet gets every picture (like posting a whole story);
+// where that is not possible, one picture with all the cards side by side is saved
+async function shareAll(ids, t) {
+  toast('Making your pictures…')
+  const canvases = []
+  for (const id of ids) canvases.push(await storyCanvas(id, t))
+  const files = await Promise.all(canvases.map((c, i) => new Promise((ok) => c.toBlob((b) => ok(new File([b], `my-${t.year}-${i + 1}-${ids[i]}.png`, { type: 'image/png' })), 'image/png'))))
+  window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'year_shared', props: { card: 'all' } } }))
+  if (navigator.canShare?.({ files })) {
+    try { await navigator.share({ files, title: `My ${t.year} in Planner` }); return } catch (e) { if (e?.name === 'AbortError') return }
+  }
+  const cols = Math.min(5, canvases.length), rows = Math.ceil(canvases.length / cols), w = 432, h = 768, gap = 24
+  const sheet = document.createElement('canvas')
+  sheet.width = cols * w + (cols + 1) * gap; sheet.height = rows * h + (rows + 1) * gap
+  const g = sheet.getContext('2d')
+  g.fillStyle = '#1d1934'; g.fillRect(0, 0, sheet.width, sheet.height)
+  canvases.forEach((c, i) => { const x = gap + (i % cols) * (w + gap), y = gap + Math.floor(i / cols) * (h + gap); g.save(); roundRect(g, x, y, w, h, 28); g.clip(); g.drawImage(c, x, y, w, h); g.restore() })
+  const a = document.createElement('a')
+  a.download = `my-${t.year}-in-planner-all.jpg`
+  a.href = sheet.toDataURL('image/jpeg', 0.9)
+  a.click()
+  toast('Saved one picture with all your cards')
+}
+
 const STAY = 6500 // how long a card stays before the next one
 
 export function mount(el) {
@@ -322,7 +346,7 @@ export function mount(el) {
   }
   function paint() {
     const c = list[i]
-    $('#yr-card', el).innerHTML = `<div class="yr-in yr-${c.cls}"><span class="yr-art" aria-hidden="true">${ART[c.art] || ''}</span>${c.html}${c.summary ? '' : '<button class="yr-share" data-share-card aria-label="Share this card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share</button>'}</div>`
+    $('#yr-card', el).innerHTML = `<div class="yr-in yr-${c.cls}"><span class="yr-art" aria-hidden="true">${ART[c.art] || ''}</span>${c.html}</div>`
     $('.yr-prev', el).hidden = i === 0
     $('.yr-next', el).textContent = i === list.length - 1 ? '↺' : '›'
     left = STAY
@@ -344,6 +368,7 @@ export function mount(el) {
   el.addEventListener('pointerup', () => { downAt = 0; if (paused) { heldUntil = Date.now() + 80; pause(false) } })
   el.addEventListener('click', (e) => {
     if (e.target.closest('[data-save-img]')) { saveImage(t); return }
+    if (e.target.closest('[data-share-all]')) { pause(true); shareAll(list.map((c) => c.id), t).finally(() => pause(false)); return }
     if (e.target.closest('[data-share-card]')) { pause(true); shareCard(list[i].id, t).finally(() => pause(false)); return }
     const s = e.target.closest('[data-step]')
     if (s) return step(Number(s.dataset.step))

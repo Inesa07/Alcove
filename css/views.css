@@ -959,3 +959,84 @@ html[data-theme="light"] .pn-go b { color: #2a2638; }
 .toolbar .inks { flex-shrink: 0; display: flex; align-items: center; padding: 0 8px; }
 .toolbar .ink { width: 26px; height: 26px; }
 .page-nav .bin .bin-count { top: 0; right: 0; }
+
+/* ---------- chapter covers every 20 pages ---------- */
+.chapter { position: absolute; inset: 0; padding: 5cqw; background: linear-gradient(160deg, var(--a), var(--b)); pointer-events: none; }
+.ch-frame { height: 100%; border: .5cqw solid rgba(255, 255, 255, .55); border-radius: 3cqw; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--ink); padding: 6cqw; }
+.ch-kicker { margin: 0; font-family: 'Figtree', sans-serif; font-size: 3cqw; font-weight: 700; letter-spacing: .4em; text-transform: uppercase; opacity: .7; }
+.ch-no { margin: 0 0 2cqw; font-family: var(--serif); font-style: italic; font-size: 22cqw; line-height: 1; }
+.ch-art { width: 62cqw; height: auto; margin: 2cqw 0 5cqw; }
+.ch-text { margin: 0; font-family: var(--vibur); font-size: 7cqw; line-height: 1.2; max-width: 74cqw; }
+.ch-pages { margin: 5cqw 0 0; font-family: 'Figtree', sans-serif; font-size: 2.6cqw; opacity: .6; }
+.page.is-chapter .page-num { color: var(--ink, #fff); }
+/* ---------- ideas for what to write ---------- */
+.idea-card { display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border-radius: 16px; background: linear-gradient(135deg, #F6F2FD, #FDF0F4); color: #3a3350; }
+.idea-card span { color: #8e74c4; font-size: 18px; }
+.idea-card p { margin: 0; font-family: var(--serif); font-style: italic; font-size: 19px; line-height: 1.35; }
+.idea-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+/* ---------- the notes corkboard ---------- */
+.board {
+  position: relative; padding: 46px 28px 34px; border-radius: 26px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(120, 80, 40, .18) 0 1.5px, transparent 2px) 0 0 / 23px 19px,
+    radial-gradient(circle at 70% 60%, rgba(255, 240, 210, .18) 0 1.2px, transparent 1.8px) 0 0 / 17px 21px,
+    radial-gradient(circle at 40% 80%, rgba(90, 60, 30, .14) 0 1px, transparent 1.6px) 0 0 / 11px 13px,
+    linear-gradient(160deg, #C99A6B, #B5845A 60%, #A87650);
+  box-shadow: inset 0 0 0 12px #8C6244, inset 0 0 0 14px #6E4C34, inset 0 0 50px rgba(60, 35, 15, .45), 0 30px 60px -30px rgba(0, 0, 0, .6);
+}
+.board-lights { position: absolute; left: 14px; right: 14px; top: 4px; width: calc(100% - 28px); height: 48px; overflow: visible; }
+.board-lights .bulb { animation: bulb 2.4s ease-in-out infinite alternate; }
+@keyframes bulb { from { opacity: .55 } to { opacity: 1 } }
+
+/* the pad you write on */
+.board .note-new { display: flex; flex-direction: column; gap: 12px; align-items: stretch; max-width: 560px; margin: 0 auto 34px; }
+.board .pad { position: relative; padding: 22px 20px 14px; background: var(--c); border-radius: 3px; transform: rotate(-.6deg);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .06), 0 4px 0 -1px var(--c), 0 5px 0 -1px rgba(0, 0, 0, .08), 0 8px 0 -2px var(--c), 0 18px 30px -16px rgba(40, 20, 0, .6); transition: background .25s; }
+.board .pad::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 10px; background: rgba(0, 0, 0, .06); }
+.board .pad textarea { width: 100%; min-height: 70px; border: none; background: transparent; color: #3a3350; font-family: var(--hand); font-size: 26px; line-height: 1.25; resize: none; outline: none; padding: 0; }
+.board .pad textarea::placeholder { color: rgba(58, 51, 80, .45); }
+.pad-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pad-kinds { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(60, 35, 15, .35); }
+.pad-kind { padding: 7px 12px; border: none; border-radius: 999px; background: transparent; color: #FFF3E0; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.pad-kind[aria-checked="true"] { background: #FFF8EC; color: #5a3a28; }
+.pad-colors { display: flex; gap: 6px; flex: 1; }
+.pad-color { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .6); background: var(--c); cursor: pointer; }
+.pad-color[aria-pressed="true"] { border-color: #5a3a28; box-shadow: 0 0 0 2px #FFF8EC; }
+
+/* the notes: columns like a real board */
+.board .note-wall { display: block; columns: 230px; column-gap: 26px; }
+.board .note { break-inside: avoid; display: inline-block; width: 100%; margin: 0 0 30px; padding: 28px 18px 12px; border-radius: 2px;
+  transform: rotate(var(--tilt)); transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s; box-shadow: 0 2px 2px rgba(0, 0, 0, .12), 0 16px 26px -16px rgba(40, 20, 0, .7); }
+.board .note:hover, .board .note:focus-within { transform: rotate(0deg) translateY(-4px) scale(1.03); z-index: 2; box-shadow: 0 4px 4px rgba(0, 0, 0, .1), 0 28px 40px -20px rgba(40, 20, 0, .8); }
+.board .note footer { color: rgba(42, 38, 56, .55); }
+/* sticky note: a curled corner */
+.note-sticky { background: linear-gradient(170deg, var(--c), color-mix(in srgb, var(--c) 85%, #000) 140%); border-bottom-right-radius: 18px 6px !important; }
+/* polaroid: a white frame with a little picture */
+.note-polaroid { background: #FFFDF8; padding: 14px 14px 12px !important; }
+.note-polaroid .pola-photo { display: block; height: 120px; margin-bottom: 10px; border-radius: 1px; background: linear-gradient(160deg, hsl(var(--h) 60% 82%), hsl(calc(var(--h) + 40) 55% 70%)); position: relative; overflow: hidden; }
+.note-polaroid .pola-photo::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: radial-gradient(ellipse at 30% 100%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(ellipse at 80% 100%, rgba(255, 255, 255, .35), transparent 60%); }
+.note-polaroid .pola-photo::before { content: ''; position: absolute; right: 18%; top: 18%; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, .8); }
+.note-polaroid .note-text { text-align: center; font-size: 23px; }
+/* index card: blue lines and a red margin line */
+.note-card { background: repeating-linear-gradient(#FFFEFA 0 27px, #BFD3EA 27px 28px) 0 34px, #FFFEFA; border-top: 6px solid var(--c); }
+.note-card::before { content: ''; position: absolute; top: 0; bottom: 0; left: 30px; width: 1px; background: #F0A3A8; }
+.note-card .note-text { padding-left: 22px; line-height: 28px !important; font-size: 23px; }
+/* torn paper: ragged top and bottom */
+.note-torn { background: var(--c); clip-path: polygon(0 4px, 6% 0, 13% 5px, 21% 1px, 30% 6px, 38% 0, 47% 4px, 55% 1px, 64% 6px, 72% 0, 81% 5px, 90% 1px, 100% 5px, 100% calc(100% - 5px), 92% 100%, 83% calc(100% - 4px), 74% 100%, 65% calc(100% - 6px), 55% calc(100% - 1px), 46% calc(100% - 5px), 36% 100%, 27% calc(100% - 4px), 17% 100%, 8% calc(100% - 5px), 0 100%); filter: drop-shadow(0 10px 10px rgba(40, 20, 0, .35)); box-shadow: none !important; }
+/* a letter from a friend: an envelope with a wax seal */
+.note-letter { background: linear-gradient(#FFF8EC, #FBEFDC); border: 1px solid #EAD9BD; padding-top: 44px !important; }
+.note-letter::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 34px; background: linear-gradient(to bottom right, transparent 49.5%, #EAD9BD 50%, #F6E8D2 51%) left / 50% 100% no-repeat, linear-gradient(to bottom left, transparent 49.5%, #EAD9BD 50%, #F6E8D2 51%) right / 50% 100% no-repeat; }
+/* how a note is held on the board */
+.hold { position: absolute; z-index: 1; pointer-events: none; }
+.hold-pin .hold { top: 8px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #F48FA6, #C9506D 70%); box-shadow: 2px 3px 3px rgba(0, 0, 0, .3); }
+.hold-tape .hold { top: -10px; left: 50%; width: 84px; height: 24px; margin-left: -42px; background: var(--tape); transform: rotate(-4deg); clip-path: polygon(3% 0, 97% 0, 100% 20%, 97% 40%, 100% 60%, 97% 80%, 100% 100%, 0 100%, 3% 80%, 0 60%, 3% 40%, 0 20%); }
+.hold-clip .hold { top: -12px; left: 22px; width: 14px; height: 38px; border: 3px solid #B9BFC9; border-bottom: none; border-radius: 8px 8px 0 0; }
+.hold-seal .hold { top: 20px; left: 50%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #E2687F, #A8324C); box-shadow: 0 2px 4px rgba(0, 0, 0, .3); }
+.hold-seal .hold::after { content: '♥'; position: absolute; inset: 0; display: grid; place-items: center; color: #FFD9E0; font-size: 13px; }
+/* a new note drops onto the board; a deleted one floats away */
+.just-pinned { animation: pin-in .6s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes pin-in { from { opacity: 0; transform: translateY(-60px) rotate(-12deg) scale(1.1); } }
+.unpinned { transition: transform .4s ease-in, opacity .4s ease-in !important; transform: translateY(40px) rotate(18deg) scale(.8) !important; opacity: 0; }
+@media (max-width: 720px) { .board { padding: 40px 14px 20px; border-radius: 18px; } .board .note-wall { columns: 150px; column-gap: 14px; } }
+@media (prefers-reduced-motion: reduce) { .just-pinned, .board-lights .bulb { animation: none; } }
