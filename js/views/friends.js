@@ -4,10 +4,13 @@
 import * as sync from '../sync.js'
 import * as F from '../friends.js'
 import { NOTE_COLORS } from '../store.js'
-import { drawRoom, seasonOf, timeOfDay, DEFAULT_ROOM } from '../room.js'
+import { drawRoom, seasonOf, timeOfDay, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
 import { $, esc, toast } from '../ui.js'
 
 const petName = (f) => f?.room?.petName || (f?.room?.pet === 'dog' ? 'The dog' : 'The cat')
+// a small picture of each gift, cut out of a room drawing
+const giftThumbs = {}
+const giftThumb = (kind) => giftThumbs[kind] || (giftThumbs[kind] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(giftSVG(kind)))
 const thumb = (room) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
   drawRoom({ room: { ...DEFAULT_ROOM, ...(room || {}) }, tod: 'day', books: 6, notes: 2, events: 0, leaves: 6 }).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
 
@@ -16,6 +19,7 @@ export function mount(el) {
   const box = $('#fr', el)
   let friends = null
   let noteColor = NOTE_COLORS[0]
+  let giftKind = 'flowers'
 
   const visiting = () => location.hash.split('/')[1] || ''
 
@@ -91,6 +95,12 @@ export function mount(el) {
             <button class="primary small" type="submit">Leave note</button></div>
             <p class="muted small-note">Only ${name} will read it.</p>
           </form>
+          <form class="fr-card fr-gift" id="fr-gift">
+            <h3>Leave a gift in ${name}’s room</h3>
+            <div class="gift-pick" role="radiogroup" aria-label="Gift">${Object.entries(GIFTS).map(([k, label]) => `<button type="button" role="radio" class="gift-opt ${k === giftKind ? 'on' : ''}" data-gift-kind="${k}" aria-checked="${k === giftKind}" title="${label}"><img src="${giftThumb(k)}" alt=""><span>${label.replace(/^an? /i, '')}</span></button>`).join('')}</div>
+            <div class="code-row"><input id="fr-gift-text" maxlength="120" placeholder="A few words with it (optional)" aria-label="Words with the gift"><button class="primary small" type="submit">Leave gift</button></div>
+            <p class="muted small-note">It will stand on the floor of ${name}’s room.</p>
+          </form>
           <div class="fr-card">
             <h3>${name}’s shelf</h3>
             ${books.length ? `<ul class="fr-books">${books.map((b) => `<li><i style="background:${esc(b.color || '#8E7CC3')}"></i><span><b>${esc(b.title)}</b>${b.author ? `<em>${esc(b.author)}</em>` : ''}</span>${b.status === 'reading' ? '<small>reading</small>' : b.rating ? `<small class="stars">${'★'.repeat(b.rating)}</small>` : ''}</li>`).join('')}</ul>` : '<p class="muted">No books yet.</p>'}
@@ -108,6 +118,12 @@ export function mount(el) {
     if (t.closest('[data-copy]')) {
       const code = $('.code', el).textContent
       try { await navigator.clipboard.writeText(code); toast('Code copied') } catch { toast('Your code: ' + code) }
+      return
+    }
+    const gk = t.closest('[data-gift-kind]')
+    if (gk) {
+      giftKind = gk.dataset.giftKind
+      el.querySelectorAll('[data-gift-kind]').forEach((b) => { b.classList.toggle('on', b === gk); b.setAttribute('aria-checked', b === gk) })
       return
     }
     const c = t.closest('[data-color]')
@@ -170,6 +186,15 @@ export function mount(el) {
         friends = await F.listFriends()
         render(await F.getMyProfile())
       } catch (err) { $('#fr-err', el).textContent = err.message }
+    }
+    if (e.target.id === 'fr-gift') {
+      const btn = e.target.querySelector('[type=submit]')
+      btn.disabled = true
+      try {
+        await F.leaveGift(visiting(), giftKind, $('#fr-gift-text', el).value.trim() || GIFTS[giftKind])
+        $('#fr-gift-text', el).value = ''
+        toast(`${GIFTS[giftKind]} is waiting in ${friends.find((x) => x.user_id === visiting())?.name || 'your friend'}’s room`)
+      } catch (err) { toast('Could not leave the gift: ' + (err.message || 'no connection')) } finally { btn.disabled = false }
     }
     if (e.target.id === 'fr-note') {
       const text = $('#fr-text', el).value.trim()

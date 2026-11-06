@@ -17,8 +17,8 @@ const STEPS = [
   { at: '#room [data-pet]', title: 'Your pet', text: 'It moves around the room through the day. Tap it to say hi. You can choose a cat or a dog and give it a name in Decorate.' },
   { at: '[data-amb]', title: 'Weather and sounds', text: 'Show the real weather outside your window, and play quiet sounds: rain, a fireplace, birds, the sea.' },
   { at: '[data-gallery]', title: 'Rooms', text: 'Move to a different room: a Nordic cabin, a night observatory, a seaside studio or a pastel room. Each has its own shape and furniture.' },
-  { at: '[data-decorate]', title: 'Decorate', text: 'Change the blanket, the picture on the wall, choose a cat or a dog with a name, and even put your own photo in the window.' },
-  { at: '#nav a[href="#friends"]', title: 'Friends', text: 'Share your code with a friend. You can visit each other’s rooms and leave notes. Friends never see your diary.' },
+  { at: '[data-decorate]', title: 'Decorate', text: 'Every piece has 3 styles: the bed, chair, desk, lamp, clock, plant, flowers and wall decorations. Choose a cat or a dog with a name, and even put your own photo in the window.' },
+  { at: '#nav a[href="#friends"]', title: 'Friends', text: 'Share your code with a friend. You can visit each other’s rooms, leave notes and little gifts. Friends never see your diary.' },
   { at: '#nav a[href="#year"]', title: 'Your year', text: 'A small story of your year: days you wrote, books, moods and plans.' },
   { at: '#me-btn, .me-btn', title: 'Your account', text: 'Light or dark look, sign out, and this tour again if you want it. Everything you add is saved and syncs to your other devices.' },
 ]

@@ -3,7 +3,8 @@
 // Tables and rules are in supabase/friends.sql.
 
 import * as sync from './sync.js'
-import { getState, add, pick, NOTE_COLORS } from './store.js'
+import { getState, add, pick, setField, NOTE_COLORS } from './store.js'
+import { GIFTS } from './room.js'
 import { toast } from './ui.js'
 
 let myProfile = null
@@ -82,6 +83,12 @@ export async function removeFriend(id) {
   await c.from('friendships').delete().eq('user_id', id).eq('friend_id', me)
 }
 
+// A gift travels like a note: its colour says which gift it is
+export async function leaveGift(toId, kind, text) {
+  await leaveNote(toId, text, 'gift:' + kind)
+  window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'friend_gift', props: { kind } } }))
+}
+
 export async function leaveNote(toId, text, color) {
   const c = await sync.getClient()
   const { error } = await c.from('friend_notes').insert({ to_id: toId, text, color, from_name: getState().name || sync.nameOf() || 'A friend' })
@@ -99,13 +106,23 @@ export async function checkInbox() {
     const { data, error } = await c.from('friend_notes').select('id, from_name, text, color, created_at').eq('to_id', sync.currentUser().id).order('created_at')
     if (error || !data?.length) return
     const have = new Set(getState().notes.filter((n) => n.friendNote).map((n) => n.friendNote))
-    data.forEach((n) => {
+    const gifts = data.filter((n) => (n.color || '').startsWith('gift:')), notes = data.filter((n) => !gifts.includes(n))
+    const known = new Set((getState().gifts || []).map((g) => g.friendNote))
+    const fresh = gifts.filter((n) => !known.has(n.id)).map((n) => ({ id: 'g' + n.id, friendNote: n.id, kind: n.color.slice(5), from: n.from_name || 'A friend', text: n.text, at: new Date(n.created_at).getTime() }))
+    if (fresh.length) setField({ gifts: [...(getState().gifts || []), ...fresh].slice(-3) })
+    notes.forEach((n) => {
       if (have.has(n.id)) return
       add('notes', { text: n.text, color: NOTE_COLORS.includes(n.color) ? n.color : pick(NOTE_COLORS), from: n.from_name || 'A friend', friendNote: n.id, createdAt: new Date(n.created_at).getTime() })
     })
     await c.from('friend_notes').delete().in('id', data.map((n) => n.id))
-    const names = [...new Set(data.map((n) => n.from_name || 'A friend'))]
-    toast(data.length === 1 ? `${names[0]} left a note on your board` : `${names.join(' and ')} left ${data.length} notes on your board`, { label: 'See', run: () => { location.hash = '#notes' } })
+    if (gifts.length) {
+      const g = gifts[gifts.length - 1]
+      const what = (GIFTS[g.color.slice(5)] || 'a gift').toLowerCase()
+      toast(`${g.from_name || 'A friend'} left you ${what}${notes.length ? ` and ${notes.length === 1 ? 'a note' : notes.length + ' notes'}` : ' in your room'}`, { label: 'See', run: () => { location.hash = '#room' } })
+      return
+    }
+    const names = [...new Set(notes.map((n) => n.from_name || 'A friend'))]
+    toast(notes.length === 1 ? `${names[0]} left a note on your board` : `${names.join(' and ')} left ${notes.length} notes on your board`, { label: 'See', run: () => { location.hash = '#notes' } })
   } catch { /* not set up yet, or offline */ } finally { checking = false }
 }
 

@@ -82,10 +82,15 @@ export const RUGS = {
 
 export const STYLES = {
   art: Object.fromEntries(Object.entries({ mountains: 'Mountains', sea: 'Sunset sea', flowers: 'Flowers in a vase', shapes: 'Soft shapes', moon: 'Moon and stars', cat: 'Cat portrait', plants: 'Pressed leaves' })),
-  shelfStyle: { tall: 'Tall bookcase', low: 'Low shelf', ladder: 'Ladder shelf', cube: 'Cube shelf' },
+  shelfStyle: { tall: 'Tall bookcase', medium: 'Medium bookcase', low: 'Low shelf' },
   deskStyle: { drawers: 'Desk with drawers', simple: 'Light table', trestle: 'Trestle desk' },
-  bedStyle: { classic: 'Cozy bed', canopy: 'Canopy bed', platform: 'Low platform bed' },
-  chairStyle: { classic: 'Wooden chair', office: 'Office chair', armchair: 'Armchair', stool: 'Round stool' },
+  bedStyle: { classic: 'Classic bed', canopy: 'Canopy bed', cozy: 'Extra cozy bed' },
+  chairStyle: { classic: 'Wooden chair', swivel: 'Soft swivel chair', stool: 'Round stool' },
+  lampStyle: { table: 'Table lamp', mushroom: 'Mushroom lamp', globe: 'Glowing globe' },
+  plantStyle: { leafy: 'Leafy plant', round: 'Round leaves', cactus: 'Cactus' },
+  vase: { tulips: 'Tulips', lavender: 'Lavender', sunflowers: 'Sunflowers', none: 'No vase' },
+  clockStyle: { round: 'Round clock', sun: 'Sun clock', none: 'No clock' },
+  deco: { lights: 'Fairy lights', bunting: 'Paper flags', hanging: 'Hanging plants', none: 'Nothing' },
   pet: { cat: 'Cat', dog: 'Dog', none: 'No pet' },
   wallStyle: { plain: 'Plain paint', boards: 'Wooden boards', stripes: 'Stripes', dots: 'Polka dots', floral: 'Flowers', brick: 'Painted brick', panels: 'Wood panels' },
   floorStyle: { planks: 'Planks', herringbone: 'Herringbone', tiles: 'Tiles', carpet: 'Soft carpet' },
@@ -109,10 +114,10 @@ export function upgradeRoom(r) {
   return { ...r, ...look, theme, v: 2 }
 }
 export const THEME_PRESETS = {
-  cabin: { wall: 'pine', floor: 'ash', rug: 'white', blanket: 'linen', bedWood: 'pine', shelfWood: 'pine', deskWood: 'pine', chairColor: 'linen', art: 'mountains', pet: 'cat', petColor: 'ginger' },
-  observatory: { wall: 'starry', floor: 'dark', rug: 'navy', blanket: 'navy', bedWood: 'dark', shelfWood: 'dark', deskWood: 'dark', chairColor: 'navy', art: 'moon', pet: 'cat', petColor: 'black' },
-  seaside: { wall: 'shell', floor: 'bleached', rug: 'jute', blanket: 'white', bedWood: 'driftwood', shelfWood: 'driftwood', deskWood: 'driftwood', chairColor: 'blue', art: 'sea', pet: 'dog', petColor: 'golden' },
-  pastel: { wall: 'blush', floor: 'lilac', rug: 'white', blanket: 'blush', bedWood: 'white', shelfWood: 'white', deskWood: 'white', chairColor: 'white', art: 'flowers', pet: 'cat', petColor: 'white' },
+  cabin: { shelfStyle: 'low', deskStyle: 'simple', bedStyle: 'classic', chairStyle: 'classic', lampStyle: 'table', plantStyle: 'leafy', vase: 'tulips', clockStyle: 'round', deco: 'lights', wall: 'pine', floor: 'ash', rug: 'white', blanket: 'linen', bedWood: 'pine', shelfWood: 'pine', deskWood: 'pine', chairColor: 'linen', art: 'mountains', pet: 'cat', petColor: 'ginger' },
+  observatory: { shelfStyle: 'medium', deskStyle: 'drawers', bedStyle: 'classic', chairStyle: 'classic', lampStyle: 'globe', plantStyle: 'leafy', vase: 'lavender', clockStyle: 'sun', deco: 'hanging', wall: 'starry', floor: 'dark', rug: 'navy', blanket: 'navy', bedWood: 'dark', shelfWood: 'dark', deskWood: 'dark', chairColor: 'navy', art: 'moon', pet: 'cat', petColor: 'black' },
+  seaside: { shelfStyle: 'low', deskStyle: 'simple', bedStyle: 'classic', chairStyle: 'classic', lampStyle: 'table', plantStyle: 'leafy', vase: 'sunflowers', clockStyle: 'round', deco: 'bunting', wall: 'shell', floor: 'bleached', rug: 'jute', blanket: 'white', bedWood: 'driftwood', shelfWood: 'driftwood', deskWood: 'driftwood', chairColor: 'blue', art: 'sea', pet: 'dog', petColor: 'golden' },
+  pastel: { shelfStyle: 'low', deskStyle: 'simple', bedStyle: 'cozy', chairStyle: 'swivel', lampStyle: 'table', plantStyle: 'round', vase: 'tulips', clockStyle: 'none', deco: 'lights', wall: 'blush', floor: 'lilac', rug: 'white', blanket: 'blush', bedWood: 'white', shelfWood: 'white', deskWood: 'white', chairColor: 'white', art: 'flowers', pet: 'cat', petColor: 'white' },
   cozy: { wall: 'lavender', wallStyle: 'plain', floor: 'oak', floorStyle: 'planks', rug: 'pink', blanket: 'lilac', shelfWood: 'oak', deskWood: 'oak', bedWood: 'oak', chairColor: 'lilac', chairStyle: 'classic' },
   attic: { wall: 'peach', wallStyle: 'boards', floor: 'honey', floorStyle: 'planks', rug: 'cream', blanket: 'rose', shelfWood: 'white', deskWood: 'white', bedWood: 'oak', chairColor: 'cream', pet: 'cat', petColor: 'ginger', art: 'flowers' },
   japanese: { wall: 'cream', wallStyle: 'plain', floor: 'honey', floorStyle: 'planks', rug: 'none', blanket: 'blue', chairColor: 'peach', pet: 'cat', petColor: 'white', art: 'plants' },
@@ -129,7 +134,15 @@ export const DEFAULT_ROOM = {
   bedStyle: 'classic', bedWood: 'oak', blanket: 'lilac',
   chairStyle: 'classic', chairColor: 'lilac',
   pet: 'cat', petColor: 'black', wallStyle: 'plain', floorStyle: 'planks', art: 'mountains',
+  lampStyle: 'table', plantStyle: 'leafy', vase: 'tulips', clockStyle: 'round', deco: 'lights',
 }
+
+// some rooms call a piece by another name (the seaside "chair" is a hanging egg chair)
+const STYLE_NAMES = {
+  seaside: { chairStyle: { classic: 'Hanging egg chair', swivel: 'Rattan armchair', stool: 'Bean bag' } },
+  pastel: { chairStyle: { classic: 'Cushioned chair', swivel: 'Soft swivel chair', stool: 'Round stool' }, lampStyle: { table: 'Cloud lamp', mushroom: 'Mushroom lamp', globe: 'Glowing globe' } },
+}
+export const stylesFor = (theme, key) => STYLE_NAMES[theme]?.[key] || STYLES[key]
 
 /* ---------- colour helpers ---------- */
 
@@ -212,6 +225,140 @@ const SKIES = {
   day: { stops: ['#8EC0E8', '#C6E1F4', '#EEF6FB'], orb: '#FFFBEA', orbZ: 7.0, stars: false, lights: false, beam: 0.34, hills: '#9DB79F' },
   evening: { stops: ['#3E477F', '#B9738F', '#F3BB8F'], orb: '#FFF3D6', orbZ: 6.6, stars: true, lights: true, beam: 0, hills: '#7A6496' },
   night: { stops: ['#0D1330', '#1B2550', '#2C3A6E'], orb: '#E9ECF7', orbZ: 6.9, stars: true, lights: true, beam: 0, hills: '#2A2F55' },
+}
+
+
+/* ---------- pieces with three looks each, used in every room ---------- */
+
+const fx = (n) => n.toFixed(1)
+
+// four posts and a frame over a bed (x0..x1, y0..y1), with light curtains at the foot
+function canopy(d, x0, y0, x1, y1, z0, top, wood) {
+  const post = (x, y) => d.box(x - 0.08, y - 0.08, z0, 0.16, 0.16, top - z0, [shade(wood, 0.1), wood, shade(wood, -0.12)])
+  post(x0, y0); post(x1, y0)
+  d.line([[x0, y0, top], [x1, y0, top], [x1, y1, top]], wood, 2)
+  d.line([[x0, y0, top], [x0, y1, top], [x1, y1, top]], wood, 2)
+  // soft fabric hanging from the frame at the two front corners
+  ;[[x1, y1, 1], [x0, y1, -1]].forEach(([x, y, k]) => {
+    const a = P(x, y, top), b = P(x, y, z0 + 0.6)
+    d.raw(`<path d="M${fx(a[0] - 9 * k)},${fx(a[1] - 3)} Q${fx(a[0] + 2 * k)},${fx(a[1] + 20)} ${fx(b[0] - 3 * k)},${fx(b[1])} L${fx(b[0] + 3 * k)},${fx(b[1])} Q${fx(a[0] + 6 * k)},${fx(a[1] + 18)} ${fx(a[0] + 3 * k)},${fx(a[1])} z" fill="#FFFFFF" opacity=".7"/>`)
+  })
+  post(x0, y1); post(x1, y1)
+}
+// more pillows and a chunky knitted blanket folded at the foot
+function cozyBed(d, x0, y0, x1, y1, z, foot = 'y') {
+  if (foot === 'y') {
+    soft(d, x0 + 0.3, y0 + 0.9, z, 0.8, 0.45, 0.5, ['#F7CFD9', '#F2BCCB', '#E5A9BA'], 0.25, 1)
+    soft(d, x0 + 1.2, y0 + 0.95, z, 0.8, 0.45, 0.5, ['#FBE7A6', '#F2D88A', '#E3C774'], 0.25, 1)
+    d.poly([[x0, y1 - 1.2, z + 0.12], [x1, y1 - 1.2, z + 0.12], [x1, y1 - 0.15, z + 0.12], [x0, y1 - 0.15, z + 0.12]], '#E9DCC8')
+    for (let x = x0 + 0.15; x < x1; x += 0.3) d.line([[x, y1 - 1.15, z + 0.13], [x, y1 - 0.2, z + 0.13]], '#D6C6AE', 1.6, ' stroke-dasharray="1.5 1.5"')
+  } else {
+    soft(d, x0 + 0.9, y0 + 0.3, z, 0.45, 0.8, 0.5, ['#F7CFD9', '#F2BCCB', '#E5A9BA'], 0.25, 1)
+    soft(d, x0 + 0.95, y0 + 1.3, z, 0.45, 0.8, 0.5, ['#FBE7A6', '#F2D88A', '#E3C774'], 0.25, 1)
+    d.poly([[x1 - 1.2, y0, z + 0.12], [x1 - 0.15, y0, z + 0.12], [x1 - 0.15, y1, z + 0.12], [x1 - 1.2, y1, z + 0.12]], '#E9DCC8')
+    for (let y = y0 + 0.15; y < y1; y += 0.3) d.line([[x1 - 1.15, y, z + 0.13], [x1 - 0.2, y, z + 0.13]], '#D6C6AE', 1.6, ' stroke-dasharray="1.5 1.5"')
+  }
+}
+
+// a little lamp standing at (x, y, z)
+function smallLamp(d, x, y, z, style, lit, glow, color = '#F4D9C6') {
+  const b = P(x, y, z)
+  if (style === 'mushroom') {
+    d.raw(`<path d="M${fx(b[0] - 2)},${fx(b[1])} v-9 h4 v9z" fill="#F3EADB"/><path d="M${fx(b[0] - 10)},${fx(b[1] - 8)} q10,-16 20,0 q-10,3 -20,0z" fill="${lit ? '#FFD9A0' : '#F2B5A0'}"/><circle cx="${fx(b[0] - 3)}" cy="${fx(b[1] - 13)}" r="1.4" fill="#fff" opacity=".8"/><circle cx="${fx(b[0] + 4)}" cy="${fx(b[1] - 11)}" r="1" fill="#fff" opacity=".8"/>`)
+    if (lit) glow(b[0], b[1] - 9, 30)
+  } else if (style === 'globe') {
+    d.raw(`<rect x="${fx(b[0] - 4)}" y="${fx(b[1] - 2)}" width="8" height="2.4" rx="1" fill="#C9A55A"/><circle cx="${fx(b[0])}" cy="${fx(b[1] - 8)}" r="7" fill="${lit ? '#FFF3C9' : '#F7F0DE'}"/><circle cx="${fx(b[0] + 2)}" cy="${fx(b[1] - 10)}" r="1.4" fill="#E9DDB8"/>`)
+    glow(b[0], b[1] - 8, lit ? 36 : 18)
+  } else if (style === 'cloud') {
+    d.raw(`<path d="M${fx(b[0] - 9)},${fx(b[1] - 2)} q-3,-9 5,-9 q3,-7 9,-2 q8,-2 7,6 q4,5 -3,6 h-15 q-6,-1 -3,-1z" fill="${lit ? '#FFF1D6' : '#EFE4FB'}" stroke="#D9C9EE" stroke-width=".6"/>`)
+    if (lit) glow(b[0], b[1] - 6, 36)
+  } else {
+    d.raw(`<path d="M${fx(b[0] - 3)},${fx(b[1])} h6 l-1,-6 h-4z" fill="${color}"/><path d="M${fx(b[0] - 0.6)},${fx(b[1] - 6)} v-4 h1.2 v4z" fill="#C9A26E"/><path d="M${fx(b[0] - 5)},${fx(b[1] - 17)} h10 l3,8 h-16z" fill="${lit ? '#FFF3D6' : '#F3EADB'}"/>`)
+    if (lit) glow(b[0], b[1] - 12, 32)
+  }
+}
+
+// a vase of flowers standing at (x, y, z)
+function vase(d, x, y, z, kind) {
+  if (!kind || kind === 'none') return
+  const b = P(x, y, z)
+  const flowers = {
+    tulips: () => [[-4, -16, '#F28BA4'], [0, -19, '#F7B1C2'], [4, -15, '#E86F8D']].map(([dx, dy, c]) => `<path d="M${fx(b[0])},${fx(b[1] - 6)} Q${fx(b[0] + dx / 2)},${fx(b[1] - 10)} ${fx(b[0] + dx)},${fx(b[1] + dy + 3)}" stroke="#6FA287" stroke-width=".9" fill="none"/><path d="M${fx(b[0] + dx - 2)},${fx(b[1] + dy + 3)} q0,-5 2,-5 q2,0 2,5 q-2,1.5 -4,0z" fill="${c}"/>`).join(''),
+    lavender: () => [[-4, -18], [-1, -21], [2, -19], [5, -16]].map(([dx, dy]) => `<path d="M${fx(b[0])},${fx(b[1] - 6)} L${fx(b[0] + dx)},${fx(b[1] + dy)}" stroke="#7FA28B" stroke-width=".8"/>${[0, 2, 4].map((k) => `<ellipse cx="${fx(b[0] + dx * (1 - k * 0.05))}" cy="${fx(b[1] + dy + k)}" rx="1.1" ry="1.5" fill="#A38BD6"/>`).join('')}`).join(''),
+    sunflowers: () => [[-4, -16], [4, -18]].map(([dx, dy]) => `<path d="M${fx(b[0])},${fx(b[1] - 6)} L${fx(b[0] + dx)},${fx(b[1] + dy)}" stroke="#6FA287" stroke-width="1"/>${Array.from({ length: 8 }, (_, i) => { const a = (Math.PI * i) / 4; return `<ellipse cx="${fx(b[0] + dx + Math.cos(a) * 2.6)}" cy="${fx(b[1] + dy + Math.sin(a) * 2.6)}" rx="1.8" ry=".9" transform="rotate(${(a * 180) / Math.PI} ${fx(b[0] + dx + Math.cos(a) * 2.6)} ${fx(b[1] + dy + Math.sin(a) * 2.6)})" fill="#F2C443"/>` }).join('')}<circle cx="${fx(b[0] + dx)}" cy="${fx(b[1] + dy)}" r="1.8" fill="#7A5230"/>`).join(''),
+  }
+  d.raw(`<g>${flowers[kind]?.() || ''}<path d="M${fx(b[0] - 3.5)},${fx(b[1])} q-2,-4 0,-7 h7 q2,3 0,7z" fill="#FFFFFF" stroke="#D9CFE6" stroke-width=".6"/></g>`)
+}
+
+// a clock on a wall: side 'left' or 'right', u along the wall, at height z
+function clockOn(d, side, u, z, style, now = new Date()) {
+  if (!style || style === 'none') return
+  const c = P(...onWall(side, u, z, 0.04))
+  const sk = side === 'left' ? 'skewY(-30)' : 'skewY(30)'
+  const h = ((now.getHours() % 12) + now.getMinutes() / 60) * 30, m = now.getMinutes() * 6
+  const hands = `<path d="M0,0 L${fx(Math.sin((h * Math.PI) / 180) * 3.6)},${fx(-Math.cos((h * Math.PI) / 180) * 3.6)}" stroke="#3A3350" stroke-width="1.1" stroke-linecap="round"/><path d="M0,0 L${fx(Math.sin((m * Math.PI) / 180) * 5.4)},${fx(-Math.cos((m * Math.PI) / 180) * 5.4)}" stroke="#3A3350" stroke-width=".8" stroke-linecap="round"/>`
+  if (style === 'sun') {
+    const rays = Array.from({ length: 16 }, (_, i) => { const a = (Math.PI * 2 * i) / 16, r = i % 2 ? 11 : 13; return `<path d="M${fx(Math.cos(a) * 8)},${fx(Math.sin(a) * 8)} L${fx(Math.cos(a) * r)},${fx(Math.sin(a) * r)}" stroke="#D9A441" stroke-width="1.6" stroke-linecap="round"/>` }).join('')
+    d.raw(`<g transform="translate(${fx(c[0])} ${fx(c[1])}) ${sk}">${rays}<circle r="7.6" fill="#FFF8E6" stroke="#D9A441" stroke-width="1.2"/>${hands}</g>`)
+  } else {
+    d.raw(`<g transform="translate(${fx(c[0])} ${fx(c[1])}) ${sk}"><circle r="8.6" fill="#B88D6C"/><circle r="7.2" fill="#FFFDF8"/>${[0, 1, 2, 3].map((i) => `<circle cx="${fx(Math.sin((i * Math.PI) / 2) * 5.6)}" cy="${fx(-Math.cos((i * Math.PI) / 2) * 5.6)}" r=".7" fill="#8A7A6A"/>`).join('')}${hands}</g>`)
+  }
+}
+
+// a decoration hanging along the top of a wall, from u0 to u1, its top edge at top(u)
+function wallDeco(d, side, u0, u1, top, style, lit, glow) {
+  if (!style || style === 'none') return
+  const N = 9
+  const pts = Array.from({ length: N + 1 }, (_, i) => { const u = u0 + ((u1 - u0) * i) / N; return [u, top(u) - 0.35 - 0.45 * Math.sin((Math.PI * i) / N * 2) ** 2] })
+  const at3 = ([u, z]) => onWall(side, u, z, 0.05)
+  if (style === 'lights' || style === 'bunting') {
+    d.line(pts.map(at3), '#8C7A6A', 0.8)
+    pts.slice(1, -1).forEach(([u, z], i) => {
+      const p = P(...at3([u, z]))
+      if (style === 'lights') {
+        const col = ['#FFE29A', '#F7A8B8', '#BFE0FF', '#C9F2C7'][i % 4]
+        d.raw(`<circle class="twinkle" style="animation-delay:${(i % 4) * 0.4}s" cx="${fx(p[0])}" cy="${fx(p[1] + 2)}" r="1.7" fill="${col}"/>`)
+        if (lit) d.raw(`<circle cx="${fx(p[0])}" cy="${fx(p[1] + 2)}" r="5" fill="${col}" opacity=".3"/>`)
+      } else {
+        const col = ['#F28BA4', '#F2C46B', '#8FB7E0', '#A8D58E', '#B9A3E0'][i % 5]
+        const q = P(...at3([u + (u1 - u0) / N / 2, z])), r = P(...at3([u - (u1 - u0) / N / 2, z]))
+        d.raw(`<path d="M${fx((p[0] + r[0]) / 2)},${fx((p[1] + r[1]) / 2)} L${fx((p[0] + q[0]) / 2)},${fx((p[1] + q[1]) / 2)} L${fx(p[0])},${fx(p[1] + 9)}z" fill="${col}"/>`)
+      }
+    })
+  } else if (style === 'hanging') {
+    ;[0.2, 0.5, 0.8].forEach((t, i) => {
+      const u = u0 + (u1 - u0) * t, z = top(u) - 1.6 - (i % 2) * 0.5
+      const a = P(...onWall(side, u, top(u) - 0.05, 0.35)), b = P(...onWall(side, u, z, 0.35))
+      d.raw(`<path d="M${fx(a[0])},${fx(a[1])} L${fx(b[0] - 5)},${fx(b[1])} M${fx(a[0])},${fx(a[1])} L${fx(b[0] + 5)},${fx(b[1])}" stroke="#C9A27A" stroke-width=".6"/><path d="M${fx(b[0] - 6)},${fx(b[1])} h12 l-2,6 h-8z" fill="#F3EADB"/>`)
+      for (let k = 0; k < 5; k++) d.raw(`<path d="M${fx(b[0] - 4 + k * 2)},${fx(b[1] + 4)} q${k % 2 ? 2 : -2},8 ${k % 2 ? 1 : -1},${14 + (k % 3) * 4}" stroke="#6FA287" stroke-width="1.3" fill="none" stroke-linecap="round"/>`)
+    })
+  }
+}
+
+// a desk chair seen from behind, at a desk on the right wall; adds a round stool to the styles above
+function deskChair(d, cx, cy, { color, wood, style }) {
+  if (style !== 'stool') return chairFacingWall(d, cx, cy, { color, wood, style })
+  d.shadow(cx - 0.7, cy - 0.7, cx + 0.7, cy + 0.7, 0.14)
+  ;[[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]].forEach(([dx, dy]) => d.line([[cx + dx * 0.4, cy + dy * 0.4, 1.3], [cx + dx, cy + dy, 0]], shade(wood, -0.1), 2))
+  d.line([[cx - 0.45, cy - 0.45, 0.6], [cx + 0.45, cy - 0.45, 0.6], [cx + 0.45, cy + 0.45, 0.6]], shade(wood, -0.1), 1.2)
+  d.cylinder(cx, cy, 1.3, 0.62, 0.32, color)
+  return bounds([[cx - 0.8, cy - 0.8, 0], [cx + 0.8, cy + 0.8, 0], [cx - 0.8, cy + 0.8, 1.8], [cx + 0.8, cy - 0.8, 1.8]], 2)
+}
+
+// legs for a desk on the right wall in three styles (the top is drawn by wallDesk)
+function styledDesk(d, { x0, x1, depth, top, wood, style }) {
+  if (style === 'trestle') {
+    d.shadow(x0 - 0.1, 0, x1 + 0.2, depth + 0.3, 0.16)
+    const leg = shade(wood, -0.12)
+    ;[x0 + 0.35, x1 - 0.35].forEach((x) => {
+      d.line([[x, 0.25, 0], [x, depth - 0.25, top - 0.2]], leg, 3.2)
+      d.line([[x, depth - 0.25, 0], [x, 0.25, top - 0.2]], leg, 3.2)
+    })
+    d.line([[x0 + 0.35, depth / 2, top * 0.45], [x1 - 0.35, depth / 2, top * 0.45]], leg, 2)
+    d.box(x0, 0, top - 0.18, x1 - x0, depth, 0.18, [shade(wood, 0.18), wood, shade(wood, -0.1)])
+    return
+  }
+  wallDesk(d, { x0, x1, depth, top, wood, drawers: style === 'drawers' ? 'left' : 'none' })
 }
 
 /* ---------- seasons: a little decoration that changes through the year ---------- */
@@ -429,8 +576,58 @@ function wallImage(d, u0, u1, z0, z1, src) {
 
 const screenSpot = (x, y, w, h) => ({ l: ((x - VB.x) / VB.w) * 100, t: ((y - VB.y) / VB.h) * 100, w: (w / VB.w) * 100, h: (h / VB.h) * 100 })
 // places: bed = [x, y, z] on the bed, floor = [x, y] on the rug, sill = [x, y, z] by a window (cats only)
+// Gifts friends left: they stand on the floor in a little row until you put them away
+export const GIFTS = { flowers: 'Flowers', present: 'A present', teddy: 'A teddy bear', candle: 'A candle', balloon: 'A balloon' }
+const GIFT_AT = { cabin: [3.8, 10.8], observatory: [6.2, 6.0], seaside: [8.4, 11.3], pastel: [5.4, 11.0] }
+function gift(S, kind, x, y) {
+  const { d, sky, glow } = S
+  const b = P(x, y, 0)
+  d.raw(`<ellipse cx="${fx(b[0])}" cy="${fx(b[1] + 1)}" rx="9" ry="3" fill="#000" opacity=".14" filter="url(#soft)"/>`)
+  if (kind === 'present') {
+    d.box(x - 0.4, y - 0.4, 0, 0.8, 0.8, 0.75, ['#F7A8B8', '#E98AA0', '#D9768D'])
+    d.line([[x, y - 0.4, 0.76], [x, y + 0.4, 0.76], [x, y + 0.4, 0]], '#FFF3C4', 1.6)
+    d.line([[x - 0.4, y, 0.76], [x + 0.4, y, 0.76], [x + 0.4, y, 0]], '#FFF3C4', 1.6)
+    const t = P(x, y, 0.76)
+    d.raw(`<path d="M${fx(t[0])},${fx(t[1])} q-6,-7 -7,-1 q1,4 7,1 q6,-7 7,-1 q-1,4 -7,1z" fill="#FFE07A" stroke="#E8C24E" stroke-width=".5"/>`)
+  } else if (kind === 'teddy') {
+    const c = '#C99567', l = '#E6BE95'
+    d.raw(`<g transform="translate(${fx(b[0])} ${fx(b[1])})"><ellipse cx="0" cy="-7" rx="7" ry="7.5" fill="${c}"/><ellipse cx="0" cy="-5" rx="4" ry="4" fill="${l}"/><circle cx="-6" cy="-1.5" r="3" fill="${c}"/><circle cx="6" cy="-1.5" r="3" fill="${c}"/><circle cx="0" cy="-18" r="6" fill="${c}"/><circle cx="-5" cy="-23" r="2.6" fill="${c}"/><circle cx="5" cy="-23" r="2.6" fill="${c}"/><circle cx="-5" cy="-23" r="1.3" fill="${l}"/><circle cx="5" cy="-23" r="1.3" fill="${l}"/><ellipse cx="0" cy="-16" rx="2.6" ry="2" fill="${l}"/><circle cx="-2.2" cy="-19.5" r=".9" fill="#3a2a22"/><circle cx="2.2" cy="-19.5" r=".9" fill="#3a2a22"/><circle cx="0" cy="-16.6" r=".8" fill="#3a2a22"/><path d="M-4,-12.5 q4,3 8,0" stroke="#F49AA8" stroke-width="1.6" fill="none"/></g>`)
+  } else if (kind === 'candle') {
+    d.cylinder(x, y, 0, 0.42, 0.9, '#FFF6E6')
+    const t = P(x, y, 0.92)
+    d.raw(`<path d="M${fx(t[0])},${fx(t[1] - 1)} v-2" stroke="#3a2a22" stroke-width=".7"/><path d="M${fx(t[0])},${fx(t[1] - 10)} q3.5,4 0,7 q-3.5,-3 0,-7z" fill="#FFC85A"/>`)
+    if (sky.lights) glow(t[0], t[1] - 6, 26)
+  } else if (kind === 'balloon') {
+    const c = '#F49AA8'
+    d.raw(`<path d="M${fx(b[0])},${fx(b[1])} q-4,-14 2,-26 q5,-10 -1,-20" stroke="#B9A3E0" stroke-width=".8" fill="none"/><ellipse cx="${fx(b[0] - 1)}" cy="${fx(b[1] - 55)}" rx="8" ry="10" fill="${c}"/><ellipse cx="${fx(b[0] - 4)}" cy="${fx(b[1] - 59)}" rx="2" ry="3" fill="#fff" opacity=".6"/><path d="M${fx(b[0] - 2.5)},${fx(b[1] - 45)} h3 l-1.5,2z" fill="${c}"/><rect x="${fx(b[0] - 3)}" y="${fx(b[1] - 3)}" width="6" height="3" rx="1" fill="#B9A3E0"/>`)
+  } else {
+    // a bouquet in a paper cone
+    d.raw(`<g transform="translate(${fx(b[0])} ${fx(b[1])})"><path d="M-2,-6 l-3,-14 M2,-6 l3,-14 M0,-6 v-16" stroke="#5E8F5A" stroke-width="1.2"/><circle cx="-5" cy="-21" r="3.6" fill="#F49AA8"/><circle cx="5" cy="-21" r="3.6" fill="#FFD66E"/><circle cx="0" cy="-24" r="3.8" fill="#B9A3E0"/><circle cx="-5" cy="-21" r="1.2" fill="#fff" opacity=".7"/><circle cx="0" cy="-24" r="1.2" fill="#fff" opacity=".7"/><circle cx="5" cy="-21" r="1.2" fill="#fff" opacity=".7"/><path d="M-8,-15 L8,-15 L1.5,0 h-3z" fill="#FFF3E2" stroke="#E9D9C4" stroke-width=".6"/><path d="M-4,-8 q4,2 8,0" stroke="#F49AA8" stroke-width="1.4" fill="none"/></g>`)
+  }
+}
+// one gift on its own, for the gift picker on a friend's page
+export function giftSVG(kind) {
+  K = 14.2; at()
+  const d = painter()
+  gift({ d, sky: {}, glow() {} }, kind, 6, 6)
+  const [x, y] = P(6, 6, 0), h = kind === 'balloon' ? 72 : 38
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${fx(x - h / 2)} ${fx(y - h + 6)} ${h} ${h}"><defs><filter id="soft"><feGaussianBlur stdDeviation="1.5"/></filter></defs>${d.out.join('')}</svg>`
+}
+function giftsOn(S) {
+  const spot = GIFT_AT[roomTheme(S.room.theme)]
+  if (!spot || !S.gifts.length) return
+  at()
+  S.spots.gifts = S.gifts.map((g, i) => {
+    const x = spot[0] + i * 1.15, y = spot[1] - i * 0.15
+    gift(S, g.kind, x, y)
+    const b = P(x, y, 0), tall = g.kind === 'balloon' ? 66 : 30
+    return screenSpot(b[0] - 11, b[1] - tall, 22, tall + 4)
+  })
+}
+
 function livePet(S, { bed, floor, sill }) {
   const { d, room, spots, tod } = S
+  giftsOn(S)
   if (room.pet !== 'cat' && room.pet !== 'dog') return
   const c = PET_COLORS[room.petColor] || PET_COLORS[room.pet === 'dog' ? 'golden' : 'black']
   let where = tod === 'evening' ? 'floor' : tod === 'morning' ? (room.pet === 'cat' && sill ? 'sill' : 'floor') : 'bed'
@@ -526,7 +723,7 @@ function pet(kind, c, x, y, k) {
 
 /* ---------- a big leafy plant in a ceramic pot ---------- */
 
-function plant(d, x, y, leaves) {
+function plant(d, x, y, leaves, style = 'leafy') {
   const base = P(x, y, 0)
   d.raw(`<ellipse cx="${base[0].toFixed(1)}" cy="${(base[1] + 1).toFixed(1)}" rx="15" ry="5.5" fill="#3a2a22" opacity=".22" filter="url(#soft)"/>`)
   // pot: a slightly tapered ceramic pot with a rim
@@ -538,6 +735,24 @@ function plant(d, x, y, leaves) {
   d.raw(`<path d="M${px - 9.5},${ty} L${px - 7.5},${py - 1} Q${px},${py + 3} ${px + 7.5},${py - 1} L${px + 9.5},${ty} Z" fill="url(#potg)"/>`)
   d.raw(`<path d="M${px - 9.5},${ty + 3.2} Q${px},${ty + 7.5} ${px + 9.5},${ty + 3.2}" stroke="#C9A98E" stroke-width="1.4" fill="none" opacity=".7"/>`)
   d.raw(`<ellipse cx="${px}" cy="${ty}" rx="10.2" ry="3.6" fill="#E6DDD3"/><ellipse cx="${px}" cy="${ty + .4}" rx="8.6" ry="2.7" fill="#6B4E3A"/>`)
+  const n = Math.max(5, Math.min(leaves + 2, 10))
+  if (style === 'cactus') {
+    // a cactus: one tall column and arms, a flower for every few days
+    const c = '#6FA287', cd = '#4F8A67'
+    d.raw(`<path d="M${px - 5},${ty - 1} v-${30 + n * 3} q0,-6 5,-6 q5,0 5,6 v${30 + n * 3}z" fill="${c}"/><path d="M${px - 1},${ty - 4} v-${28 + n * 3}" stroke="${cd}" stroke-width="1.2" opacity=".6"/>`)
+    if (n > 5) d.raw(`<path d="M${px - 5},${ty - 18} h-6 q-4,0 -4,-4 v-12 q0,-4 3,-4 q3,0 3,4 v9 h4z" fill="${c}"/>`)
+    if (n > 7) d.raw(`<path d="M${px + 5},${ty - 26} h6 q4,0 4,-4 v-10 q0,-4 -3,-4 q-3,0 -3,4 v7 h-4z" fill="${c}"/>`)
+    for (let k = 0; k < Math.floor(n / 3); k++) d.raw(`<circle cx="${px + [-0, -12, 12][k % 3]}" cy="${ty - [38 + n * 3, 40, 46][k % 3]}" r="3" fill="#F28BA4"/><circle cx="${px + [-0, -12, 12][k % 3]}" cy="${ty - [38 + n * 3, 40, 46][k % 3]}" r="1.2" fill="#FBE7A6"/>`)
+    return
+  }
+  if (style === 'round') {
+    // round leaves on thin stems, like a pancake plant
+    const L = [[-20, -22], [18, -26], [-8, -38], [10, -42], [-24, -40], [24, -46], [0, -54], [-14, -58], [14, -62], [2, -70]].slice(0, n)
+    L.forEach(([lx, ly], k) => {
+      d.raw(`<path d="M${px},${ty - 1} Q${px + lx * 0.2},${ty + ly * 0.5} ${px + lx},${ty + ly}" stroke="#5E8F6E" stroke-width=".9" fill="none"/><circle cx="${px + lx}" cy="${ty + ly}" r="${7 - (k % 3)}" fill="${k % 2 ? '#7FB08A' : '#6FA287'}"/><circle cx="${px + lx}" cy="${ty + ly}" r="1" fill="#4F8A67"/>`)
+    })
+    return
+  }
   // leaves: wide, pointed leaves on thin stems, the newest ones on top
   const L = [
     [-24, -26, 13, 0], [22, -28, 12, 1], [-10, -40, 13, 1], [12, -44, 12, 0], [-28, -46, 11, 1], [27, -50, 11, 0],
@@ -757,12 +972,17 @@ function sconce(d, side, u, z, lit, glow, shadeColor = '#F6E7CF') {
 }
 
 // a bedside table with a drawer and a little ceramic lamp
-function nightstand(d, x, y, wood, lit, glow, lampColor = '#F4D9C6') {
+function nightstand(d, x, y, wood, lit, glow, lampColor = '#F4D9C6', lampStyle = 'table') {
   d.shadow(x - 0.1, y - 0.1, x + 1.05, y + 1.05, 0.14)
   d.box(x, y, 0, 0.9, 0.9, 1.45, [shade(wood, 0.18), wood, shade(wood, -0.1)])
   d.poly([[x + 0.91, y + 0.12, 0.85], [x + 0.91, y + 0.78, 0.85], [x + 0.91, y + 0.78, 1.3], [x + 0.91, y + 0.12, 1.3]], shade(wood, -0.05))
   const k = P(x + 0.92, y + 0.45, 1.07)
   d.raw(`<circle cx="${k[0].toFixed(1)}" cy="${k[1].toFixed(1)}" r="1" fill="${shade(wood, -0.35)}"/>`)
+  if (lampStyle !== 'table') {
+    smallLamp(d, x + 0.5, y + 0.5, 1.45, lampStyle, lit, glow, lampColor)
+    d.box(x + 0.08, y + 0.1, 1.45, 0.25, 0.6, 0.1, '#B9A3D6')
+    return
+  }
   d.cylinder(x + 0.45, y + 0.45, 1.45, 0.24, 0.5, lampColor)
   const top = P(x + 0.45, y + 0.45, 1.95)
   d.raw(`<path d="M${(top[0] - 0.6).toFixed(1)},${top[1].toFixed(1)} v-5 h1.2 v5 z" fill="#C9A26E"/>`)
@@ -1638,7 +1858,9 @@ export function drawRoom(o) {
   const { room: given, tod = timeOfDay(), books = 0, notes = 0, events = 0, diaryToday = false, leaves = 3 } = o
   // a room from before gets the look of the new room it became
   const { pet: _p, petColor: _c, ...look } = THEME_PRESETS[roomTheme(given.theme)]
-  const room = THEMES[given.theme] && given.v === 2 ? given : { ...given, ...look, theme: roomTheme(given.theme) }
+  // rooms saved before the furniture styles get this room's own lamp, clock, flowers…
+  const styled = Object.fromEntries(Object.keys(STYLES).filter((k) => given[k] === undefined && look[k]).map((k) => [k, look[k]]))
+  const room = THEMES[given.theme] && given.v === 2 ? { ...styled, ...given } : { ...given, ...look, theme: roomTheme(given.theme) }
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
   const theme = roomTheme(room.theme)
@@ -1730,7 +1952,7 @@ export function drawRoom(o) {
   d.box(0, 0, 0, W, 0.12, 0.35, [trim, shade(trim, -0.06), shade(trim, -0.08)])
 
   }
-  const S = { d, room, sky, tod, photo: o.windowPhoto, memories: o.memories || 0, moods: o.moods || [], spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug,
+  const S = { d, room, sky, tod, photo: o.windowPhoto, gifts: (o.gifts || []).slice(-3), memories: o.memories || 0, moods: o.moods || [], spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug,
     walls: WALLS[room.wall] || WALLS.lavender, floorPal: FLOORS[room.floor] || FLOORS.oak, chair: (FABRICS[room.chairColor] || FABRICS.lilac).c }
   if (NEW_ROOMS[theme]) NEW_ROOMS[theme](S)
   else if (theme === 'attic') atticScene(S)
@@ -2246,7 +2468,8 @@ function cabinScene(S) {
   d.box(6.4, 0, 3.15, 3.0, 0.4, 0.1, ['#FFFFFF', '#EEE6DA', '#E2D8C8'])
   E()
 
-  nightstand(d, 5.0, 0.15, S.bedWood, sky.lights, glow, '#F2E6D4')
+  nightstand(d, 5.0, 0.15, S.bedWood, sky.lights, glow, '#F2E6D4', room.lampStyle)
+  spots.lamp = lampSpot(5.45, 0.6, 1.45)
   // the bed under the window, the head against the wall
   G('bed')
   const bw = S.bedWood
@@ -2263,19 +2486,21 @@ function cabinScene(S) {
   d.poly([[6.0, 3.7, mt + 0.1], [9.68, 3.7, mt + 0.1], [9.68, 4.7, mt + 0.1], [6.0, 4.7, mt + 0.1]], '#C9564F')
   d.poly([[9.7, 3.7, mt + 0.1], [9.7, 4.7, mt + 0.1], [9.7, 4.7, mt - 0.7], [9.7, 3.7, mt - 0.7]], '#A84540')
   for (let x = 6.2; x < 9.6; x += 0.35) d.line([[x, 3.75, mt + 0.11], [x + 0.15, 4.65, mt + 0.11]], '#F5E6D8', 0.8, ' opacity=".7"')
+  if (room.bedStyle === 'cozy') cozyBed(d, 6.0, 0.2, 9.68, 5.27, mt + 0.1, 'y')
   openDiary(d, 7.0, 2.2, mt + 0.12, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, 6.0, 0.25, 9.7, 5.3, 0, 5.4, bw)
   spots.bed = bounds([[5.9, 0.2, 0], [9.9, 0.2, 0], [9.9, 5.4, 0], [5.9, 5.4, 0], [6.0, 0.2, 2.8]], 0)
   E()
 
   at(0, 0)
   // a tall bookcase in the corner
   G('shelf')
-  spots.shelf = bookcase(d, { y0: 0.3, len: 3.0, depth: 1.0, h: 3.5, levels: [0.12, 1.2, 2.3], wood: S.shelfWood, books })
+  spots.shelf = bookcase(d, { y0: 0.3, len: 3.0, depth: 1.0, ...shelfSize(room), wood: S.shelfWood, books })
   E()
   at(0.8, 0)
   // a writing desk on the right wall with a pinboard above it
   G('desk')
-  wallDesk(d, { x0: 2.2, x1: 4.9, depth: 1.7, top: 2.5, wood: S.deskWood, drawers: 'none' })
+  styledDesk(d, { x0: 2.2, x1: 4.9, depth: 1.7, top: 2.5, wood: S.deskWood, style: room.deskStyle })
   calendarFront(d, 2.5, 3.2, 1.25, 2.5, 0.85, events)
   spots.desk = bounds([[2.4, 1.0, 2.5], [3.4, 1.0, 2.5], [3.4, 1.3, 3.4], [2.4, 1.3, 3.4]], 3)
   mug(d, 3.8, 1.0, 2.5, '#C9564F', !lit)
@@ -2290,7 +2515,7 @@ function cabinScene(S) {
   spots.board = bounds([[2.3, 0, 3.6], [4.8, 0, 3.6], [4.8, 0, 5.3], [2.3, 0, 5.3]], 2)
   E()
   G('chair')
-  spots.chair = chairFacingWall(d, 3.6, 2.4, { color: S.chair, wood: shade(S.deskWood, -0.15), style: 'classic' })
+  spots.chair = deskChair(d, 3.6, 2.4, { color: S.chair, wood: shade(S.deskWood, -0.15), style: room.chairStyle })
   E()
 
 
@@ -2342,7 +2567,8 @@ function cabinScene(S) {
   d.raw(`<path d="M${f(fl[0])},${f(fl[1])} V${f(fl[1] - 70)}" stroke="#2F3A44" stroke-width="1.6"/><path d="M${f(fl[0] - 9)},${f(fl[1] - 70)} h18 l-4,-12 h-10z" fill="${lit ? '#FDEBC4' : '#F3EADB'}"/>`)
   if (lit) glow(fl[0], fl[1] - 64, 40)
   at(1.8, 1.8)
-  plant(d, 9.6, 9.6, leaves)
+  plant(d, 9.6, 9.6, leaves, room.plantStyle)
+  spots.plant = bounds([[9.1, 9.1, 0], [10.1, 10.1, 0], [9.1, 10.1, 4.5], [10.1, 9.1, 4.5]], 2)
   at(2, 0)
   if (sky.beam) d.poly([[6.4, 0.6, 0.02], [9.4, 0.6, 0.02], [8.6, 4.8, 0.02], [5.6, 4.8, 0.02]], 'url(#beam)')
   at(0, 1.9)
@@ -2358,6 +2584,7 @@ function cabinScene(S) {
   d.raw(`<rect x="${f(lt[0] - 4)}" y="${f(lt[1] - 14)}" width="8" height="12" rx="1.5" fill="#2F3A44"/><rect x="${f(lt[0] - 2.6)}" y="${f(lt[1] - 12)}" width="5.2" height="8" rx="1" fill="${sky.lights ? '#FFE3A8' : '#F3EADB'}"/><path d="M${f(lt[0] - 2)},${f(lt[1] - 14)} q2,-4 4,0" stroke="#2F3A44" stroke-width="1" fill="none"/>`)
   if (sky.lights) glow(lt[0], lt[1] - 8, 16)
   at(0, 0)
+  extras(S, { clock: { side: 'right', u: 7.0, z: 4.7 }, vase: { x: 0.5, y: 1.7, z: shelfSize(room).h }, deco: { side: 'right', u0: 0.4, u1: 8.2, top: () => 5.95 } })
   livePet(S, { bed: [10.6, 2.9, mt + 0.15], floor: [6.0, 8.1], sill: [9.4, 0.25, 3.25] })
 }
 
@@ -2414,16 +2641,17 @@ function observatoryScene(S) {
   E()
   // a bookcase with a globe on top
   G('shelf')
-  spots.shelf = bookcase(d, { y0: 0.4, len: 3.0, depth: 1.1, h: 3.9, levels: [0.12, 1.15, 2.2, 3.1], wood: S.shelfWood, books })
-  const gb = P(0.55, 1.9, 4.05)
+  const sh = shelfSize(room)
+  spots.shelf = bookcase(d, { y0: 0.4, len: 3.0, depth: 1.1, ...sh, wood: S.shelfWood, books })
+  const gb = P(0.55, 1.9, sh.h + 0.15)
   d.raw(`<path d="M${f(gb[0])},${f(gb[1])} v-4" stroke="#C9A55A" stroke-width="1.4"/><circle cx="${f(gb[0])}" cy="${f(gb[1] - 12)}" r="8" fill="#5F86B3"/><path d="M${f(gb[0] - 5)},${f(gb[1] - 16)} q3,2 2,6 q4,1 6,-2 M${f(gb[0] + 1)},${f(gb[1] - 7)} q3,-2 5,0" fill="#7FB08A" stroke="#7FB08A"/><path d="M${f(gb[0] - 9)},${f(gb[1] - 12)} a9,9 0 0 0 18,0" stroke="#C9A55A" stroke-width="1" fill="none"/>`)
-  moodJar(S, 0.55, 2.95, 3.92)
+  moodJar(S, 0.55, 2.95, sh.h + 0.02)
   E()
 
   at(1.2, 0)
   // a desk on the right wall with a glowing moon lamp and star charts
   G('desk')
-  wallDesk(d, { x0: 2.9, x1: 5.7, depth: 1.8, top: 2.5, wood: S.deskWood, drawers: 'left' })
+  styledDesk(d, { x0: 2.9, x1: 5.7, depth: 1.8, top: 2.5, wood: S.deskWood, style: room.deskStyle })
   calendarFront(d, 4.2, 4.9, 1.3, 2.5, 0.85, events)
   spots.desk = bounds([[4.1, 1.1, 2.5], [5.1, 1.1, 2.5], [5.1, 1.4, 3.4], [4.1, 1.4, 3.4]], 3)
   d.poly([[3.1, 0.3, 2.51], [4.0, 0.3, 2.51], [4.0, 1.3, 2.51], [3.1, 1.3, 2.51]], '#E9DFC6')
@@ -2434,11 +2662,12 @@ function observatoryScene(S) {
   E()
 
   G('chair')
-  spots.chair = chairFacingWall(d, 4.3, 2.5, { color: S.chair, wood: shade(S.deskWood, -0.1), style: 'classic' })
+  spots.chair = deskChair(d, 4.3, 2.5, { color: S.chair, wood: shade(S.deskWood, -0.1), style: room.chairStyle })
   E()
 
   at(0, 0.8)
-  nightstand(d, 0.12, 4.55, S.bedWood, sky.lights, glow, '#FFF0C4')
+  nightstand(d, 0.12, 4.55, S.bedWood, sky.lights, glow, '#FFF0C4', room.lampStyle)
+  spots.lamp = lampSpot(0.6, 5.0, 1.45)
   at(2.2, 0)
   // the telescope on its tripod, looking at the moon
   const tb = P(7.9, 3.4, 0), tt = P(7.9, 3.4, 2.6)
@@ -2450,9 +2679,11 @@ function observatoryScene(S) {
   // a daybed along the left wall with a star blanket
   G('bed')
   const mt = bedHeadLeft(d, { y0: 5.6, y1: 8.9, len: 4.4, base: 0.7, mattressZ: 1.45, blanket: S.blanket, wood: S.bedWood, head: shade(S.bedWood, 0.12) })
+  if (room.bedStyle === 'cozy') cozyBed(d, 0.3, 5.6, 4.7, 8.9, mt, 'x')
   for (let i = 0; i < 16; i++) { const p = P(1.9 + (i % 4) * 0.7, 5.9 + Math.floor(i / 4) * 0.75 + (i % 3) * 0.08, mt + 0.02); d.raw(`<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".8" fill="#FFE9A8"/>`) }
   soft(d, 1.25, 7.0, mt, 0.5, 0.8, 0.5, ['#F2D27A', '#E9C46A', '#D6B058'], 0.25, 1)
   openDiary(d, 2.3, 6.0, mt + 0.03, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, 0.4, 5.65, 4.7, 8.85, 0, 5.6, S.bedWood)
   spots.bed = bounds([[0, 5.4, 0], [5.0, 5.4, 0], [5.0, 9.2, 0], [0, 9.2, 0], [0, 5.6, 3.3]], 0)
   E()
   G('art'); art(d, room.art || 'moon', 'left', 5.6, 8.8, 4.0, 6.0, '#C9A55A'); spots.art = bounds([[0, 5.4, 3.8], [0, 9.0, 3.8], [0, 9.0, 6.2], [0, 5.4, 6.2]], 1); E()
@@ -2469,7 +2700,8 @@ function observatoryScene(S) {
   E()
   pouf(d, 8.2, 8.6, '#E9C46A')
   at(2.4, 0)
-  plant(d, 9.1, 1.4, leaves)
+  plant(d, 9.1, 1.4, leaves, room.plantStyle)
+  spots.plant = bounds([[8.6, 0.9, 0], [9.6, 1.9, 0], [8.6, 1.9, 4.5], [9.6, 0.9, 4.5]], 2)
   at(0, 0)
   // the room is always a little dark, lit by lamps and the moon
   if (!sky.lights) d.poly([[0, 0, 0], [12, 0, 0], [12, 12, 0], [0, 12, 0]], '#1D2550', ' opacity=".12" pointer-events="none"')
@@ -2477,6 +2709,7 @@ function observatoryScene(S) {
   // a bedside table with a moon lamp, a stack of books by the telescope
   ;[['#8FB7E0', 0.2], ['#E9C46A', 0.16], ['#E9A8B4', 0.18]].reduce((z, [c, h]) => { d.box(5.0, 9.0, z, 0.85, 0.6, h, c); return z + h }, 0)
   at(0, 0)
+  extras(S, { clock: { side: 'right', u: 2.0, z: 6.4 }, vase: { x: 3.5, y: 1.45, z: 2.5, at: [1.2, 0] }, deco: { side: 'left', u0: 3.8, u1: 11.6, top: () => 9.4 } })
   livePet(S, { bed: [3.6, 9.0, mt + 0.05], floor: [7.8, 8.0], sill: null })
 }
 
@@ -2517,23 +2750,35 @@ function seasideScene(S) {
   E()
 
   at(1.4, 0.4)
-  // a rattan egg chair hanging near the glass
+  // a chair by the glass: a hanging egg chair, a rattan armchair or a bean bag
   G('chair')
   const hc = P(7.4, 3.0, 1.6), top = P(7.4, 3.0, 8.4)
   d.raw(`<ellipse cx="${f(P(7.4, 3.0, 0)[0])}" cy="${f(P(7.4, 3.0, 0)[1] + 1)}" rx="16" ry="5" fill="#000" opacity=".15" filter="url(#soft)"/>`)
-  d.raw(`<path d="M${f(hc[0])},${f(top[1])} V${f(hc[1] - 26)}" stroke="#8C6A4A" stroke-width="1.2"/>`)
-  d.raw(`<path d="M${f(hc[0] - 15)},${f(hc[1] - 6)} q-2,-24 15,-22 q17,-2 15,22 q-1,14 -15,14 q-14,0 -15,-14z" fill="#D9B98C"/>`)
-  for (let i = 0; i < 6; i++) d.raw(`<path d="M${f(hc[0] - 14 + i * 5.6)},${f(hc[1] - 24 + Math.abs(2.5 - i) * 2)} q${f(-1 + i * 0.4)},14 ${f(1 - i * 0.4)},28" stroke="#BF9C6E" stroke-width=".8" fill="none"/>`)
-  d.raw(`<ellipse cx="${f(hc[0])}" cy="${f(hc[1] - 3)}" rx="11" ry="5" fill="#FFFFFF"/><ellipse cx="${f(hc[0] - 2)}" cy="${f(hc[1] - 10)}" rx="6" ry="5" fill="${S.chair}"/>`)
-  spots.chair = screenSpot(hc[0] - 17, hc[1] - 30, 34, 40)
+  if (room.chairStyle === 'swivel') {
+    const fc = P(7.4, 3.0, 0)
+    d.raw(`<path d="M${f(fc[0] - 16)},${f(fc[1] - 6)} q-2,-26 16,-26 q18,0 16,26 q0,6 -16,6 q-16,0 -16,-6z" fill="#D9B98C"/><path d="M${f(fc[0] - 12)},${f(fc[1] - 10)} q12,-8 24,0 v4 q-12,5 -24,0z" fill="#FFFFFF"/><ellipse cx="${f(fc[0])}" cy="${f(fc[1] - 20)}" rx="7" ry="5" fill="${S.chair}"/>`)
+    for (let i = 0; i < 6; i++) d.raw(`<path d="M${f(fc[0] - 13 + i * 5.2)},${f(fc[1] - 28 + Math.abs(2.5 - i) * 2)} v${f(18 - Math.abs(2.5 - i) * 2)}" stroke="#BF9C6E" stroke-width=".8"/>`)
+    spots.chair = screenSpot(fc[0] - 18, fc[1] - 34, 36, 36)
+  } else if (room.chairStyle === 'stool') {
+    soft(d, 6.6, 2.2, 0, 1.6, 1.6, 1.05, [shade(S.chair, 0.12), S.chair, shade(S.chair, -0.1)], 0.75, 2)
+    const fc = P(7.4, 3.0, 0)
+    spots.chair = screenSpot(fc[0] - 16, fc[1] - 22, 32, 26)
+  } else {
+    d.raw(`<path d="M${f(hc[0])},${f(top[1])} V${f(hc[1] - 26)}" stroke="#8C6A4A" stroke-width="1.2"/>`)
+    d.raw(`<path d="M${f(hc[0] - 15)},${f(hc[1] - 6)} q-2,-24 15,-22 q17,-2 15,22 q-1,14 -15,14 q-14,0 -15,-14z" fill="#D9B98C"/>`)
+    for (let i = 0; i < 6; i++) d.raw(`<path d="M${f(hc[0] - 14 + i * 5.6)},${f(hc[1] - 24 + Math.abs(2.5 - i) * 2)} q${f(-1 + i * 0.4)},14 ${f(1 - i * 0.4)},28" stroke="#BF9C6E" stroke-width=".8" fill="none"/>`)
+    d.raw(`<ellipse cx="${f(hc[0])}" cy="${f(hc[1] - 3)}" rx="11" ry="5" fill="#FFFFFF"/><ellipse cx="${f(hc[0] - 2)}" cy="${f(hc[1] - 10)}" rx="6" ry="5" fill="${S.chair}"/>`)
+    spots.chair = screenSpot(hc[0] - 17, hc[1] - 30, 34, 40)
+  }
   E()
 
   at(0, 0)
   // low shelves with books and shells along the left wall
   G('shelf')
-  spots.shelf = bookcase(d, { y0: 0.5, len: 3.2, depth: 1.2, h: 3.2, levels: [0.12, 1.15, 2.15], wood: S.shelfWood, books })
+  const sh = shelfSize(room)
+  spots.shelf = bookcase(d, { y0: 0.5, len: 3.2, depth: 1.2, ...sh, wood: S.shelfWood, books })
   ;[[0.5, 1.1, '#F4D7C8'], [0.5, 2.3, '#FFFFFF']].forEach(([x, y, c]) => { const p = P(x, y, 3.32); d.raw(`<path d="M${f(p[0] - 5)},${f(p[1])} q5,-9 10,0 z" fill="${c}"/><path d="M${f(p[0] - 3)},${f(p[1])} l3,-6 l3,6" stroke="#D9B8A6" stroke-width=".5" fill="none"/>`) })
-  moodJar(S, 0.6, 3.2, 3.32)
+  moodJar(S, 0.6, 3.2, sh.h + 0.12)
   E()
   // a calendar on the wall, and a driftwood string with photos above the bed
   G('desk')
@@ -2557,14 +2802,17 @@ function seasideScene(S) {
   spots.board = bounds([[0, 4.6, 5.2], [0, 9.4, 5.2], [0, 9.4, 6.8], [0, 4.6, 6.8]], 2)
   E()
   at(0, 0.6)
-  nightstand(d, 0.12, 3.95, S.bedWood, sky.lights, glow, '#F4D7C8')
+  nightstand(d, 0.12, 3.95, S.bedWood, sky.lights, glow, '#F4D7C8', room.lampStyle)
+  spots.lamp = lampSpot(0.6, 4.4, 1.45)
   at(0, 0.8)
   // the bed: white linen with a blue striped throw
   G('bed')
   const mt = bedHeadLeft(d, { y0: 5.0, y1: 8.5, len: 4.4, base: 0.55, mattressZ: 1.35, blanket: S.blanket, wood: S.bedWood, head: shade(S.bedWood, 0.25) })
+  if (room.bedStyle === 'cozy') cozyBed(d, 0.3, 5.0, 4.7, 8.5, mt, 'x')
   for (let x = 3.0; x < 4.6; x += 0.32) d.poly([[x, 5.03, mt + 0.02], [x + 0.14, 5.03, mt + 0.02], [x + 0.14, 8.47, mt + 0.02], [x, 8.47, mt + 0.02]], '#4F86B8', ' opacity=".8"')
   soft(d, 1.25, 6.4, mt, 0.5, 0.8, 0.5, ['#A9C9EA', '#8FB7E0', '#7BA3CD'], 0.25, 1)
   openDiary(d, 1.9, 5.3, mt + 0.03, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, 0.4, 5.05, 4.7, 8.45, 0, 5.6, S.bedWood)
   spots.bed = bounds([[0, 4.8, 0], [5.0, 4.8, 0], [5.0, 8.8, 0], [0, 8.8, 0], [0, 5.0, 3.2]], 0)
   E()
   at(0, 1.9)
@@ -2588,7 +2836,8 @@ function seasideScene(S) {
   d.poly([[10.4, 1.5, 1.9], [11.7, 1.5, 1.9], [11.7, 2.4, 0.6], [11.7, 3.8, 0.55], [10.4, 3.8, 0.55], [10.4, 2.4, 0.6]], '#FFFFFF')
   for (let k = 0; k < 4; k++) { const x = 10.5 + k * 0.32; d.poly([[x, 1.5, 1.91], [x + 0.16, 1.5, 1.91], [x + 0.16, 2.4, 0.61], [x + 0.16, 3.8, 0.56], [x, 3.8, 0.56], [x, 2.4, 0.61]], '#4F86B8') }
   d.line([[10.4, 1.5, 1.9], [11.7, 1.5, 1.9]], '#A97F55', 1.6)
-  plant(d, 9.6, 8.0, leaves)
+  plant(d, 9.6, 8.0, leaves, room.plantStyle)
+  spots.plant = bounds([[9.1, 7.5, 0], [10.1, 8.5, 0], [9.1, 8.5, 4.5], [10.1, 7.5, 4.5]], 2)
   const ln = P(11.6, 0.6, 0)
   d.raw(`<rect x="${f(ln[0] - 4)}" y="${f(ln[1] - 13)}" width="8" height="12" rx="1.5" fill="#FFFFFF" stroke="#3A3350" stroke-width=".8"/><circle cx="${f(ln[0])}" cy="${f(ln[1] - 7)}" r="2" fill="#F6C46B"/>`)
   if (lit) glow(ln[0], ln[1] - 7, 18)
@@ -2603,6 +2852,7 @@ function seasideScene(S) {
   at(1.2, 1.9)
   ;[[4.4, 9.4], [4.95, 9.55]].forEach(([x, y], i) => { const b2 = P(x, y, 0); d.raw(`<rect x="${f(b2[0] - 3.5)}" y="${f(b2[1] - 11 + i * 3)}" width="7" height="${10 - i * 3}" rx="1.5" fill="#FFFFFF" stroke="#C9A27A" stroke-width=".8"/><circle cx="${f(b2[0])}" cy="${f(b2[1] - 6 + i * 2)}" r="1.6" fill="#F6C46B"/>`); if (sky.lights) glow(b2[0], b2[1] - 6, 12) })
   at(0, 0)
+  extras(S, { clock: { side: 'left', u: 4.3, z: 6.9 }, vase: { x: 0.6, y: 1.6, z: shelfSize(room).h }, deco: { side: 'left', u0: 5.8, u1: 11.6, top: () => 8.2 } })
   livePet(S, { bed: [3.6, 8.4, mt + 0.05], floor: [8.4, 8.4], sill: null })
 }
 
@@ -2646,18 +2896,19 @@ function pastelScene(S) {
   soft(d, 0.5, 0.45, mt, 1.6, 1.0, 0.5, ['#FFFFFF', '#F8F2F6', '#ECE4EC'], 0.42, 2)
   soft(d, 2.3, 0.45, mt, 1.6, 1.0, 0.5, ['#FFFFFF', '#F8F2F6', '#ECE4EC'], 0.42, 2)
   duvet(d, 0.3, 1.6, 4.7, 3.88, mt + 0.06, 0.45, S.blanket)
+  if (room.bedStyle === 'cozy') cozyBed(d, 0.3, 0.3, 4.7, 3.88, mt + 0.08, 'y')
   for (let i = 0; i < 10; i++) { const p = P(0.7 + (i % 5) * 0.8, 2.1 + Math.floor(i / 5) * 0.9, mt + 0.07); d.raw(`<circle cx="${f(p[0])}" cy="${f(p[1])}" r="1.2" fill="#FFFFFF" opacity=".8"/>`) }
   plush(d, 4.1, 0.9, mt + 0.1, '#F2B5C6')
   plush(d, 3.5, 0.6, mt + 0.1, '#B9A3E0')
   openDiary(d, 1.2, 2.3, mt + 0.08, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, 0.35, 0.35, 4.7, 3.9, ph, ph + 4.4, S.bedWood === WOODS.white.c ? '#E9DFF2' : S.bedWood)
   spots.bed = bounds([[0.2, 0.2, 0], [5.0, 0.2, 0], [5.0, 4.2, 0], [0.2, 4.2, 0], [0.3, 0.3, 2.5]], 0)
   E()
   at(1.6, 0)
   // a little low table on the platform with a lamp shaped like a cloud
   d.box(6.2, 1.4, ph, 2.4, 1.6, 0.6, ['#FFFFFF', '#F4EEF2', '#EAE2EA'])
-  const cl = P(7.6, 2.1, ph + 0.6)
-  d.raw(`<path d="M${f(cl[0] - 9)},${f(cl[1] - 2)} q-3,-9 5,-9 q3,-7 9,-2 q8,-2 7,6 q4,5 -3,6 h-15 q-6,-1 -3,-1z" fill="${lit ? '#FFF1D6' : '#EFE4FB'}" stroke="#D9C9EE" stroke-width=".6"/>`)
-  if (lit) glow(cl[0], cl[1] - 6, 36)
+  smallLamp(d, 7.6, 2.1, ph + 0.6, room.lampStyle === 'table' ? 'cloud' : room.lampStyle, lit, glow)
+  spots.lamp = lampSpot(7.6, 2.1, ph + 0.6)
   mug(d, 6.7, 1.9, ph + 0.6, '#B9A3E0', true)
 
   at(0, 0.8)
@@ -2665,7 +2916,15 @@ function pastelScene(S) {
   G('desk')
   const dx = 1.9, dy0 = 5.0, dy1 = 8.4, top = 2.5
   d.shadow(0, dy0 - 0.1, dx + 0.3, dy1 + 0.2, 0.14)
-  ;[[0.15, dy0 + 0.1], [dx - 0.25, dy0 + 0.1], [0.15, dy1 - 0.25], [dx - 0.25, dy1 - 0.25]].forEach(([x, y]) => d.box(x, y, 0, 0.12, 0.12, top - 0.15, S.deskWood))
+  if (room.deskStyle === 'trestle') {
+    ;[dy0 + 0.35, dy1 - 0.35].forEach((y) => { d.line([[0.2, y, 0], [dx - 0.2, y, top - 0.15]], shade(S.deskWood, -0.12), 3); d.line([[dx - 0.2, y, 0], [0.2, y, top - 0.15]], shade(S.deskWood, -0.12), 3) })
+  } else {
+    ;[[0.15, dy0 + 0.1], [dx - 0.25, dy0 + 0.1], [0.15, dy1 - 0.25], [dx - 0.25, dy1 - 0.25]].forEach(([x, y]) => d.box(x, y, 0, 0.12, 0.12, top - 0.15, S.deskWood))
+    if (room.deskStyle === 'drawers') {
+      d.box(0.1, dy1 - 1.4, 0, dx - 0.2, 1.3, top - 0.15, [shade(S.deskWood, 0.08), S.deskWood, shade(S.deskWood, -0.08)])
+      ;[0.4, 1.1, 1.75].forEach((z) => { const k = P(dx - 0.09, dy1 - 0.75, z); d.raw(`<ellipse cx="${f(k[0])}" cy="${f(k[1])}" rx="1.6" ry="1" fill="${shade(S.deskWood, -0.3)}"/>`) })
+    }
+  }
   d.box(0, dy0, top - 0.15, dx, dy1 - dy0, 0.15, [shade(S.deskWood, 0.08), S.deskWood, shade(S.deskWood, -0.08)])
   d.box(0.3, 6.0, top, 0.2, 1.6, 1.2, ['#3A3350', '#2E2840', '#25202F'])
   d.poly([[0.51, 6.08, top + 0.1], [0.51, 7.52, top + 0.1], [0.51, 7.52, top + 1.1], [0.51, 6.08, top + 1.1]], lit ? '#B9A3E0' : '#D7E6F5')
@@ -2689,16 +2948,27 @@ function pastelScene(S) {
   G('chair')
   const ch = P(2.7, 6.7, 0)
   d.raw(`<ellipse cx="${f(ch[0])}" cy="${f(ch[1] + 1)}" rx="14" ry="5" fill="#000" opacity=".12" filter="url(#soft)"/>`)
-  d.cylinder(2.7, 6.7, 0.2, 0.07, 1.0, '#E3D6E6')
-  soft(d, 2.1, 6.1, 1.2, 1.3, 1.3, 0.35, [shade(S.chair, 0.1), S.chair, shade(S.chair, -0.08)], 0.5, 1)
-  soft(d, 3.25, 6.0, 1.3, 0.4, 1.5, 1.6, [shade(S.chair, 0.1), S.chair, shade(S.chair, -0.08)], 0.25)
+  const cc = [shade(S.chair, 0.1), S.chair, shade(S.chair, -0.08)]
+  if (room.chairStyle === 'stool') {
+    ;[[-0.35, -0.35], [0.35, -0.35], [-0.35, 0.35], [0.35, 0.35]].forEach(([a, b2]) => d.line([[2.7 + a * 0.4, 6.7 + b2 * 0.4, 1.2], [2.7 + a, 6.7 + b2, 0]], '#E3D6E6', 2))
+    d.cylinder(2.7, 6.7, 1.2, 0.6, 0.32, S.chair)
+  } else if (room.chairStyle === 'classic') {
+    ;[[2.15, 6.15], [3.15, 6.15], [2.15, 7.15], [3.15, 7.15]].forEach(([x, y]) => d.box(x, y, 0, 0.12, 0.12, 1.2, shade(S.deskWood, -0.1)))
+    soft(d, 2.1, 6.1, 1.2, 1.3, 1.3, 0.35, cc, 0.5, 1)
+    soft(d, 3.25, 6.0, 1.3, 0.4, 1.5, 1.6, cc, 0.25)
+  } else {
+    d.cylinder(2.7, 6.7, 0.2, 0.07, 1.0, '#E3D6E6')
+    soft(d, 2.1, 6.1, 1.2, 1.3, 1.3, 0.35, cc, 0.5, 1)
+    soft(d, 3.25, 6.0, 1.3, 0.4, 1.5, 1.6, cc, 0.25)
+  }
   spots.chair = screenSpot(ch[0] - 16, ch[1] - 40, 34, 44)
   E()
   at(0, 1.9)
   // a white cube shelf by the door, full of books and toys
   G('shelf')
-  spots.shelf = bookcase(d, { y0: 8.6, len: 1.3, depth: 1.1, h: 2.4, levels: [0.12, 1.25], wood: S.shelfWood, books, plushTop: false })
-  plush(d, 0.55, 9.25, 2.52, '#A7D3C0')
+  const sh = shelfSize(room)
+  spots.shelf = bookcase(d, { y0: 8.6, len: 1.3, depth: 1.1, ...sh, wood: S.shelfWood, books, plushTop: false })
+  plush(d, 0.55, 9.25, sh.h + 0.12, '#A7D3C0')
   E()
   at(1.0, 1.4)
   // a fluffy cloud rug and a bean bag
@@ -2708,9 +2978,10 @@ function pastelScene(S) {
   d.raw(`<path d="M${f(rc[0] - 36)},${f(rc[1] + 4)} q-8,-12 6,-14 q4,-12 18,-8 q10,-10 24,-2 q16,-2 14,10 q10,8 -2,14 q-6,8 -20,5 q-10,6 -22,0 q-16,4 -18,-5z" fill="${S.rug || 'none'}"/><path d="M${f(rc[0] - 20)},${f(rc[1] - 2)} q8,-4 16,0 M${f(rc[0] + 6)},${f(rc[1] - 8)} q8,-2 12,4" stroke="#EFE7F2" stroke-width="1.2" fill="none"/>`)
   E()
   at(2.1, 0.6)
-  soft(d, 7.9, 5.1, 0, 1.6, 1.5, 1.0, ['#C7B4EC', '#B9A3E0', '#A892D2'], 0.75, 2)
+  soft(d, 6.6, 8.7, 0, 1.6, 1.5, 1.0, ['#C7B4EC', '#B9A3E0', '#A892D2'], 0.75, 2)
   at(2.0, 0.6)
-  plant(d, 9.5, 4.6, leaves)
+  plant(d, 9.4, 5.9, leaves, room.plantStyle)
+  spots.plant = bounds([[8.9, 5.4, 0], [9.9, 6.4, 0], [8.9, 6.4, 4.5], [9.9, 5.4, 4.5]], 2)
   at(1.6, 0)
   if (sky.beam) d.poly([[6.2, 0.6, 0.92], [9.2, 0.6, 0.92], [8.6, 4.0, 0.92], [5.6, 4.0, 0.92]], 'url(#beam)')
   at(0, 0)
@@ -2723,7 +2994,21 @@ function pastelScene(S) {
   d.raw(`<path transform="translate(${f(hs[0])} ${f(hs[1])}) skewY(30) scale(1.2)" d="M0,5 C-8,-1 -6,-8 -2.5,-8 C-1,-8 0,-7 0,-6 C0,-7 1,-8 2.5,-8 C6,-8 8,-1 0,5z" fill="none" stroke="${sky.lights ? '#FF9EC4' : '#F4A6C4'}" stroke-width="1.6"/>`)
   if (sky.lights) glow(hs[0], hs[1] - 3, 22)
   at(0, 0)
+  extras(S, { clock: { side: 'right', u: 5.0, z: 8.0 }, vase: { x: 0.75, y: 5.45, z: 2.5, at: [0, 0.8] }, deco: { side: 'left', u0: 0.4, u1: 11.6, top: () => 8.0 } })
   livePet(S, { bed: [3.3, 2.9, mt + 0.1], floor: [7.1, 8.5], sill: [9.3, 0.3, 3.05] })
 }
+
+// the three bookcase sizes in the new rooms
+const SHELF_SIZE = { tall: { h: 5.0, levels: [0.12, 1.35, 2.55, 3.75] }, medium: { h: 3.8, levels: [0.12, 1.25, 2.5] }, low: { h: 2.4, levels: [0.12, 1.25] } }
+const shelfSize = (room) => SHELF_SIZE[room.shelfStyle] || SHELF_SIZE.medium
+// small things on the walls, the vase and the clock: each room says where they go
+function extras(S, { clock, vase: v, deco }) {
+  const { d, room, sky, spots, glow } = S
+  if (clock) { at(...(clock.at || [0, 0])); clockOn(d, clock.side, clock.u, clock.z, room.clockStyle); spots.clock = bounds([onWall(clock.side, clock.u - 0.8, clock.z - 0.8), onWall(clock.side, clock.u + 0.8, clock.z - 0.8), onWall(clock.side, clock.u + 0.8, clock.z + 0.8), onWall(clock.side, clock.u - 0.8, clock.z + 0.8)], 2) }
+  if (v) { at(...(v.at || [0, 0])); vase(d, v.x, v.y, v.z, room.vase); spots.vase = bounds([[v.x - 0.4, v.y - 0.4, v.z], [v.x + 0.4, v.y + 0.4, v.z], [v.x - 0.4, v.y + 0.4, v.z + 1.6], [v.x + 0.4, v.y - 0.4, v.z + 1.6]], 3) }
+  if (deco) { at(); wallDeco(d, deco.side, deco.u0, deco.u1, deco.top, room.deco, sky.lights, glow); spots.deco = bounds([onWall(deco.side, deco.u0, deco.top(deco.u0) - 1.6), onWall(deco.side, deco.u1, deco.top(deco.u1) - 1.6), onWall(deco.side, deco.u1, deco.top(deco.u1)), onWall(deco.side, deco.u0, deco.top(deco.u0))], 1) }
+  at()
+}
+const lampSpot = (x, y, z) => bounds([[x - 0.5, y - 0.5, z], [x + 0.5, y + 0.5, z], [x - 0.5, y + 0.5, z + 1.6], [x + 0.5, y - 0.5, z + 1.6]], 3)
 
 const NEW_ROOMS = { cabin: cabinScene, observatory: observatoryScene, seaside: seasideScene, pastel: pastelScene }

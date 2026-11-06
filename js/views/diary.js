@@ -180,7 +180,7 @@ export function mount(el) {
     pendingSave.clear()
     // a neighbour read ahead of time may now be old
     list.forEach(([n, p]) => savePage(n, p).then(() => ahead.delete(Math.floor(n / 2))))
-    if (list.some(([, p]) => hasContent(p))) markDiaryDay(todayISO(), true)
+    if (list.some(([, p]) => hasContent(p))) { markDiaryDay(todayISO(), true); if (list.some(([n]) => n === nextFree)) findNextFree() }
   }, 400)
   const saveSoon = () => { ahead.delete(spread); pendingSave.set(num(0), pages[0]); pendingSave.set(num(1), pages[1]); flushSave() }
 
@@ -202,6 +202,7 @@ export function mount(el) {
     </div>`
   }
 
+  let ideaAt = Math.floor(Date.now() / 86400000) // one question a day; “Another” moves on
   function renderPage(side) {
     const p = pageEls[side]
     const page = pages[side]
@@ -218,6 +219,8 @@ export function mount(el) {
       <div class="items">${free.map(itemHTML).join('')}</div>
       <canvas class="ink-layer" width="${CANVAS_W}" height="${CANVAS_H}" aria-label="Drawing on page ${n + 1}"></canvas>
       <footer class="page-foot"><span class="page-num">${n + 1}</span></footer>
+      ${promptHere(side) ? `<div class="today-q"><p class="tq-kicker">Today’s question</p><p class="tq-text">${esc(PROMPTS[ideaAt % PROMPTS.length])}</p>
+        <div class="tq-actions"><button class="primary small" data-idea-use="${side}">Write about it</button><button class="link-btn" data-tq-next aria-label="Another question">Another one</button></div></div>` : ''}
       ${page.heart ? '<span class="page-ribbon" aria-label="Kept in your Memories">♥</span>' : ''}
 
       ${side === 0
@@ -229,6 +232,23 @@ export function mount(el) {
       img.onload = () => $('canvas', p)?.getContext('2d').drawImage(img, 0, 0)
       img.src = page.ink
     }
+  }
+
+  // the page where you would write next gets a small question, so an empty page is never scary
+  const isEmpty = (pg) => !pg.items.length && !pg.ink
+  let nextFree = -1 // the first empty page after everything you wrote
+  // once you answered today's question, it waits until tomorrow
+  const answered = () => { try { return localStorage.getItem('planner.question') === todayISO() } catch { return false } }
+  const promptHere = (side) => num(side) === nextFree && isEmpty(pages[side]) && !answered()
+  async function findNextFree() {
+    const list = await everyPage()
+    let n = list.length - 1
+    while (n >= 0 && isEmpty(list[n])) n--
+    n++
+    while (isChapter(n)) n++
+    if (n === nextFree) return
+    nextFree = n
+    if (book.isConnected) { renderPage(0); renderPage(1) }
   }
 
   function render() {
@@ -407,6 +427,7 @@ export function mount(el) {
     const item = { id: uid(), rot: 0, ...it }
     pages[side].items.push(item)
     selected = item.id
+    pageEls[side].querySelector('.today-q')?.remove()
     setTool('hand')
     saveSoon()
     if (it.type === 'text') $(`[data-id="${item.id}"] .text`, book)?.focus()
@@ -453,7 +474,6 @@ export function mount(el) {
   function closePop() { $('#d-pop', el).hidden = true; popover = null }
 
   // the writing ideas start at a different one every day
-  let ideaAt = Math.floor(Date.now() / 86400000)
   function openPop(kind, side) {
     const pop = $('#d-pop', el)
     const id = kind + (side ?? '')
@@ -728,10 +748,14 @@ export function mount(el) {
     const trash = t.closest('[data-trash]')
     if (trash) return trashPage(Number(trash.dataset.trash))
     if (t.closest('[data-idea-next]')) { ideaAt++; popover = null; return openPop('idea') }
-    if (t.closest('[data-idea-use]')) {
+    if (t.closest('[data-tq-next]')) { ideaAt++; return render() }
+    const use = t.closest('[data-idea-use]')
+    if (use) {
       const q = PROMPTS[ideaAt % PROMPTS.length]
       closePop()
-      const side = pages[0].items.filter((i) => i.type === 'text').length < 4 ? 0 : 1
+      const side = use.dataset.ideaUse !== '' ? Number(use.dataset.ideaUse) : pages[0].items.filter((i) => i.type === 'text').length < 4 ? 0 : 1
+      pageEls[side].querySelector('.today-q')?.remove()
+      try { localStorage.setItem('planner.question', todayISO()) } catch { /* private window */ }
       const used = pages[side].items.filter((i) => i.type === 'text').length
       const y = Math.min(8 + used * 13, 76)
       pages[side].items.push({ id: uid(), rot: 0, type: 'text', x: 8, y, w: 84, text: q, color: '#8E74C4', fs: 4.4 })
@@ -1054,7 +1078,7 @@ export function mount(el) {
 
   ensureBook().then(() => {
     const { count: c, spread: s } = getState().diaryBook
-    openSpread(Math.min(s, Math.max(0, c / 2 - 1)))
+    openSpread(Math.min(s, Math.max(0, c / 2 - 1))).then(findNextFree)
     // coming from the chest in the room
     if (location.hash.endsWith('/memories')) { history.replaceState(null, '', '#diary'); openMemories() }
   })

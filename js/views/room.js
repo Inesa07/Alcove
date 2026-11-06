@@ -2,8 +2,8 @@ import * as db from '../db.js'
 // "My room": the room fills the page. Objects open their pages,
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
-import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS } from '../store.js'
-import { drawRoom, roomTheme, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM } from '../room.js'
+import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS, setField } from '../store.js'
+import { drawRoom, roomTheme, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, stylesFor, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
 import { $, esc, toast, moodFace } from '../ui.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
@@ -22,15 +22,21 @@ const PARTS = {
   window: { name: 'Window', options: [['Your own view', 'windowPhoto', 'photo']] },
   walls: { name: 'Walls', options: [['Colour', 'wall', WALLS], ['Texture', 'wallStyle', 'styles']] },
   floor: { name: 'Floor', options: [['Colour', 'floor', FLOORS], ['Pattern', 'floorStyle', 'styles']] },
+  lamp: { name: 'Lamp', options: [['Style', 'lampStyle', 'styles']] },
+  plant: { name: 'Plant', options: [['Style', 'plantStyle', 'styles']] },
+  vase: { name: 'Flowers', options: [['Flowers', 'vase', 'styles']] },
+  clock: { name: 'Clock', options: [['Clock', 'clockStyle', 'styles']] },
+  deco: { name: 'Wall decoration', options: [['Decoration', 'deco', 'styles']] },
 }
 // Every room has its own furniture; in each one you can change the colours of everything
 const CAN = {
-  bed: ['bedWood', 'blanket', 'pet', 'petColor', 'petName'], shelf: ['shelfWood'], desk: ['deskWood'], chair: ['chairColor'],
+  bed: ['bedStyle', 'bedWood', 'blanket', 'pet', 'petColor', 'petName'], shelf: ['shelfStyle', 'shelfWood'], desk: ['deskStyle', 'deskWood'], chair: ['chairStyle', 'chairColor'],
   rug: ['rug'], art: ['art'], window: ['windowPhoto'], walls: ['wall'], floor: ['floor'],
+  lamp: ['lampStyle'], plant: ['plantStyle'], vase: ['vase'], clock: ['clockStyle'], deco: ['deco'],
 }
 const canIn = (theme, id) => !(theme === 'seaside' && id === 'desk') && CAN[id] // the seaside studio has a wall calendar, not a desk
 // Order matters: later ones sit on top, so furniture wins over walls and floor.
-const DECOR_ORDER = ['window', 'art', 'rug', 'desk', 'chair', 'shelf', 'bed']
+const DECOR_ORDER = ['window', 'deco', 'art', 'clock', 'rug', 'desk', 'chair', 'shelf', 'bed', 'plant', 'lamp', 'vase'] // small things last so they stay tappable
 
 const swatchColor = (v) => v.c ?? v.l?.[0] ?? v.a ?? v.base ?? null
 
@@ -98,6 +104,7 @@ export function mount(el) {
     const list = [...s.books].sort((a, b) => ((b.status === 'reading') - (a.status === 'reading')) || (b.createdAt || 0) - (a.createdAt || 0))
     const { svg, spots, shapes, bookSpots } = drawRoom({
       windowPhoto,
+      gifts: s.gifts || [],
       memories: (s.diaryBook.hearts || []).length,
       moods: Object.entries(s.moods || {}).filter(([d]) => d.slice(0, 7) === today.slice(0, 7)).sort().map(([, v]) => MOODS[v - 1].c),
       bookList: list.map((b) => ({ id: b.id, title: b.title, author: b.author, color: b.color, cover: covers.get(b.id)?.src })),
@@ -137,6 +144,7 @@ export function mount(el) {
         </a>`
       }).join('')
     }
+    if (!decorating && spots.gifts) overlay += spots.gifts.map((b, i) => { const g = s.gifts.slice(-3)[i]; return `<button class="pet-spot gift-spot" data-gift="${esc(g.id)}" style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%" aria-label="${esc(GIFTS[g.kind] || 'A gift')} from ${esc(g.from)}"></button>` }).join('')
     if (!decorating && spots.jar) overlay += `<button class="pet-spot jar-spot" data-jar style="left:${spots.jar.l}%;top:${spots.jar.t}%;width:${spots.jar.w}%;height:${spots.jar.h}%" aria-label="Mood jar: how are you today?"></button>`
     if (!decorating && spots.pet) {
       const pn = room().petName || (room().pet === 'dog' ? 'your dog' : 'your cat')
@@ -159,7 +167,7 @@ export function mount(el) {
   /* ---------- top bar ---------- */
 
   function renderTop() {
-    $('#room-hint', el).textContent = decorating ? 'Tap the bed, shelf, desk, chair, rug, picture, window, walls or floor to change it' : 'Tap something in your room'
+    $('#room-hint', el).textContent = decorating ? 'Tap anything in the room: the bed, lamp, clock, plant, flowers, walls… Each has 3 styles' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-amb aria-expanded="${!$('#amb', el).hidden}" aria-label="Weather and sounds">
@@ -195,7 +203,7 @@ export function mount(el) {
         return `<section><h3>${label}</h3><input class="decor-input" data-set-text="${key}" maxlength="20" placeholder="Mochi" value="${esc(r[key] || '')}"></section>`
       }
       if (list === 'styles') {
-        return `<section><h3>${label}</h3><div class="chips">${Object.entries(STYLES[key]).map(([id, name]) =>
+        return `<section><h3>${label}</h3><div class="chips">${Object.entries(stylesFor(roomTheme(r.theme), key)).map(([id, name]) =>
           `<button class="chip ${r[key] === id ? 'on' : ''}" data-set="${key}" data-val="${id}" aria-pressed="${r[key] === id}">${esc(name)}</button>`).join('')}</div></section>`
       }
       return `<section><h3>${label}</h3><div class="swatches" role="radiogroup" aria-label="${label}">${Object.entries(list).map(([id, v]) => {
@@ -275,6 +283,33 @@ export function mount(el) {
     if (m) { setMood(todayISO(), Number(m.dataset.jarMood)); openMoodJar() }
   })
 
+  /* ---------- gifts from friends ---------- */
+
+  const giftDlg = document.createElement('dialog')
+  giftDlg.className = 'sheet-dialog gift-dialog'
+  el.appendChild(giftDlg)
+  function openGift(id) {
+    const g = (getState().gifts || []).find((x) => x.id === id)
+    if (!g) return
+    const name = GIFTS[g.kind] || 'A gift'
+    const words = g.text && g.text !== name ? `<p class="gift-words">“${esc(g.text)}”</p>` : ''
+    giftDlg.innerHTML = `<div class="book-form gift-card">
+      <img class="gift-img" src="${'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(giftSVG(g.kind))}" alt="">
+      <h3>${esc(name)} from ${esc(g.from)}</h3>${words}
+      <p class="muted">${new Date(g.at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}</p>
+      <div class="bf-actions"><button class="ghost" data-gift-away="${esc(g.id)}">Put it away</button><span class="grow"></span><button class="primary" data-gift-close>Keep it here</button></div></div>`
+    if (!giftDlg.open) giftDlg.showModal()
+  }
+  giftDlg.addEventListener('click', (e) => {
+    if (e.target === giftDlg || e.target.closest('[data-gift-close]')) return giftDlg.close()
+    const away = e.target.closest('[data-gift-away]')
+    if (away) {
+      setField({ gifts: (getState().gifts || []).filter((g) => g.id !== away.dataset.giftAway) })
+      giftDlg.close()
+      toast('Put away. Thank you for the gift!')
+    }
+  })
+
   /* ---------- choosing a whole room ---------- */
 
   const looks = {}
@@ -331,6 +366,8 @@ export function mount(el) {
     if (t.closest('[data-gallery]')) return openGallery()
     if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
     if (t.closest('[data-jar]')) return openMoodJar()
+    const gf = t.closest('[data-gift]')
+    if (gf) return openGift(gf.dataset.gift)
     if (t.closest('[data-amb]')) return toggleAmb()
     if (t.closest('[data-seasonal]')) { setRoom({ seasonal: getState().room.seasonal === 'off' ? 'on' : 'off' }); renderRoom(); renderAmb(); return }
     const snd = t.closest('[data-sound]')
