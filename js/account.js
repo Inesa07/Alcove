@@ -65,7 +65,7 @@ function forms() {
 }
 
 function paintGate() {
-  $('.auth-card', gate).innerHTML = `<div class="auth-brand">Planner</div>${forms()}`
+  $('.auth-card', gate).innerHTML = `<div class="auth-brand">Alcove</div><p class="auth-tag">your cozy corner for days, books and thoughts</p>${forms()}`
   $('.auth-card input', gate)?.focus()
 }
 
@@ -150,7 +150,7 @@ function setupMenu() {
       <p class="acc-who">${esc(i.email)}</p>
       <p class="acc-msg ${i.status === 'error' ? 'bad' : ''}">${line}</p>
       <p class="acc-privacy">We collect anonymous usage statistics (like which pages are opened) to improve the app. What you write is never part of them.</p>
-      <p><a class="link-btn" href="#year" data-close>See your year in Planner</a> · <button type="button" class="link-btn" data-close data-tour>Show me around again</button></p>
+      <p><a class="link-btn" href="#year" data-close>See your year in Alcove</a> · <button type="button" class="link-btn" data-close data-tour>Show me around again</button></p>
       ${i.email === OWNER ? '<p><a class="link-btn" href="#admin" data-close>Open your app statistics</a></p>' : ''}
       <p class="acc-label">Look</p>
       <div class="seg acc-theme" role="radiogroup" aria-label="Look">${[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Like my device']].map(([k, v]) => `<button type="button" role="radio" aria-checked="${themeMode() === k}" data-theme-pick="${k}">${v}</button>`).join('')}</div>

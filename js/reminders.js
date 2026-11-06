@@ -22,8 +22,8 @@ async function show(ev) {
   if (permission() !== 'granted') return
   try {
     const reg = await navigator.serviceWorker?.getRegistration()
-    if (reg) reg.showNotification('Planner', { body, icon: 'icons/icon-192.png', tag: ev.id })
-    else new Notification('Planner', { body, icon: 'icons/icon-192.png' })
+    if (reg) reg.showNotification('Alcove', { body, icon: 'icons/icon-192.png', tag: ev.id })
+    else new Notification('Alcove', { body, icon: 'icons/icon-192.png' })
   } catch { /* some browsers block notifications from pages */ }
 }
 

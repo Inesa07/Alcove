@@ -15,7 +15,7 @@ function bars(rows, total) {
 }
 
 export function mount(el) {
-  el.innerHTML = `<section class="admin"><header class="page-head"><div><h2>Your app</h2><p>How people use Planner. Only you can see this page.</p></div></header><div id="ad-body"><p class="muted">Loading…</p></div></section>`
+  el.innerHTML = `<section class="admin"><header class="page-head"><div><h2>Your app</h2><p>How people use Alcove. Only you can see this page.</p></div></header><div id="ad-body"><p class="muted">Loading…</p></div></section>`
   const body = $('#ad-body', el)
   const me = sync.currentUser()
   if (!me || me.email !== OWNER_EMAIL) { body.innerHTML = '<p class="muted">This page is only for the owner of the app.</p>'; return }

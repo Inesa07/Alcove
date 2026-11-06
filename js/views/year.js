@@ -1,4 +1,4 @@
-// "Your year": a few cards that tell the story of your year in Planner, like a yearly wrap-up.
+// "Your year": a few cards that tell the story of your year in Alcove, like a yearly wrap-up.
 // Everything is counted here on your device from your own data.
 
 import { getState, MOODS, todayISO } from '../store.js'
@@ -76,7 +76,7 @@ function cards(t) {
   const name = getState().name
   const list = []
   const p = persona(t)
-  list.push({ id: 'intro', cls: 'c0', art: 'stars', html: `<p class="yr-kicker">Planner · your year</p><div class="yr-big">${t.year}</div><h2>${name ? esc(name) + ', this' : 'This'} was your year</h2><p>Sit back. Here is your year, one card at a time.</p>` })
+  list.push({ id: 'intro', cls: 'c0', art: 'stars', html: `<p class="yr-kicker">Alcove · your year</p><div class="yr-big">${t.year}</div><h2>${name ? esc(name) + ', this' : 'This'} was your year</h2><p>Sit back. Here is your year, one card at a time.</p>` })
   list.push({ id: 'diary', cls: 'c1', art: 'pen', html: `<p class="yr-kicker">Your diary</p>${count(t.days)}<h2>${t.days === 1 ? 'day' : 'days'} you wrote or drew</h2>
     ${t.run > 1 ? `<p>Your longest streak: <b>${t.run} days</b> in a row.</p>` : '<p>Every page is a small piece of your year.</p>'}
     <div class="yr-bars">${t.writeMonth.map((n, i) => `<i style="--h:${(n / Math.max(1, ...t.writeMonth)) * 100}%;--d:${i * 50}ms" title="${MONTHS[i]}: ${n}"><span>${MONTHS[i][0]}</span></i>`).join('')}</div>
@@ -175,7 +175,7 @@ async function storyCanvas(id, t) {
   const line = (txt, y, size = 40, alpha = 0.9) => { g.globalAlpha = alpha; g.font = `${size}px ${sans}`; const ny = wrapText(g, txt, W / 2, y, W - 180, size * 1.35, 3); g.globalAlpha = 1; return ny }
   const doneYear = t.books
 
-  if (id === 'intro') { kicker(`Planner · ${t.year}`, 520); big(t.year, 900, 260); title(name ? `${name}, this was your year` : 'This was your year', 1100) }
+  if (id === 'intro') { kicker(`Alcove · ${t.year}`, 520); big(t.year, 900, 260); title(name ? `${name}, this was your year` : 'This was your year', 1100) }
   if (id === 'diary') {
     kicker('My diary'); big(t.days, 640); title(t.days === 1 ? 'day I wrote or drew' : 'days I wrote or drew', 780)
     const max = Math.max(1, ...t.writeMonth), bw = 52, gap = 18, x0 = (W - 12 * bw - 11 * gap) / 2
@@ -239,7 +239,7 @@ async function storyCanvas(id, t) {
     const p = persona(t); kicker('My year in one word', 520); g.font = `220px ${sans}`; g.fillText(p[2], W / 2, 860); title(p[0], 1060, 100); line(p[1], 1200, 44)
   }
   if (id === 'summary') {
-    const p = persona(t); kicker(`Planner · ${t.year}`, 200); g.font = `italic 96px ${serif}`; g.fillText(name ? `${name}’s year` : 'My year', W / 2, 330)
+    const p = persona(t); kicker(`Alcove · ${t.year}`, 200); g.font = `italic 96px ${serif}`; g.fillText(name ? `${name}’s year` : 'My year', W / 2, 330)
     const room = await roomImage(t); if (room) g.drawImage(room, (W - 780) / 2, 380, 780, 760)
     const stats = [[t.days, 'diary days'], [t.books, 'books'], [t.events, 'plans'], [t.topMood ? t.topMood.name : '–', 'mood']]
     stats.forEach(([v, l], i) => {
@@ -252,7 +252,7 @@ async function storyCanvas(id, t) {
     line(p[1], 1610, 40, 0.85)
   }
   // a small signature at the bottom of every picture
-  g.globalAlpha = 0.75; g.font = `italic 40px ${serif}`; g.fillText('Planner', W / 2, H - 110)
+  g.globalAlpha = 0.75; g.font = `italic 40px ${serif}`; g.fillText('Alcove', W / 2, H - 110)
   g.font = `28px ${sans}`; g.fillText('my year · ' + t.year, W / 2, H - 66); g.globalAlpha = 1
   return c
 }
@@ -264,7 +264,7 @@ async function shareCard(id, t) {
   const file = new File([blob], `my-${t.year}-${id}.png`, { type: 'image/png' })
   window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'year_shared', props: { card: id } } }))
   if (navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: `My ${t.year} in Planner` }); return } catch (e) { if (e?.name === 'AbortError') return }
+    try { await navigator.share({ files: [file], title: `My ${t.year} in Alcove` }); return } catch (e) { if (e?.name === 'AbortError') return }
   }
   const a = document.createElement('a')
   a.download = file.name
@@ -283,7 +283,7 @@ async function shareAll(ids, t) {
   const files = await Promise.all(canvases.map((c, i) => new Promise((ok) => c.toBlob((b) => ok(new File([b], `my-${t.year}-${i + 1}-${ids[i]}.png`, { type: 'image/png' })), 'image/png'))))
   window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'year_shared', props: { card: 'all' } } }))
   if (navigator.canShare?.({ files })) {
-    try { await navigator.share({ files, title: `My ${t.year} in Planner` }); return } catch (e) { if (e?.name === 'AbortError') return }
+    try { await navigator.share({ files, title: `My ${t.year} in Alcove` }); return } catch (e) { if (e?.name === 'AbortError') return }
   }
   const cols = Math.min(5, canvases.length), rows = Math.ceil(canvases.length / cols), w = 432, h = 768, gap = 24
   const sheet = document.createElement('canvas')

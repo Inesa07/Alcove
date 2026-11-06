@@ -1,6 +1,6 @@
 {
-  "name": "Planner",
-  "short_name": "Planner",
+  "name": "Alcove",
+  "short_name": "Alcove",
   "description": "A cozy room that is your planner and diary.",
   "start_url": ".",
   "display": "standalone",
