@@ -1,14 +1,86 @@
 # Planner
 
-**A cozy room that is your planner and diary.** Every object in the room opens a part of your life: the diary on the bed, books on the shelf, notes on the corkboard, plans on the desk calendar.
+**A cozy little room that is your planner and diary.**
 
-**Live:** https://inesa07.github.io/Planner/
+Instead of menus and lists, you get a small room. Every object in it opens one part of your life: tap the **bed** to write in your diary, the **bookshelf** for your books, the **corkboard** for notes and the **desk calendar** for your plans. The room grows with you: books appear on the shelf, the plant gets a new leaf every day you write, and the window shows the real time of day and weather.
 
-![My room](docs/room.jpg)
+### 👉 [Open Planner](https://inesa07.github.io/Planner/)
+
+Free, works in any browser on a computer or a phone, and you can install it like an app. Your diary is private: friends can visit your room, but never read your diary.
+
+<p align="center"><img src="docs/rooms.gif" width="560" alt="The four rooms: a Nordic cabin, a night observatory, a seaside studio and a pastel room"></p>
 
 ---
 
-## Case study
+## How it works
+
+| Tap in the room | What opens |
+| --- | --- |
+| 🛏 The bed | **Diary**: a real little book you write, draw and put stickers and photos in |
+| 📚 The bookshelf | **Books**: what you read, your progress, quotes and a yearly goal |
+| 📌 The corkboard | **Notes**: quick things to remember, pinned on coloured paper |
+| 📅 The desk calendar | **Calendar**: plans by day, week or month, with reminders |
+| 🫙 The mood jar | **Moods**: one marble a day in the colour of how you felt |
+| 🐱 Your pet | Say hi. It sleeps, plays and moves around the room through the day |
+
+A short tour shows each of these the first time you open the app.
+
+![My room](docs/room.jpg)
+
+## What you can do
+
+### ✏️ Write in a diary that feels like paper
+Pages turn like a book. Type, draw with a pen, add stickers and photos, and move them between pages. Make a page a tracker, a to-do list, goals or a month plan. Keep your favourite pages in **Memories**, search everything you wrote, and save the whole diary as a PDF.
+
+When you don't know what to write, the next empty page asks you **one small question a day**. Every 20 pages a colourful **chapter cover** begins a new part of your story.
+
+<p>
+  <img src="docs/diary.jpg" width="49%" alt="Writing in the diary">
+  <img src="docs/chapter.jpg" width="49%" alt="A chapter cover every 20 pages">
+</p>
+
+### 📚 Keep track of your books, notes and plans
+Add the books you read and they appear on your shelf. Pin notes on a corkboard with fairy lights. Plan your days in the calendar and get a reminder on time.
+
+<p>
+  <img src="docs/books.jpg" width="32.5%" alt="Books">
+  <img src="docs/notes.jpg" width="32.5%" alt="Notes on the corkboard">
+  <img src="docs/calendar.jpg" width="32.5%" alt="Calendar">
+</p>
+
+### 🛋 Make the room yours
+Choose one of four rooms, each with its own shape: a **Nordic cabin**, a **night observatory**, a **seaside studio** or a **pastel room**. In **Decorate**, every piece has 3 styles: the bed, bookshelf, desk, chair, lamp, plant, flowers, clock and wall decoration. Change the colours, pick a cat or a dog and give it a name, or put your own photo in the window.
+
+<p>
+  <img src="docs/rooms.jpg" width="49%" alt="Choose your room">
+  <img src="docs/decorate.jpg" width="49%" alt="Decorate: three styles for every piece">
+</p>
+
+![The same room in three different styles](docs/styles.jpg)
+
+The room also follows real life: day and night in the window, the real weather where you live (rain, snow, sun), pumpkins in autumn, a little tree in December. You can turn on quiet sounds too: rain, a fireplace, birds or the sea.
+
+### 💌 Visit friends
+Share your friend code. You can visit each other's rooms, play with their pet, leave a note on their board, or leave a **gift**: flowers, a present, a teddy bear, a candle or a balloon that stands in their room.
+
+![A friend's room](docs/friend.jpg)
+
+### ✨ See your year
+Open a short story of your year, like Spotify Wrapped: the days you wrote, your favourite book, your mood, your plans. Share all the cards at once with friends.
+
+<p>
+  <img src="docs/year.jpg" width="49%" alt="Your year">
+  <img src="docs/night-snow.jpg" width="49%" alt="The room in the evening">
+</p>
+
+### 📱 On your phone too
+Everything syncs between your phone and computer when you sign in. It also works offline.
+
+<p align="center"><img src="docs/phone.jpg" width="280" alt="Planner on a phone"></p>
+
+---
+
+## Case study (for product people)
 
 ### The problem
 
@@ -42,28 +114,6 @@ Turn the app into a **place** instead of a list. The home screen is a small isom
 | **Local first** | Everything is saved on the device first, so the app opens instantly and works offline. Sign-in syncs it between phone and computer. |
 | **Removed the "quick capture" field** | It tried to guess where a sentence belongs. It was clever but confusing, and the room already makes each place obvious. |
 
-### Features
-
-- **Diary**: a book that grows without a limit; text, pen, stickers, photos, page styles; drag between pages; rotate; *Keep* a page in the memory chest; recycle bin; search across all pages; save the whole diary as a PDF
-- **Books**: want to read / reading / read, page progress, reading timer, rating, review, quotes (one tap puts a quote in your diary), yearly goal
-- **Notes** on coloured paper, with search
-- **Calendar**: month and week, times and reminders
-- **Mood**: pick how you feel in the menu or in the mood jar; the calendar is tinted by your moods
-- **Weather and sounds**: real weather in the window (Open-Meteo), and quiet room sounds made in the browser (rain, fireplace, birds, sea, summer night)
-- **Friends**: a friend code, visit a friend's room and shelf, leave a note on their board
-- **Your year**: a yearly wrap-up of diary days, books, moods, plans and your room
-- **Light and dark** look, works on phone and computer, installable as an app (PWA)
-- **Onboarding** in three steps: your name, your room, your first thing
-
-<p>
-  <img src="docs/diary.jpg" width="49%" alt="Diary">
-  <img src="docs/rooms.jpg" width="49%" alt="Choose your room">
-  <img src="docs/friend.jpg" width="49%" alt="A friend's room">
-  <img src="docs/year.jpg" width="49%" alt="Your year">
-  <img src="docs/night-snow.jpg" width="49%" alt="Snow outside in the evening">
-  <img src="docs/phone.jpg" width="24%" alt="On a phone">
-</p>
-
 ### Measuring it
 
 The app sends anonymous usage events (which pages are opened, that something was added — never what people write) to a table that only the owner's account can read, enforced by the database itself (row level security). The owner sees an `#admin` page with:
@@ -79,7 +129,7 @@ These answer the main questions of the product: *does the room make people come 
 
 1. Push reminders when the app is closed (needs a small server)
 2. Shared rooms: decorate a room together with a friend
-3. More rooms and furniture, and seasonal items you can keep
+3. Seasonal items you can collect and keep
 4. AI help: "what did I write about Anna this year?" across the diary
 
 ---
@@ -115,6 +165,9 @@ js/weather.js           real weather from Open-Meteo
 js/sounds.js            room sounds made with Web Audio
 js/analytics.js         anonymous usage events
 js/onboarding.js        the three welcome steps
+js/tour.js              the guided tour of the room
+js/chapters.js          chapter covers and the daily questions
+js/templates.js         diary page layouts: tracker, to-do, goals, month
 js/views/*.js           the pages: room, diary, books, notes, calendar, friends, your year, admin
 sw.js                   offline support
 supabase/*.sql          database tables and access rules
