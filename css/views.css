@@ -1268,43 +1268,52 @@ html[data-theme="light"] .wall-pop { background: #fff; border-color: rgba(42,38,
 @media (max-width: 720px) { .head-tools { width: 100%; } .head-tools .search { flex: 1; min-width: 0; } .wall-pop { right: auto; left: 0; width: min(290px, 86vw); } }
 .wall-btn { height: 46px !important; border-radius: 15px !important; } html[data-theme="light"] .wall-btn { color: #2a2638; border-color: rgba(42,38,56,.18); }
 
-/* Harry Potter: an enchanted night ceiling, floating candles, house-colour banners and parchment */
-.sw-magic { background: radial-gradient(circle at 35% 40%, #FFD36B 0 2px, #FFD36B55 3px, transparent 7px), radial-gradient(circle at 65% 30%, #FFD36B 0 2px, #FFD36B55 3px, transparent 7px), linear-gradient(90deg, #7A1F2B 0 18%, transparent 18% 82%, #1F5B3A 82%), linear-gradient(180deg, #1B1D3A, #3B342E); }
+/* Harry Potter: the great hall at night */
+.sw-magic { background: radial-gradient(circle at 35% 42%, #FFE3A0 0 2px, #FFC24A66 3px, transparent 8px), radial-gradient(circle at 62% 30%, #FFE3A0 0 2px, #FFC24A66 3px, transparent 8px), linear-gradient(90deg, #6E1423 0 16%, transparent 16% 84%, #173F2A 84%), linear-gradient(180deg, #0B0F2E, #2B2550 55%, #4a4238); }
 .board[data-wall="magic"] {
   overflow: hidden; padding-top: 0;
   background:
-    linear-gradient(180deg, transparent 0 260px, rgba(0,0,0,.0) 260px),
-    repeating-linear-gradient(0deg, transparent 0 46px, rgba(0, 0, 0, .22) 46px 48px),
-    repeating-linear-gradient(90deg, transparent 0 92px, rgba(0, 0, 0, .18) 92px 94px),
-    linear-gradient(180deg, #14163A 0, #23244A 160px, #3E3730 300px, #4A4238 60%, #3A332B 100%);
-  box-shadow: inset 0 0 0 10px #2A231C, inset 0 0 0 12px #8C6F3A, inset 0 0 120px rgba(0, 0, 0, .6), 0 30px 60px -30px rgba(0, 0, 0, .8);
+    radial-gradient(ellipse 70% 40% at 50% 340px, rgba(255, 190, 110, .28), transparent 70%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0, rgba(0,0,0,0) 300px, rgba(20, 14, 8, .15) 600px, rgba(10, 6, 2, .55) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27240%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%273%27 seed=%273%27/%3E%3CfeColorMatrix values=%270 0 0 0 .2  0 0 0 0 .17  0 0 0 0 .13  0 0 0 .55 0%27/%3E%3C/filter%3E%3Cfilter id=%27m%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.035%27 numOctaves=%273%27 seed=%279%27/%3E%3CfeColorMatrix values=%270 0 0 0 .1  0 0 0 0 .08  0 0 0 0 .06  0 0 0 .9 -.35%27/%3E%3C/filter%3E%3Crect width=%27240%27 height=%27160%27 fill=%27%235a5044%27/%3E%3Crect width=%27240%27 height=%27160%27 filter=%27url%28%23m%29%27/%3E%3Crect width=%27240%27 height=%27160%27 filter=%27url%28%23n%29%27/%3E%3Cg fill=%27none%27 stroke=%27%232b241d%27 stroke-width=%273%27 opacity=%27.85%27%3E%3Cpath d=%27M0 1.5H240M0 41.5H240M0 81.5H240M0 121.5H240%27/%3E%3Cpath d=%27M1.5 0V41M101.5 0V41M181.5 0V41M51.5 41V81M141.5 41V81M221.5 41V81M21.5 81V121M111.5 81V121M191.5 81V121M71.5 121V160M161.5 121V160%27/%3E%3C/g%3E%3Cg fill=%27none%27 stroke=%27%238a7d69%27 stroke-width=%271%27 opacity=%27.35%27%3E%3Cpath d=%27M0 4H240M0 44H240M0 84H240M0 124H240%27/%3E%3C/g%3E%3C/svg%3E") 0 0 / 240px 160px;
+  box-shadow: inset 0 0 0 8px #1d1812, inset 0 0 0 10px #8C6F3A, inset 0 0 0 11px #1d1812, inset 0 0 140px rgba(0, 0, 0, .75), 0 30px 60px -30px rgba(0, 0, 0, .85);
 }
 .board[data-wall="magic"] .board-top { position: static; }
-.magic-top { display: block; width: calc(100% + 56px); margin: 0 -28px -70px; height: auto; pointer-events: none; }
-.magic-top .tw { animation: twinkle 3s ease-in-out infinite; }
-@keyframes twinkle { 50% { opacity: .25 } }
+.magic-top { display: block; width: calc(100% + 56px); height: 360px; margin: 0 -28px -96px; pointer-events: none; -webkit-mask: linear-gradient(#000 50%, rgba(0,0,0,.6) 72%, transparent); mask: linear-gradient(#000 50%, rgba(0,0,0,.6) 72%, transparent); }
+.magic-top .tw { animation: twinkle 3.5s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: .2 } }
 .magic-top .candle { animation: float 5s ease-in-out infinite; }
-.magic-top .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame .9s ease-in-out infinite alternate; }
-.magic-top .banner { transform-box: fill-box; transform-origin: 50% 0; animation: sway 6s ease-in-out infinite; }
-@keyframes float { 50% { transform: translateY(-9px); } }
-@keyframes flame { from { transform: scale(1, 1) rotate(-3deg); } to { transform: scale(.85, 1.12) rotate(3deg); } }
-@keyframes sway { 50% { transform: rotate(1.2deg); } }
-.magic-title { position: relative; margin: 0 0 26px; text-align: center; font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.8vw, 42px); color: #F3DFA6; text-shadow: 0 0 20px rgba(255, 200, 100, .45); }
+.magic-top .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame .7s ease-in-out infinite alternate; }
+.magic-top .banner { transform-box: fill-box; transform-origin: 50% 0; animation: sway 7s ease-in-out infinite; }
+.magic-top .spark { animation: spark 9s linear infinite; }
+@keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+@keyframes flame { from { transform: scale(1, 1) skewX(-3deg); } to { transform: scale(.88, 1.1) skewX(4deg); } }
+@keyframes sway { 50% { transform: rotate(.8deg) skewX(.6deg); } }
+@keyframes spark { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: 1 } 100% { transform: translate(14px, -220px); opacity: 0 } }
+.magic-title { position: relative; margin: 0 0 30px; text-align: center; font-family: 'Cinzel Decorative', var(--serif); font-weight: 700; font-size: clamp(26px, 3.6vw, 44px); letter-spacing: .04em;
+  color: transparent; background: linear-gradient(180deg, #FFF3C8, #E8C46A 45%, #A87A2C 55%, #F4D98C); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 14px rgba(255, 190, 90, .45)) drop-shadow(0 2px 0 #2a1d0a); }
 .board[data-wall="magic"] .note-new, .board[data-wall="magic"] .note-wall { position: relative; z-index: 1; }
-.board[data-wall="magic"] .note { --tilt: 0deg; clip-path: none !important; filter: none !important; border-radius: 3px;
-  background: radial-gradient(ellipse at 50% 50%, #F1E2BC 40%, #E2C990 85%, #C9A86A 100%) !important;
-  box-shadow: inset 0 0 18px rgba(120, 80, 30, .35), 0 20px 30px -16px rgba(0, 0, 0, .8) !important; }
+.board[data-wall="magic"] .note { --tilt: 0deg; filter: drop-shadow(0 14px 14px rgba(0, 0, 0, .55)) !important; box-shadow: none !important; border-radius: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(120, 70, 20, .45) 100%), url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Cfilter id=%27p%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.012%27 numOctaves=%275%27 seed=%274%27/%3E%3CfeColorMatrix values=%270 0 0 0 .55  0 0 0 0 .38  0 0 0 0 .16  0 0 0 .55 -.12%27/%3E%3C/filter%3E%3Cfilter id=%27f%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.8%27 numOctaves=%272%27 seed=%272%27/%3E%3CfeColorMatrix values=%270 0 0 0 .4  0 0 0 0 .3  0 0 0 0 .15  0 0 0 .18 0%27/%3E%3C/filter%3E%3Crect width=%27300%27 height=%27300%27 fill=%27%23EEDDB4%27/%3E%3Crect width=%27300%27 height=%27300%27 filter=%27url%28%23p%29%27/%3E%3Crect width=%27300%27 height=%27300%27 filter=%27url%28%23f%29%27/%3E%3C/svg%3E") 0 0 / 300px 300px !important;
+  clip-path: polygon(0 3px, 7% 0, 15% 4px, 24% 1px, 33% 5px, 41% 1px, 52% 4px, 60% 0, 69% 3px, 78% 0, 88% 4px, 95% 1px, 100% 4px, 99% 25%, 100% 50%, 98.5% 76%, 100% 100%, 92% calc(100% - 4px), 83% 100%, 72% calc(100% - 3px), 62% 100%, 50% calc(100% - 5px), 40% 100%, 30% calc(100% - 3px), 19% 100%, 9% calc(100% - 4px), 0 100%, 1.5% 74%, 0 48%, 1% 22%) !important; padding-top: 34px !important; }
 .board[data-wall="magic"] .note::before { display: none; }
-.board[data-wall="magic"] .note-text { font-family: var(--serif) !important; font-style: italic; color: #3B2414 !important; font-size: 19px !important; padding-left: 0 !important; }
-.board[data-wall="magic"] .note footer { color: #7A5A36; }
-.board[data-wall="magic"] .note .hold { top: -12px; left: 50%; width: 30px; height: 30px; margin-left: -15px; border: 0; transform: rotate(-6deg); clip-path: none; border-radius: 47% 53% 50% 48%;
-  background: radial-gradient(circle at 38% 32%, #C8434F, #6E141F 75%); box-shadow: 0 2px 4px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.1); }
-.board[data-wall="magic"] .note .hold::after { content: '✦'; position: absolute; inset: 0; display: grid; place-items: center; color: #F2C9A0; font-size: 13px; }
-.board[data-wall="magic"] .pola-photo { filter: sepia(.6) contrast(1.05); }
-.board[data-wall="magic"] .pad { background: radial-gradient(ellipse at 50% 50%, #F1E2BC 40%, #E2C990 90%); box-shadow: inset 0 0 22px rgba(120, 80, 30, .35), 0 18px 30px -16px #000; }
+.board[data-wall="magic"] .note-text { font-family: 'IM Fell English', var(--serif) !important; font-style: italic; color: #2B1A0C !important; font-size: 20px !important; line-height: 1.35 !important; padding-left: 0 !important; }
+.board[data-wall="magic"] .note footer { color: #7A5A36; font-family: 'IM Fell English', var(--serif); }
+.board[data-wall="magic"] .note .hold { top: 6px; left: 50%; width: 32px; height: 32px; margin-left: -16px; border: 0; transform: rotate(-8deg); clip-path: none;
+  border-radius: 46% 54% 51% 49% / 53% 47% 53% 47%; background: radial-gradient(circle at 38% 30%, #D2505C, #8A1A26 55%, #5A0D16); box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 0 0 4px rgba(0,0,0,.12), inset 0 0 0 5px rgba(255,255,255,.08); }
+.board[data-wall="magic"] .note .hold::after { content: '✶'; position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255, 210, 180, .55); font-size: 15px; text-shadow: 0 -1px 0 rgba(0,0,0,.4); }
+.board[data-wall="magic"] .pola-photo { filter: sepia(.75) contrast(1.05) brightness(.95); box-shadow: inset 0 0 20px rgba(60, 30, 0, .5); }
+.board[data-wall="magic"] .pad { background: radial-gradient(ellipse at 50% 45%, transparent 60%, rgba(120, 70, 20, .4) 100%), url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Cfilter id=%27p%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.012%27 numOctaves=%275%27 seed=%274%27/%3E%3CfeColorMatrix values=%270 0 0 0 .55  0 0 0 0 .38  0 0 0 0 .16  0 0 0 .55 -.12%27/%3E%3C/filter%3E%3Cfilter id=%27f%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.8%27 numOctaves=%272%27 seed=%272%27/%3E%3CfeColorMatrix values=%270 0 0 0 .4  0 0 0 0 .3  0 0 0 0 .15  0 0 0 .18 0%27/%3E%3C/filter%3E%3Crect width=%27300%27 height=%27300%27 fill=%27%23EEDDB4%27/%3E%3Crect width=%27300%27 height=%27300%27 filter=%27url%28%23p%29%27/%3E%3Crect width=%27300%27 height=%27300%27 filter=%27url%28%23f%29%27/%3E%3C/svg%3E") center / cover; box-shadow: 0 18px 30px -12px rgba(0, 0, 0, .7); border-radius: 2px; }
 .board[data-wall="magic"] .pad::before { display: none; }
-.board[data-wall="magic"] .pad textarea { font-family: var(--serif); font-style: italic; font-size: 21px; color: #3B2414; }
-.board[data-wall="magic"] .pad-kinds { background: rgba(0, 0, 0, .35); }
-.board[data-wall="magic"] .primary { background: linear-gradient(135deg, #F3DFA6, #C9A24E); color: #3B2414; }
-@media (prefers-reduced-motion: reduce) { .magic-top .candle, .magic-top .flame, .magic-top .banner, .magic-top .tw { animation: none; } }
+.board[data-wall="magic"] .pad::after { content: ''; position: absolute; right: -34px; top: -30px; width: 46px; height: 120px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 120'%3E%3Cpath d='M40 2 C20 20 8 50 6 92 L10 94 C16 60 26 30 40 2z' fill='%23F4EFE6'/%3E%3Cpath d='M40 2 C30 30 18 60 10 94' stroke='%23B9A98E' stroke-width='1.2' fill='none'/%3E%3Cpath d='M38 8 l-10 6 M34 18 l-12 7 M30 30 l-12 8 M26 42 l-12 8 M22 54 l-10 8 M18 66 l-8 7' stroke='%23D8CFC0' stroke-width='.8'/%3E%3Cpath d='M6 92 L3 118' stroke='%233a2a1a' stroke-width='2'/%3E%3C/svg%3E") no-repeat; transform: rotate(14deg); filter: drop-shadow(2px 6px 4px rgba(0,0,0,.5)); }
+.board[data-wall="magic"] .pad textarea { font-family: 'IM Fell English', var(--serif); font-style: italic; font-size: 22px; color: #2B1A0C; }
+.board[data-wall="magic"] .pad textarea::placeholder { color: rgba(60, 35, 10, .5); }
+.board[data-wall="magic"] .pad-kinds { background: rgba(0, 0, 0, .45); }
+.board[data-wall="magic"] .primary { background: radial-gradient(circle at 38% 30%, #D2505C, #8A1A26 70%); color: #FBE3C8; font-family: 'Cinzel Decorative', var(--serif); letter-spacing: .03em; box-shadow: 0 6px 14px -6px #000; }
+/* a new note appears with a burst of golden light, as if a spell placed it */
+.board[data-wall="magic"] .just-pinned { animation: spell-in 1s cubic-bezier(.2, .9, .3, 1); }
+@keyframes spell-in { 0% { opacity: 0; transform: scale(.6) rotate(-6deg); filter: drop-shadow(0 0 0 #FFD27A) brightness(2); } 50% { opacity: 1; filter: drop-shadow(0 0 30px #FFD27A) brightness(1.3); } 100% { filter: drop-shadow(0 14px 14px rgba(0,0,0,.55)); } }
+@media (max-width: 720px) { .magic-top { height: 260px; margin-bottom: -60px; } .board[data-wall="magic"] .pad::after { display: none; } }
+@media (prefers-reduced-motion: reduce) { .magic-top .candle, .magic-top .flame, .magic-top .banner, .magic-top .tw, .magic-top .spark { animation: none; } }
 .board[data-wall="magic"] .note-card, .board[data-wall="gothic"] .note-card, .board[data-wall="regency"] .note-card, .board[data-wall="paris"] .note-card { border-top: 0; }

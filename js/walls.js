@@ -141,23 +141,96 @@ function parisTop() {
     <p class="paris-title"><svg class="eiffel-wrap" viewBox="-40 -6 80 170" aria-hidden="true">${tower}</svg>Mes petites notes</p>`
 }
 
-// Harry Potter: an enchanted night ceiling over an old stone hall, floating candles,
-// four long banners in the house colours, and notes on parchment with a wax seal
+// Harry Potter: the great hall at night. An enchanted ceiling with clouds and stars,
+// tall gothic windows of stained glass, house banners with gold fringe,
+// dozens of floating candles at different depths, and golden sparks drifting up
 function magicTop() {
-  const banner = (x, a, b, d) => `<g class="banner" style="animation-delay:${d}s"><path d="M${x - 34} 0 h68 v150 l-34 -22 l-34 22z" fill="${a}"/><path d="M${x - 34} 0 h68 v150 l-34 -22 l-34 22z" fill="url(#cloth)"/>
-    <path d="M${x - 26} 0 v136 M${x + 26} 0 v136" stroke="${b}" stroke-width="3"/><path d="M${x} 40 l16 24 l-16 24 l-16 -24z" fill="none" stroke="${b}" stroke-width="2.5"/><circle cx="${x}" cy="64" r="4" fill="${b}"/>
-    <path d="M${x - 40} 0 h80" stroke="#6B5530" stroke-width="5" stroke-linecap="round"/></g>`
-  const candle = (x, y, h, d) => `<g class="candle" style="animation-delay:${d}s"><circle cx="${x}" cy="${y - 10}" r="20" fill="url(#flame)"/>
-    <rect x="${x - 5}" y="${y}" width="10" height="${h}" rx="2" fill="#F6EEDC"/><path d="M${x - 5} ${y + 2} q3 6 0 ${h * 0.4}" stroke="#E4D7BC" stroke-width="2" fill="none"/>
-    <path d="M${x} ${y} v-4" stroke="#3a2f2a" stroke-width="1.2"/><path class="flame" d="M${x} ${y - 16} q5 7 0 12 q-5 -5 0 -12z" fill="#FFD36B"/></g>`
+  const W = 1000, H = 360
+  // stars, a few of them twinkling
   let stars = ''
-  for (let i = 0; i < 70; i++) stars += `<circle class="${i % 5 ? '' : 'tw'}" cx="${(rnd(i + 3) * 1000).toFixed(0)}" cy="${(rnd(i + 300) * 170).toFixed(0)}" r="${(0.5 + rnd(i + 600) * 1.3).toFixed(1)}" fill="#FFF6D8" style="animation-delay:${(rnd(i + 40) * 4).toFixed(1)}s"/>`
-  return `<svg class="magic-top" viewBox="0 0 1000 250" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
-    <defs><radialGradient id="flame"><stop offset="0" stop-color="#FFD98A" stop-opacity=".55"/><stop offset="1" stop-color="#FFD98A" stop-opacity="0"/></radialGradient>
-    <linearGradient id="cloth" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>
+  for (let i = 0; i < 140; i++) {
+    const r = 0.4 + rnd(i + 600) ** 3 * 2.2
+    stars += `<circle class="${i % 4 ? '' : 'tw'}" cx="${(rnd(i + 3) * W).toFixed(0)}" cy="${(rnd(i + 300) ** 1.4 * 230).toFixed(0)}" r="${r.toFixed(2)}" fill="#FFF8E6" style="animation-delay:${(rnd(i + 40) * 5).toFixed(1)}s"/>`
+  }
+  // a pointed gothic window with stained glass
+  const win = (cx, flip) => {
+    const w = 120, top = 40, bot = 330, l = cx - w / 2, r = cx + w / 2, spring = 130
+    const arch = `M${l} ${bot} V${spring} Q${l} ${top + 10} ${cx} ${top} Q${r} ${top + 10} ${r} ${spring} V${bot}z`
+    const glass = ['#1E3F8A', '#7A1F3D', '#C99A2E', '#2E6B4F', '#4B2C7A', '#B5452B']
+    let panes = ''
+    for (let row = 0; row < 7; row++) for (let col = 0; col < 3; col++) {
+      const x = l + 8 + col * ((w - 16) / 3), y = spring - 6 + row * 28
+      if (y > bot - 20) continue
+      panes += `<rect x="${x.toFixed(1)}" y="${y}" width="${((w - 16) / 3 - 3).toFixed(1)}" height="25" fill="${glass[Math.floor(rnd(cx + row * 7 + col * 3) * glass.length)]}" opacity="${(0.55 + rnd(cx + row + col) * 0.35).toFixed(2)}"/>`
+    }
+    return `<g class="window">
+      <path d="${arch}" fill="#0c0a14"/>
+      <clipPath id="w${cx}"><path d="${arch}"/></clipPath>
+      <g clip-path="url(#w${cx})">
+        <rect x="${l}" y="${top}" width="${w}" height="${bot - top}" fill="url(#moonlit)"/>
+        ${panes}
+        <circle cx="${cx}" cy="${spring - 22}" r="30" fill="#C99A2E" opacity=".55"/><circle cx="${cx}" cy="${spring - 22}" r="20" fill="#1E3F8A" opacity=".75"/>
+        ${[0, 1, 2, 3, 4, 5, 6, 7].map((k) => { const a = (k / 8) * Math.PI * 2; return `<path d="M${cx} ${spring - 22} L${(cx + Math.cos(a) * 30).toFixed(1)} ${(spring - 22 + Math.sin(a) * 30).toFixed(1)}" stroke="#1a1712" stroke-width="2"/>` }).join('')}
+        <path d="M${cx} ${spring + 8} V${bot} M${l + 8 + (w - 16) / 3 - 1.5} ${spring} V${bot} M${l + 8 + ((w - 16) * 2) / 3 - 1.5} ${spring} V${bot}" stroke="#1a1712" stroke-width="3"/>
+        ${Array.from({ length: 8 }, (_, k) => `<path d="M${l} ${spring - 6 + k * 28 - 1.5} H${r}" stroke="#1a1712" stroke-width="2.4"/>`).join('')}
+        <rect x="${l}" y="${top}" width="${w}" height="${bot - top}" fill="url(#glassshine)"/>
+      </g>
+      <path d="${arch}" fill="none" stroke="url(#stoneedge)" stroke-width="12"/>
+      <path d="M${l - 10} ${bot} h${w + 20} v10 h${-(w + 20)}z" fill="#5d5346"/>
+      <path d="${arch}" fill="url(#winglow)" opacity=".5" transform="translate(0 ${flip ? 0 : 0})" style="mix-blend-mode:screen"/>
+    </g>`
+  }
+  // a long banner on a pole, with folds, a gold border, fringe and tassels
+  const banner = (x, a, b, d, len = 220) => {
+    const w = 60, l = x - w / 2
+    let fringe = ''
+    for (let i = 0; i <= 16; i++) { const fx = l + (i / 16) * w; fringe += `<path d="M${fx.toFixed(1)} ${len - 2} v${(9 + (i % 2) * 3)}" stroke="${b}" stroke-width="1.6"/>` }
+    return `<g class="banner" style="animation-delay:${d}s">
+      <path d="M${l} 22 H${l + w} V${len} H${l}z" fill="${a}"/>
+      <path d="M${l} 22 H${l + w} V${len} H${l}z" fill="url(#folds)"/>
+      <path d="M${l + 6} 30 H${l + w - 6} V${len - 8} H${l + 6}z" fill="none" stroke="${b}" stroke-width="2"/>
+      <path d="M${l + 10} 34 H${l + w - 10} V${len - 12} H${l + 10}z" fill="none" stroke="${b}" stroke-width=".8" opacity=".7"/>
+      <path d="M${x} ${len * 0.42 - 26} l18 26 l-18 26 l-18 -26z" fill="none" stroke="${b}" stroke-width="2"/><path d="M${x} ${len * 0.42 - 14} l9 14 l-9 14 l-9 -14z" fill="${b}" opacity=".85"/>
+      ${fringe}<path d="M${l} ${len} h${w}" stroke="${b}" stroke-width="3"/>
+      <path d="M${l - 12} 22 h${w + 24}" stroke="url(#brass)" stroke-width="7" stroke-linecap="round"/><circle cx="${l - 14}" cy="22" r="6" fill="url(#brass)"/><circle cx="${l + w + 14}" cy="22" r="6" fill="url(#brass)"/>
+      <path d="M${l - 2} 22 q-6 30 -2 52" stroke="${b}" stroke-width="1.4" fill="none"/><path d="M${l - 6} 74 l4 -6 l4 6 v10 h-8z" fill="${b}"/>
+      <path d="M${l + w + 2} 22 q6 30 2 52" stroke="${b}" stroke-width="1.4" fill="none"/><path d="M${l + w - 2} 74 l4 -6 l4 6 v10 h-8z" fill="${b}"/>
+    </g>`
+  }
+  // a floating candle: wax with drips, a flame with a blue heart, and a warm halo
+  const candle = (x, y, h, s, d) => `<g class="candle" style="animation-delay:-${d}s;animation-duration:${(4 + rnd(x) * 3).toFixed(1)}s" transform="translate(${x} ${y}) scale(${s})" opacity="${(0.55 + s * 0.45).toFixed(2)}">
+      <circle cx="0" cy="-12" r="52" fill="url(#halo)"/>
+      <rect x="-6" y="0" width="12" height="${h}" rx="2" fill="url(#wax)"/>
+      <path d="M-6 2 q0 7 2 ${8 + (x % 5)} q1 3 2 0 v-10 M4 1 q1 5 0 ${5 + (x % 7)} q1 2 2 0 v-6" fill="#FBF4E2"/>
+      <ellipse cx="0" cy="0.5" rx="6" ry="1.6" fill="#E9DDC1"/>
+      <path d="M0 0 v-4" stroke="#2a211a" stroke-width="1.2"/>
+      <g class="flame"><path d="M0 -26 C6 -16 7 -9 0 -3 C-7 -9 -6 -16 0 -26z" fill="url(#flamefill)"/><ellipse cx="0" cy="-6" rx="1.8" ry="2.6" fill="#7FB4FF" opacity=".8"/></g>
+    </g>`
+  const cs = [[205, 92, 46, 0.9], [262, 150, 40, 0.6], [318, 70, 52, 1], [378, 128, 38, 0.55], [432, 88, 48, 0.8], [486, 160, 34, 0.5], [540, 66, 50, 1], [596, 118, 40, 0.65], [652, 82, 46, 0.85], [706, 150, 36, 0.55], [760, 74, 50, 0.95], [812, 132, 38, 0.6], [292, 196, 30, 0.42], [470, 205, 30, 0.4], [628, 200, 30, 0.42], [742, 210, 28, 0.38]]
+  let sparks = ''
+  for (let i = 0; i < 26; i++) sparks += `<circle class="spark" cx="${(80 + rnd(i + 900) * 840).toFixed(0)}" cy="${(260 + rnd(i + 950) * 90).toFixed(0)}" r="${(0.8 + rnd(i + 990) * 1.6).toFixed(1)}" fill="#FFE3A0" style="animation-delay:-${(rnd(i + 1000) * 8).toFixed(1)}s;animation-duration:${(6 + rnd(i + 1100) * 6).toFixed(1)}s"/>`
+  return `<svg class="magic-top" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070B24"/><stop offset=".45" stop-color="#16194A"/><stop offset=".8" stop-color="#2B2550"/><stop offset="1" stop-color="#3A2E3A" stop-opacity="0"/></linearGradient>
+      <filter id="clouds" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".004 .012" numOctaves="4" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .58  0 0 0 0 .85  0 0 0 1.4 -.62"/><feGaussianBlur stdDeviation="2"/></filter>
+      <radialGradient id="halo"><stop offset="0" stop-color="#FFE2A0" stop-opacity=".8"/><stop offset=".12" stop-color="#FFC56A" stop-opacity=".45"/><stop offset=".4" stop-color="#FFB85C" stop-opacity=".12"/><stop offset="1" stop-color="#FFB85C" stop-opacity="0"/></radialGradient>
+      <linearGradient id="wax" x1="0" x2="1"><stop offset="0" stop-color="#D9CBA8"/><stop offset=".35" stop-color="#FFFBEF"/><stop offset="1" stop-color="#CDBD98"/></linearGradient>
+      <linearGradient id="flamefill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6D6"/><stop offset=".5" stop-color="#FFC24A"/><stop offset="1" stop-color="#FF7A1A"/></linearGradient>
+      <linearGradient id="folds" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".18" stop-color="#fff" stop-opacity=".1"/><stop offset=".35" stop-color="#000" stop-opacity=".25"/><stop offset=".55" stop-color="#fff" stop-opacity=".12"/><stop offset=".75" stop-color="#000" stop-opacity=".3"/><stop offset=".9" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>
+      <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6DE9A"/><stop offset=".5" stop-color="#B8893A"/><stop offset="1" stop-color="#6E4E1C"/></linearGradient>
+      <linearGradient id="moonlit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A5DA8"/><stop offset="1" stop-color="#1B2148"/></linearGradient>
+      <linearGradient id="glassshine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="stoneedge" x1="0" x2="1"><stop offset="0" stop-color="#4a4238"/><stop offset=".5" stop-color="#7d7160"/><stop offset="1" stop-color="#3d362e"/></linearGradient>
+      <radialGradient id="winglow" cx=".5" cy=".6" r=".6"><stop offset="0" stop-color="#8FA8FF" stop-opacity=".35"/><stop offset="1" stop-color="#8FA8FF" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="${W}" height="${H}" fill="url(#sky)"/>
+    <rect width="${W}" height="250" filter="url(#clouds)" opacity=".75"/>
     ${stars}
-    ${banner(70, '#7A1F2B', '#D9A93F', 0)}${banner(155, '#C9A227', '#2A2420', 1.4)}${banner(845, '#1E3A6E', '#B8865A', 0.7)}${banner(930, '#1F5B3A', '#C9CDD2', 2.1)}
-    ${candle(250, 70, 46, 0)}${candle(330, 120, 38, 1.1)}${candle(420, 60, 50, 2.2)}${candle(520, 105, 42, 0.6)}${candle(610, 55, 48, 1.7)}${candle(690, 115, 36, 2.8)}${candle(770, 75, 44, 0.3)}
+    ${win(70, 0)}${win(930, 1)}
+    ${banner(170, '#6E1423', '#D4A84A', 0)}${banner(246, '#B8892A', '#2A2016', 2.1, 200)}${banner(754, '#1B2E5E', '#B98A5E', 0.9, 200)}${banner(830, '#173F2A', '#C9CED6', 1.4)}
+    <ellipse cx="500" cy="150" rx="330" ry="130" fill="url(#halo)" opacity=".45"/>
+    ${cs.map(([x, y, h, sc], i) => candle(Math.round(300 + (x - 205) * 0.66), y, h, sc, (i * 0.7) % 5)).join('')}
+    ${sparks}
   </svg>
   <p class="magic-title">Spells &amp; Reminders</p>`
 }
