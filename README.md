@@ -6,7 +6,7 @@
 
 Instead of menus and lists, you get a small room. Every object in it opens one part of your life: tap the **bed** to write in your diary, the **bookshelf** for your books, the **corkboard** for notes and the **desk calendar** for your plans. The room grows with you: books appear on the shelf, the plant gets a new leaf every day you write, and the window shows the real time of day and weather.
 
-### 👉 [Open Alcove](https://inesa07.github.io/Planner/)
+### 👉 [Open Alcove](https://inesa07.github.io/Alcove/)
 
 Nothing to download or install: just open the link in any browser on your computer or phone. Sign up with your email and your room is ready. Your diary is private: friends can visit your room, but never read your diary.
 
@@ -165,6 +165,6 @@ supabase/*.sql          database tables and access rules
 
 ---
 
-### 👉 [Open Alcove](https://inesa07.github.io/Planner/)
+### 👉 [Open Alcove](https://inesa07.github.io/Alcove/)
 
 Nothing to install: open the link in any browser on your computer or phone.
