@@ -18,12 +18,17 @@ export function mount(el) {
     <section class="notes-page">
       <header class="page-head">
         <div><h2>Notes</h2><p id="n-sub"></p></div>
+        <div class="head-tools">
+        <div class="wall-menu">
+          <button type="button" class="ghost-dark small wall-btn" data-wall-open aria-haspopup="true" aria-expanded="false"><i class="wall-sw sw-${wall}" id="n-wall-sw"></i>Board style</button>
+          <div class="wall-pop" role="radiogroup" aria-label="Board style" hidden>${WALLS.map(([k, n, hint]) => `<button type="button" role="radio" class="wall-opt" data-wall-pick="${k}" aria-checked="${k === wall}"><i class="wall-sw sw-${k}"></i><span><b>${n}</b><small>${hint}</small></span></button>`).join('')}</div>
+        </div>
         <label class="search"><span class="sr-only">Search notes</span>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
           <input id="n-search" type="search" placeholder="Search your notes">
         </label>
+        </div>
       </header>
-      <div class="notes-layout">
       <div class="board" data-wall="${wall}">
         <div class="board-top" id="n-top">${wallTop(wall)}</div>
         <form class="note-new" id="n-form">
@@ -38,8 +43,6 @@ export function mount(el) {
           </div>
         </form>
         <div class="note-wall" id="n-wall"></div>
-      </div>
-      <aside class="wall-pick" role="radiogroup" aria-label="Board style"><p class="wall-pick-title">Board style</p>${WALLS.map(([k, n, hint]) => `<button type="button" role="radio" class="wall-opt" data-wall-pick="${k}" aria-checked="${k === wall}"><i class="wall-sw sw-${k}"></i><span><b>${n}</b><small>${hint}</small></span></button>`).join('')}</aside>
       </div>
     </section>`
 
@@ -78,10 +81,23 @@ export function mount(el) {
   const ro = new ResizeObserver(stringLater)
   ro.observe($('#n-wall', el))
 
+  // the style menu opens under its button and closes when you click anywhere else
+  function toggleMenu(open) {
+    const pop = $('.wall-pop', el), btn = $('[data-wall-open]', el)
+    const show = open ?? pop.hidden
+    pop.hidden = !show
+    btn.setAttribute('aria-expanded', show)
+  }
+  const outside = (e) => { if (!e.target.closest('.wall-menu') && el.isConnected) toggleMenu(false) }
+  document.addEventListener('click', outside)
+  const onKey = (e) => { if (e.key === 'Escape') toggleMenu(false) }
+  document.addEventListener('keydown', onKey)
+
   function setWall(w) {
     wall = w
     setField({ noteWall: w })
     $('.board', el).dataset.wall = w
+    $('#n-wall-sw', el).className = `wall-sw sw-${w}`
     $('#n-top', el).innerHTML = wallTop(w)
     el.querySelectorAll('[data-wall-pick]').forEach((b) => b.setAttribute('aria-checked', b.dataset.wallPick === w))
     stringLater()
@@ -104,8 +120,9 @@ export function mount(el) {
   $('#n-search', el).addEventListener('input', (e) => { query = e.target.value; render() })
 
   el.addEventListener('click', (e) => {
+    if (e.target.closest('[data-wall-open]')) return toggleMenu()
     const wp = e.target.closest('[data-wall-pick]')
-    if (wp) return setWall(wp.dataset.wallPick)
+    if (wp) { toggleMenu(false); return setWall(wp.dataset.wallPick) }
     const al = e.target.closest('[data-al]')
     if (al) { al.classList.remove('flash'); void al.offsetWidth; al.classList.add('flash'); setTimeout(() => al.classList.remove('flash'), 900); return }
     const kb = e.target.closest('[data-kind]')
@@ -139,5 +156,5 @@ export function mount(el) {
 
   render()
   const off = subscribe(() => { if (!el.contains(document.activeElement) || !document.activeElement.closest('.note-text')) render() })
-  return () => { off(); ro.disconnect() }
+  return () => { off(); ro.disconnect(); document.removeEventListener('click', outside); document.removeEventListener('keydown', onKey) }
 }
