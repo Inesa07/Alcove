@@ -1,7 +1,7 @@
 // Notes: anything you want to remember, on coloured paper notes.
 
 import { getState, subscribe, add, update, remove, restore, setField, NOTE_COLORS } from '../store.js'
-import { WALLS, wallTop, spell, drawString } from '../walls.js'
+import { WALLS, wallId, wallTop, spell, drawString } from '../walls.js'
 import { $, esc, toast } from '../ui.js'
 
 // kinds of paper a note can be
@@ -13,7 +13,7 @@ export function mount(el) {
   let query = ''
   let padColor = NOTE_COLORS[0], padKind = 'sticky'
   let justPinned = null
-  let wall = getState().noteWall || 'cork'
+  let wall = wallId(getState().noteWall)
   el.innerHTML = `
     <section class="notes-page">
       <header class="page-head">
@@ -23,7 +23,7 @@ export function mount(el) {
           <input id="n-search" type="search" placeholder="Search your notes">
         </label>
       </header>
-      <div class="wall-pick" role="radiogroup" aria-label="Board style">${WALLS.map(([k, n, hint]) => `<button type="button" role="radio" class="wall-opt" data-wall-pick="${k}" aria-checked="${k === wall}" title="${hint}"><i class="wall-sw sw-${k}"></i>${n}</button>`).join('')}</div>
+      <div class="notes-layout">
       <div class="board" data-wall="${wall}">
         <div class="board-top" id="n-top">${wallTop(wall)}</div>
         <form class="note-new" id="n-form">
@@ -38,6 +38,8 @@ export function mount(el) {
           </div>
         </form>
         <div class="note-wall" id="n-wall"></div>
+      </div>
+      <aside class="wall-pick" role="radiogroup" aria-label="Board style"><p class="wall-pick-title">Board style</p>${WALLS.map(([k, n, hint]) => `<button type="button" role="radio" class="wall-opt" data-wall-pick="${k}" aria-checked="${k === wall}"><i class="wall-sw sw-${k}"></i><span><b>${n}</b><small>${hint}</small></span></button>`).join('')}</aside>
       </div>
     </section>`
 

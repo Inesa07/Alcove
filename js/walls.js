@@ -2,12 +2,15 @@
 // (lights, letters, pearls, a case stamp or the night sky); the CSS does the rest.
 
 export const WALLS = [
-  ['cork', 'Cork board', 'Fairy lights on warm cork'],
-  ['letters', 'Lights & letters', 'Painted letters and a bulb over each one'],
-  ['regency', 'Regency', 'Pearls, wisteria and wax seals'],
-  ['case', 'Case board', 'Red string between your notes'],
-  ['stars', 'Starry night', 'Notes under the moon and stars'],
+  ['cork', 'Cozy cork', 'The classic board with fairy lights'],
+  ['letters', 'Stranger Things', 'Painted letters and blinking bulbs'],
+  ['regency', 'Bridgerton', 'Roses, pearls and wax seals'],
+  ['case', 'Sherlock', 'A case board with red string'],
+  ['gothic', 'Wednesday', 'Black lace, bats and a full moon'],
+  ['paris', 'Emily in Paris', 'Postcards from a Paris café'],
 ]
+// boards that were saved under an older name
+export const wallId = (w) => ({ stars: 'gothic' }[w] || (WALLS.some(([k]) => k === w) ? w : 'cork'))
 
 const BULBS = ['#FF5A4E', '#3FCB6B', '#4DA3FF', '#FFD23F', '#FF9A3C', '#E66CFF']
 const ROWS = ['ABCDEFGH', 'IJKLMNOPQ', 'RSTUVWXYZ']
@@ -102,25 +105,42 @@ function regencyTop() {
 
 function caseTop() {
   const d = new Date()
-  return `<div class="case-top"><span class="case-stamp">Case file</span><span class="case-no">No. ${String(d.getFullYear()).slice(2)}-${String(d.getMonth() + 1).padStart(2, '0')}</span><span class="case-note">Things to figure out</span></div>`
+  return `<div class="case-top"><span class="case-stamp">Case file</span><span class="case-no">No. ${String(d.getFullYear()).slice(2)}-${String(d.getMonth() + 1).padStart(2, '0')}</span><span class="case-note">Things to figure out</span><span class="case-plaque">221B</span></div>`
 }
 
-function starsTop() {
-  let stars = ''
-  for (let i = 0; i < 90; i++) stars += `<circle class="${i % 6 ? '' : 'tw'}" cx="${(rnd(i) * 1000).toFixed(0)}" cy="${(rnd(i + 500) * 300).toFixed(0)}" r="${(0.6 + rnd(i + 900) * 1.6).toFixed(1)}" fill="#FFF8E1" style="animation-delay:${(rnd(i + 70) * 4).toFixed(1)}s"/>`
-  let garland = ''
-  for (let i = 0; i <= 24; i++) {
-    const t = i / 24, x = t * 1000, y = 8 + Math.sin(t * Math.PI * 3) ** 2 * 26
-    garland += `<path class="tw" d="M${x} ${y - 6}l1.8 4.2 4.4.4-3.3 2.9 1 4.4-3.9-2.3-3.9 2.3 1-4.4-3.3-2.9 4.4-.4z" fill="#FFE08A" style="animation-delay:${(i % 6) * 0.4}s"/>`
-  }
-  return `<svg class="night-sky" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMin meet" aria-hidden="true">${stars}
-    <circle cx="905" cy="70" r="70" fill="#FFF4C9" opacity=".08"/><circle cx="905" cy="70" r="34" fill="#FFF4C9"/><circle cx="920" cy="62" r="30" fill="#2B2E63"/>
-    <path class="shoot" d="M120 40 l140 50" stroke="url(#shoot)" stroke-width="2.4" stroke-linecap="round"/>
-    <defs><linearGradient id="shoot"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient></defs></svg>
-    <svg class="star-garland" viewBox="0 0 1000 50" preserveAspectRatio="none" aria-hidden="true"><path d="${Array.from({ length: 25 }, (_, i) => { const t = i / 24; return `${i ? 'L' : 'M'}${t * 1000} ${8 + Math.sin(t * Math.PI * 3) ** 2 * 26}` }).join(' ')}" fill="none" stroke="#C9B37A" stroke-width="1" opacity=".7"/>${garland}</svg>`
+// Wednesday: a dark gothic window at night. Black lace along the top, cobwebs in the corners,
+// a big full moon with bats flying across it
+function gothicTop() {
+  const web = (flip) => `<svg class="cobweb ${flip ? 'cw-r' : ''}" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#D9D2E6" stroke-width=".8" opacity=".55">
+    ${[0, 18, 36, 54, 72, 90].map((a) => { const r = (a * Math.PI) / 180; return `<path d="M0 0 L${(Math.cos(r) * 120).toFixed(0)} ${(Math.sin(r) * 120).toFixed(0)}"/>` }).join('')}
+    ${[22, 42, 64, 88, 112].map((d) => `<path d="${[0, 18, 36, 54, 72, 90].map((a, i) => { const r = (a * Math.PI) / 180; return `${i ? 'Q' + (Math.cos(r - 0.16) * d * 0.86).toFixed(0) + ' ' + (Math.sin(r - 0.16) * d * 0.86).toFixed(0) + ' ' : 'M'}${(Math.cos(r) * d).toFixed(0)} ${(Math.sin(r) * d).toFixed(0)}` }).join(' ')}"/>`).join('')}</g>
+    <path d="M70 0 v52" stroke="#D9D2E6" stroke-width=".6" opacity=".6"/><g transform="translate(70 56)"><ellipse rx="4" ry="5" fill="#16121c"/><circle cy="-6" r="3" fill="#16121c"/>${[-1, 1].map((x) => [0, 1, 2].map((i) => `<path d="M0 ${-2 + i * 2.4} q${x * 6} ${-4 + i * 2} ${x * 9} ${2 + i * 2}" stroke="#16121c" stroke-width="1" fill="none"/>`).join('')).join('')}</g></svg>`
+  const bat = (x, y, s, d) => `<g class="bat" style="animation-delay:${d}s"><path transform="translate(${x} ${y}) scale(${s})" d="M0 0 c-6 -8 -14 -8 -22 -4 c4 1 6 4 6 8 c-3 -2 -7 -2 -9 0 c4 1 6 4 6 7 c6 -4 13 -6 19 -4 l0 -3 c1 -2 3 -2 4 0 l0 3 c6 -2 13 0 19 4 c0 -3 2 -6 6 -7 c-2 -2 -6 -2 -9 0 c0 -4 2 -7 6 -8 c-8 -4 -16 -4 -22 4z" fill="#0f0b14"/></g>`
+  return `<div class="lace" aria-hidden="true"></div>${web(false)}${web(true)}
+    <svg class="moon-sky" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+      <defs><radialGradient id="moonglow"><stop offset="0" stop-color="#EDE6FF" stop-opacity=".35"/><stop offset="1" stop-color="#EDE6FF" stop-opacity="0"/></radialGradient>
+      <radialGradient id="moon" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FBF8FF"/><stop offset=".7" stop-color="#DCD3EC"/><stop offset="1" stop-color="#B9AECF"/></radialGradient></defs>
+      <circle cx="820" cy="118" r="150" fill="url(#moonglow)"/><circle cx="820" cy="118" r="70" fill="url(#moon)"/>
+      <circle cx="796" cy="98" r="11" fill="#C9BEDD" opacity=".55"/><circle cx="842" cy="140" r="15" fill="#C9BEDD" opacity=".45"/><circle cx="836" cy="88" r="6" fill="#C9BEDD" opacity=".5"/>
+      ${bat(760, 110, 1.3, 0)}${bat(900, 60, 0.9, 1.2)}${bat(640, 70, 0.8, 2.1)}${bat(700, 180, 0.6, 0.6)}
+    </svg>
+    <p class="gothic-title">Things I must not forget</p>`
 }
 
-export const wallTop = (w) => ({ letters: lettersTop, regency: regencyTop, case: caseTop, stars: starsTop }[w] || corkTop)()
+// Emily in Paris: a striped café awning, a string of café bulbs, the Eiffel Tower drawn in fine lines
+function parisTop() {
+  const bulbs = Array.from({ length: 15 }, (_, i) => { const t = i / 14, x = 40 + t * 920, y = 96 + Math.sin(t * Math.PI) * 30; return `<g class="cafe-bulb" style="animation-delay:${(i % 4) * 0.5}s"><circle cx="${x.toFixed(0)}" cy="${(y + 9).toFixed(0)}" r="14" fill="#FFE7A8" opacity=".25"/><path d="M${x.toFixed(0)} ${y.toFixed(0)} v3" stroke="#3a2f2a" stroke-width="2"/><circle cx="${x.toFixed(0)}" cy="${(y + 9).toFixed(0)}" r="5.5" fill="#FFE7A8"/></g>` }).join('')
+  const tower = `<g class="eiffel" fill="none" stroke="#5A4A57" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M0 0 v14 M-3 14 h6 l2 30 h-10z M-5 44 h10 M-6 44 L-14 92 h28 L6 44 M-16 92 h32 M-15 92 L-32 160 M15 92 L32 160 M-36 160 h72 M-32 160 q32 -40 64 0"/>
+    <path d="M-10 60 l20 20 M10 60 l-20 20 M-13 100 l26 30 M13 100 l-26 30" stroke-width=".7" opacity=".6"/></g>`
+  return `<div class="awning" aria-hidden="true"></div>
+    <svg class="paris-top" viewBox="0 0 1000 160" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+      <path d="M40 96 ${Array.from({ length: 15 }, (_, i) => { const t = i / 14; return `L${(40 + t * 920).toFixed(0)} ${(96 + Math.sin(t * Math.PI) * 30).toFixed(0)}` }).join(' ')}" stroke="#3a2f2a" stroke-width="1.2" fill="none"/>${bulbs}
+    </svg>
+    <p class="paris-title"><svg class="eiffel-wrap" viewBox="-40 -6 80 170" aria-hidden="true">${tower}</svg>Mes petites notes</p>`
+}
+
+export const wallTop = (w) => ({ letters: lettersTop, regency: regencyTop, case: caseTop, gothic: gothicTop, paris: parisTop }[w] || corkTop)()
 
 // Lights & letters: the bulbs blink a word one letter at a time
 let spelling = 0
