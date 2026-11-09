@@ -13,6 +13,7 @@ export function mount(el) {
   let query = ''
   let padColor = NOTE_COLORS[0], padKind = 'sticky'
   let justPinned = null
+  let lastKey = ''
   let wall = wallId(getState().noteWall)
   el.innerHTML = `
     <section class="notes-page">
@@ -52,9 +53,9 @@ export function mount(el) {
     const q = query.toLowerCase()
     const shown = q ? notes.filter((n) => n.text.toLowerCase().includes(q)) : notes
     const wall = $('#n-wall', el)
-    if (!notes.length) { wall.innerHTML = ''; return }
-    if (!shown.length) { wall.innerHTML = `<p class="muted">No notes with “${esc(query)}”.</p>`; return }
-    wall.innerHTML = shown.map((n) => {
+    if (!notes.length) { wall.innerHTML = ''; lastKey = ''; return }
+    if (!shown.length) { wall.innerHTML = `<p class="muted">No notes with “${esc(query)}”.</p>`; lastKey = ''; return }
+    const html = shown.map((n) => {
       const h = hash(n.id)
       const kind = n.from ? 'letter' : n.kind || KINDS[h % KINDS.length][0]
       const hold = n.from ? 'seal' : ['pin', 'tape', 'pin', 'clip'][(h >> 3) % 4]
@@ -72,6 +73,11 @@ export function mount(el) {
       </article>`
     }).join('')
     justPinned = null
+    // redraw only when something on the board really changed, so the notes never blink
+    const key = html + shown.map((n) => n.text).join('\u0000')
+    if (key === lastKey && wall.querySelector('.note')) return
+    lastKey = key
+    wall.innerHTML = html
     shown.forEach((n) => { el.querySelector(`[data-note="${n.id}"] .note-text`).innerText = n.text })
     stringLater()
   }

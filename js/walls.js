@@ -8,6 +8,7 @@ export const WALLS = [
   ['case', 'Sherlock', 'A case board with red string'],
   ['gothic', 'Wednesday', 'Black lace, bats and a full moon'],
   ['paris', 'Emily in Paris', 'Postcards from a Paris café'],
+  ['magic', 'Harry Potter', 'Floating candles and parchment'],
 ]
 // boards that were saved under an older name
 export const wallId = (w) => ({ stars: 'gothic' }[w] || (WALLS.some(([k]) => k === w) ? w : 'cork'))
@@ -140,7 +141,28 @@ function parisTop() {
     <p class="paris-title"><svg class="eiffel-wrap" viewBox="-40 -6 80 170" aria-hidden="true">${tower}</svg>Mes petites notes</p>`
 }
 
-export const wallTop = (w) => ({ letters: lettersTop, regency: regencyTop, case: caseTop, gothic: gothicTop, paris: parisTop }[w] || corkTop)()
+// Harry Potter: an enchanted night ceiling over an old stone hall, floating candles,
+// four long banners in the house colours, and notes on parchment with a wax seal
+function magicTop() {
+  const banner = (x, a, b, d) => `<g class="banner" style="animation-delay:${d}s"><path d="M${x - 34} 0 h68 v150 l-34 -22 l-34 22z" fill="${a}"/><path d="M${x - 34} 0 h68 v150 l-34 -22 l-34 22z" fill="url(#cloth)"/>
+    <path d="M${x - 26} 0 v136 M${x + 26} 0 v136" stroke="${b}" stroke-width="3"/><path d="M${x} 40 l16 24 l-16 24 l-16 -24z" fill="none" stroke="${b}" stroke-width="2.5"/><circle cx="${x}" cy="64" r="4" fill="${b}"/>
+    <path d="M${x - 40} 0 h80" stroke="#6B5530" stroke-width="5" stroke-linecap="round"/></g>`
+  const candle = (x, y, h, d) => `<g class="candle" style="animation-delay:${d}s"><circle cx="${x}" cy="${y - 10}" r="20" fill="url(#flame)"/>
+    <rect x="${x - 5}" y="${y}" width="10" height="${h}" rx="2" fill="#F6EEDC"/><path d="M${x - 5} ${y + 2} q3 6 0 ${h * 0.4}" stroke="#E4D7BC" stroke-width="2" fill="none"/>
+    <path d="M${x} ${y} v-4" stroke="#3a2f2a" stroke-width="1.2"/><path class="flame" d="M${x} ${y - 16} q5 7 0 12 q-5 -5 0 -12z" fill="#FFD36B"/></g>`
+  let stars = ''
+  for (let i = 0; i < 70; i++) stars += `<circle class="${i % 5 ? '' : 'tw'}" cx="${(rnd(i + 3) * 1000).toFixed(0)}" cy="${(rnd(i + 300) * 170).toFixed(0)}" r="${(0.5 + rnd(i + 600) * 1.3).toFixed(1)}" fill="#FFF6D8" style="animation-delay:${(rnd(i + 40) * 4).toFixed(1)}s"/>`
+  return `<svg class="magic-top" viewBox="0 0 1000 250" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+    <defs><radialGradient id="flame"><stop offset="0" stop-color="#FFD98A" stop-opacity=".55"/><stop offset="1" stop-color="#FFD98A" stop-opacity="0"/></radialGradient>
+    <linearGradient id="cloth" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>
+    ${stars}
+    ${banner(70, '#7A1F2B', '#D9A93F', 0)}${banner(155, '#C9A227', '#2A2420', 1.4)}${banner(845, '#1E3A6E', '#B8865A', 0.7)}${banner(930, '#1F5B3A', '#C9CDD2', 2.1)}
+    ${candle(250, 70, 46, 0)}${candle(330, 120, 38, 1.1)}${candle(420, 60, 50, 2.2)}${candle(520, 105, 42, 0.6)}${candle(610, 55, 48, 1.7)}${candle(690, 115, 36, 2.8)}${candle(770, 75, 44, 0.3)}
+  </svg>
+  <p class="magic-title">Spells &amp; Reminders</p>`
+}
+
+export const wallTop = (w) => ({ letters: lettersTop, regency: regencyTop, case: caseTop, gothic: gothicTop, paris: parisTop, magic: magicTop }[w] || corkTop)()
 
 // Lights & letters: the bulbs blink a word one letter at a time
 let spelling = 0
