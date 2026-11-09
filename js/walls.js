@@ -22,49 +22,82 @@ function corkTop() {
   </svg>`
 }
 
-// painted letters on old wallpaper, with a string of big Christmas bulbs: one bulb over each letter
+// a dim 80s living room: yellowed floral wallpaper, letters painted in a hurry with black paint
+// (a few drips run down), and one big old Christmas bulb hanging over every letter
 function lettersTop() {
   let k = 0
-  return `<div class="alpha" aria-label="Tap a letter to light it up">${ROWS.map((row) => {
+  return `<div class="alpha" aria-label="Tap a letter to light it up">${ROWS.map((row, ri) => {
     const n = row.length
-    const ys = [...row].map((_, i) => 5 + (i % 2) * 5 + rnd(i + n) * 3)
+    const ys = [...row].map((_, i) => 6 + (i % 2) * 6 + rnd(i * 3 + ri * 17) * 5)
     const pts = ys.map((y, i) => [((i + 0.5) / n) * 100, y])
-    let d = `M0 ${ys[0] - 2}`
-    pts.forEach(([x, y], i) => { const px = i ? pts[i - 1][0] : 0, py = i ? pts[i - 1][1] : ys[0] - 2; d += ` Q${(px + x) / 2} ${Math.max(py, y) + 7} ${x} ${y}` })
-    d += ` Q${(pts[n - 1][0] + 100) / 2} ${ys[n - 1] + 7} 100 ${ys[n - 1] - 2}`
-    return `<div class="al-row"><svg class="al-wire" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="#1d2a1f" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>${[...row].map((ch, i) => {
-      const s = k++
-      return `<button type="button" class="al" data-al="${ch}" style="--bc:${BULBS[Math.floor(rnd(s + 3) * BULBS.length)]};--r:${(rnd(s + 7) * 14 - 7).toFixed(1)}deg;--dy:${ys[i].toFixed(1)}px;--d:${(rnd(s + 11) * 3).toFixed(2)}s" aria-label="${ch}"><i class="al-bulb"></i><b>${ch}</b></button>`
+    const path = (off) => {
+      let d = `M-1 ${ys[0] - 4 + off}`
+      pts.forEach(([x, y], i) => { const px = i ? pts[i - 1][0] : -1, py = i ? pts[i - 1][1] : ys[0] - 4; d += ` Q${(px + x) / 2 + off} ${Math.max(py, y) + 9 + rnd(i + ri) * 5 + off} ${x} ${y + off * 0.3}` })
+      return d + ` Q${(pts[n - 1][0] + 101) / 2} ${ys[n - 1] + 10 + off} 101 ${ys[n - 1] - 3}`
+    }
+    return `<div class="al-row"><svg class="al-wire" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${path(0)}" fill="none" stroke="#1b2a1d" stroke-width="2.2" vector-effect="non-scaling-stroke"/>
+      <path d="${path(0.6)}" fill="none" stroke="#2c4130" stroke-width="1.4" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>${[...row].map((ch, i) => {
+      const sd = k++
+      const drips = rnd(sd + 21) > 0.45 ? Array.from({ length: 1 + Math.floor(rnd(sd + 5) * 2) }, (_, j) => `<i class="drip" style="left:${(25 + rnd(sd + j * 9) * 50).toFixed(0)}%;--h:${(8 + rnd(sd + j * 13) * 22).toFixed(0)}px"></i>`).join('') : ''
+      return `<button type="button" class="al" data-al="${ch}" style="--bc:${BULBS[Math.floor(rnd(sd + 3) * BULBS.length)]};--r:${(rnd(sd + 7) * 16 - 8).toFixed(1)}deg;--dy:${ys[i].toFixed(1)}px;--d:${(rnd(sd + 11) * 5).toFixed(2)}s;--sx:${(0.85 + rnd(sd + 17) * 0.35).toFixed(2)}" aria-label="${ch}"><i class="al-glow"></i><i class="al-bulb"></i><b>${ch}${drips}</b></button>`
     }).join('')}</div>`
   }).join('')}</div>`
 }
 
-// pearl swags with little bows, and wisteria hanging between them
+// a rose seen from above: petals around, a curl in the middle
+function rose(x, y, r, c, dark) {
+  let p = `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + r; p += `<ellipse cx="${(x + Math.cos(a) * r * 0.62).toFixed(1)}" cy="${(y + Math.sin(a) * r * 0.62).toFixed(1)}" rx="${(r * 0.55).toFixed(1)}" ry="${(r * 0.42).toFixed(1)}" transform="rotate(${((a * 180) / Math.PI).toFixed(0)} ${(x + Math.cos(a) * r * 0.62).toFixed(1)} ${(y + Math.sin(a) * r * 0.62).toFixed(1)})" fill="${c}" stroke="${dark}" stroke-width=".6" stroke-opacity=".5"/>` }
+  p += `<path d="M${x - r * 0.35} ${y} a${r * 0.35} ${r * 0.35} 0 1 1 ${r * 0.35} ${r * 0.35} a${r * 0.22} ${r * 0.22} 0 1 1 ${-r * 0.18} ${-r * 0.3}" fill="none" stroke="${dark}" stroke-width="1.1" stroke-opacity=".7"/>`
+  return p
+}
+const leaf = (x, y, a, l = 13) => `<path d="M${x} ${y} q${l * 0.5} ${-l * 0.45} ${l} 0 q${-l * 0.5} ${l * 0.45} ${-l} 0z" transform="rotate(${a} ${x} ${y})" fill="#9DBF94" stroke="#7FA37A" stroke-width=".6"/>`
+const butterfly = (x, y, s, c) => `<g class="bfly" transform="translate(${x} ${y}) scale(${s})"><g class="wing"><path d="M0 0 C-10 -14 -20 -6 -12 2 C-18 8 -8 14 0 4z" fill="${c}" opacity=".9"/><path d="M0 0 C10 -14 20 -6 12 2 C18 8 8 14 0 4z" fill="${c}" opacity=".9"/></g><path d="M0 -4 v9" stroke="#6B5B7A" stroke-width="1.6" stroke-linecap="round"/></g>`
+
+// Regency: a garland of roses with pearls swagged below, wisteria falling from the corners,
+// an oval gilded cartouche with the title, and butterflies
 function regencyTop() {
-  const swags = 5, w = 1000 / swags
-  let pearls = '', bows = '', flowers = ''
-  for (let s = 0; s < swags; s++) {
-    const x0 = s * w
-    for (let i = 0; i <= 22; i++) {
-      const t = i / 22, x = x0 + t * w, y = 10 + Math.sin(t * Math.PI) * 34
-      pearls += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i % 2 ? 3.2 : 4.2}" fill="url(#pearl)"/>`
+  let garland = '', pearls = '', wist = ''
+  const swags = 6, w = 1000 / swags
+  for (let s = 0; s <= swags; s++) {
+    const x = s * w
+    // a bunch of roses where two swags meet
+    garland += leaf(x - 22, 18, -160, 18) + leaf(x + 6, 22, 20, 18) + leaf(x - 8, 30, 100, 14) + leaf(x + 14, 8, -30, 14)
+    garland += rose(x - 10, 14, 11, '#F4C2CF', '#C9788F') + rose(x + 9, 18, 9, '#FBE3E8', '#D79AAB') + rose(x - 1, 27, 6.5, '#E8A3B8', '#B86A83')
+    garland += `<circle cx="${x + 18}" cy="${27}" r="2.4" fill="#fff"/><circle cx="${x - 22}" cy="${29}" r="2" fill="#fff"/>`
+    if (s < swags) {
+      for (const [depth, size] of [[30, 3.3], [46, 2.6]]) {
+        for (let i = 1; i < 26; i++) { const t = i / 26; pearls += `<circle cx="${(x + t * w).toFixed(1)}" cy="${(20 + Math.sin(t * Math.PI) * depth).toFixed(1)}" r="${size}" fill="url(#pearl)"/>` }
+      }
+      // a pearl drop in the middle of each swag
+      pearls += `<path d="M${x + w / 2} ${66} v10" stroke="#E8DCC8" stroke-width="1"/><ellipse cx="${x + w / 2}" cy="${80}" rx="3.6" ry="5" fill="url(#pearl)"/>`
     }
-    bows += `<g transform="translate(${x0} 10)"><path d="M0 0 C-14 -10 -16 8 0 0 C14 -10 16 8 0 0" fill="#F5C6D3" stroke="#D99AAD" stroke-width="1"/><path d="M0 0 l-6 16 M0 0 l6 16" stroke="#F5C6D3" stroke-width="3" stroke-linecap="round"/><circle r="3" fill="#E8A3B8"/></g>`
-    // wisteria: a soft bunch of small petals, longer in the middle
-    const fx = x0 + w / 2 + (s % 2 ? 8 : -8)
-    for (let j = 0; j < 26; j++) {
-      const t = j / 26, y = 44 + t * 70, spread = 13 * (1 - t) + 3
-      const x = fx + (rnd(s * 40 + j) - 0.5) * spread * 2
-      flowers += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(4.4 - t * 2.4).toFixed(1)}" fill="${['#B9A3E0', '#CDB8F0', '#A58BD6', '#E2D6F7'][j % 4]}" opacity=".92"/>`
-    }
-    flowers += `<path d="M${fx} 40 q-4 -10 -14 -12 M${fx} 40 q6 -9 15 -8" stroke="#8FB58A" stroke-width="2" fill="none"/><ellipse cx="${fx - 14}" cy="${28}" rx="6" ry="3" fill="#A8C9A0" transform="rotate(-20 ${fx - 14} 28)"/>`
   }
-  bows += `<g transform="translate(1000 10)"><path d="M0 0 C-14 -10 -16 8 0 0" fill="#F5C6D3" stroke="#D99AAD"/></g>`
-  return `<svg class="regency-top" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
-    <defs><radialGradient id="pearl" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#F3EEE6"/><stop offset="1" stop-color="#CFC4B5"/></radialGradient></defs>
-    ${flowers}${pearls}${bows}</svg>
-    <p class="regency-title">Notes &amp; Correspondence</p>
-    ${['tl', 'tr', 'bl', 'br'].map((c) => `<svg class="flourish fl-${c}" viewBox="0 0 80 80" aria-hidden="true"><path d="M6 74 V30 C6 14 14 6 30 6 H74 M14 66 V34 C14 22 22 14 34 14 H66 M24 40 c0 -10 6 -16 16 -16 c-8 4 -10 10 -6 16 c-4 -4 -10 -2 -10 0z" fill="none" stroke="#C8A85A" stroke-width="2.2" stroke-linecap="round"/><circle cx="40" cy="40" r="3" fill="#C8A85A"/></svg>`).join('')}`
+  // wisteria falling from both top corners, longest near the corner
+  for (const side of [0, 1]) {
+    for (let k = 0; k < 4; k++) {
+      const fx = side ? 1000 - 18 - k * 30 : 18 + k * 30, len = 150 - k * 30
+      for (let j = 0; j < 24; j++) {
+        const t = j / 24, y = 30 + t * len, spread = 10 * (1 - t) + 2
+        wist += `<circle cx="${(fx + (rnd(side * 99 + k * 31 + j) - 0.5) * spread * 2).toFixed(1)}" cy="${y.toFixed(1)}" r="${(4.6 - t * 2.6).toFixed(1)}" fill="${['#B9A3E0', '#CDB8F0', '#A58BD6', '#E2D6F7'][(j + k) % 4]}" opacity=".9"/>`
+      }
+    }
+  }
+  return `<svg class="regency-top" viewBox="0 0 1000 200" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+    <defs><radialGradient id="pearl" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#F6F1EA"/><stop offset="1" stop-color="#CFC4B5"/></radialGradient>
+    <linearGradient id="gilt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E3A1"/><stop offset=".45" stop-color="#C9A24E"/><stop offset=".6" stop-color="#F2DC94"/><stop offset="1" stop-color="#A9822F"/></linearGradient></defs>
+    ${wist}${pearls}${garland}
+    <g transform="translate(500 128)">
+      <ellipse rx="270" ry="52" fill="#FFFCF6" stroke="url(#gilt)" stroke-width="7"/>
+      <ellipse rx="258" ry="42" fill="none" stroke="#C9A24E" stroke-width="1" stroke-dasharray="2 4"/>
+      ${rose(-272, 0, 10, '#F4C2CF', '#C9788F')}${rose(272, 0, 10, '#F4C2CF', '#C9788F')}${leaf(-286, 8, 150, 15)}${leaf(-262, 12, 40, 13)}${leaf(286, 8, 30, 15)}${leaf(262, 12, 140, 13)}
+      ${rose(0, -50, 9, '#FBE3E8', '#D79AAB')}${leaf(-14, -48, -170, 13)}${leaf(14, -48, -10, 13)}
+    </g>
+    ${butterfly(150, 110, 1.3, '#B8D4F0')}${butterfly(820, 92, 1.1, '#F4C2CF')}${butterfly(880, 150, 0.75, '#D9CCF2')}
+  </svg>
+  <p class="regency-title">Notes &amp; Correspondence</p>
+  ${['tl', 'tr', 'bl', 'br'].map((c) => `<svg class="flourish fl-${c}" viewBox="0 0 80 80" aria-hidden="true"><path d="M6 74 V30 C6 14 14 6 30 6 H74 M14 66 V34 C14 22 22 14 34 14 H66 M24 40 c0 -10 6 -16 16 -16 c-8 4 -10 10 -6 16 c-4 -4 -10 -2 -10 0z" fill="none" stroke="#C8A85A" stroke-width="2.2" stroke-linecap="round"/><circle cx="40" cy="40" r="3" fill="#C8A85A"/></svg>`).join('')}`
 }
 
 function caseTop() {
@@ -97,13 +130,14 @@ export function spell(root, word) {
   const run = ++spelling
   const all = root.querySelectorAll('.al')
   all.forEach((b) => b.classList.add('quiet'))
+  root.querySelector('.board')?.classList.add('dark')
   letters.forEach((c, i) => setTimeout(() => {
     if (run !== spelling) return
     const b = root.querySelector(`[data-al="${c}"]`)
     if (!b) return
     b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash')
-  }, 300 + i * 750))
-  setTimeout(() => { if (run === spelling) all.forEach((b) => b.classList.remove('quiet', 'flash')) }, 300 + letters.length * 750 + 900)
+  }, 500 + i * 900))
+  setTimeout(() => { if (run === spelling) { all.forEach((b) => b.classList.remove('quiet', 'flash')); root.querySelector('.board')?.classList.remove('dark') } }, 300 + letters.length * 900 + 900)
 }
 
 // Case board: red string from pin to pin, through every note in order and a few across
