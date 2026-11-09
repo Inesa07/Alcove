@@ -10,6 +10,7 @@ const OLD_KEY = 'planner.v1'
 const empty = () => ({
   name: '',
   notes: [],      // { id, text, color, createdAt }
+  noteWall: 'cork', // how the notes board looks: cork, letters, regency, case, stars
   gifts: [],      // { id, kind, from, text, at }: little presents friends left in your room
   books: [],      // { id, title, author, color, hasCover, finishedOn, createdAt }
   events: [],     // { id, title, date: 'YYYY-MM-DD', time: 'HH:MM' | '', remind, notified }

@@ -1,6 +1,7 @@
 // Notes: anything you want to remember, on coloured paper notes.
 
-import { getState, subscribe, add, update, remove, restore, NOTE_COLORS } from '../store.js'
+import { getState, subscribe, add, update, remove, restore, setField, NOTE_COLORS } from '../store.js'
+import { WALLS, wallTop, spell, drawString } from '../walls.js'
 import { $, esc, toast } from '../ui.js'
 
 // kinds of paper a note can be
@@ -12,6 +13,7 @@ export function mount(el) {
   let query = ''
   let padColor = NOTE_COLORS[0], padKind = 'sticky'
   let justPinned = null
+  let wall = getState().noteWall || 'cork'
   el.innerHTML = `
     <section class="notes-page">
       <header class="page-head">
@@ -21,11 +23,9 @@ export function mount(el) {
           <input id="n-search" type="search" placeholder="Search your notes">
         </label>
       </header>
-      <div class="board">
-        <svg class="board-lights" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 8 Q125 52 250 14 T500 14 T750 14 T1000 8" fill="none" stroke="#5b4a3a" stroke-width="1.5"/>
-          ${Array.from({ length: 21 }, (_, i) => { const x = i * 50, y = 8 + 22 * Math.abs(Math.sin((i / 20) * Math.PI * 4)) * 0.9 + 6; return `<g class="bulb" style="animation-delay:${(i % 5) * 0.35}s"><circle cx="${x}" cy="${y}" r="9" fill="${['#FFE29A', '#F7A8B8', '#BFE0FF', '#C9F2C7'][i % 4]}" opacity=".35"/><circle cx="${x}" cy="${y}" r="4.5" fill="${['#FFE29A', '#F7A8B8', '#BFE0FF', '#C9F2C7'][i % 4]}"/></g>` }).join('')}
-        </svg>
+      <div class="wall-pick" role="radiogroup" aria-label="Board style">${WALLS.map(([k, n, hint]) => `<button type="button" role="radio" class="wall-opt" data-wall-pick="${k}" aria-checked="${k === wall}" title="${hint}"><i class="wall-sw sw-${k}"></i>${n}</button>`).join('')}</div>
+      <div class="board" data-wall="${wall}">
+        <div class="board-top" id="n-top">${wallTop(wall)}</div>
         <form class="note-new" id="n-form">
           <div class="pad" style="--c:${padColor}">
             <label for="n-text" class="sr-only">New note</label>
@@ -68,6 +68,22 @@ export function mount(el) {
     }).join('')
     justPinned = null
     shown.forEach((n) => { el.querySelector(`[data-note="${n.id}"] .note-text`).innerText = n.text })
+    stringLater()
+  }
+  // the red string has to wait until the notes have found their places
+  let raf = 0
+  const stringLater = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { const w = $('#n-wall', el); if (!w) return; if (wall === 'case') drawString(w); else w.querySelector('.red-string')?.remove() }) }
+  const ro = new ResizeObserver(stringLater)
+  ro.observe($('#n-wall', el))
+
+  function setWall(w) {
+    wall = w
+    setField({ noteWall: w })
+    $('.board', el).dataset.wall = w
+    $('#n-top', el).innerHTML = wallTop(w)
+    el.querySelectorAll('[data-wall-pick]').forEach((b) => b.setAttribute('aria-checked', b.dataset.wallPick === w))
+    stringLater()
+    if (w === 'letters') setTimeout(() => spell(el, 'HELLO'), 400)
   }
 
   $('#n-form', el).addEventListener('submit', (e) => {
@@ -77,6 +93,8 @@ export function mount(el) {
     if (!text) return
     justPinned = add('notes', { text, color: padColor, kind: padKind, createdAt: Date.now() }).id
     box.value = ''
+    // on the letters wall, the lights spell the first word of your note
+    if (wall === 'letters') spell(el, text.split(/\s+/).find((w) => /[a-z]/i.test(w)) || '')
   })
   $('#n-text', el).addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('#n-form', el).requestSubmit()
@@ -84,6 +102,10 @@ export function mount(el) {
   $('#n-search', el).addEventListener('input', (e) => { query = e.target.value; render() })
 
   el.addEventListener('click', (e) => {
+    const wp = e.target.closest('[data-wall-pick]')
+    if (wp) return setWall(wp.dataset.wallPick)
+    const al = e.target.closest('[data-al]')
+    if (al) { al.classList.remove('flash'); void al.offsetWidth; al.classList.add('flash'); setTimeout(() => al.classList.remove('flash'), 900); return }
     const kb = e.target.closest('[data-kind]')
     if (kb) { padKind = kb.dataset.kind; el.querySelectorAll('[data-kind]').forEach((b) => b.setAttribute('aria-checked', b === kb)); return }
     const cb = e.target.closest('[data-pad-color]')
@@ -114,5 +136,6 @@ export function mount(el) {
   })
 
   render()
-  return subscribe(() => { if (!el.contains(document.activeElement) || !document.activeElement.closest('.note-text')) render() })
+  const off = subscribe(() => { if (!el.contains(document.activeElement) || !document.activeElement.closest('.note-text')) render() })
+  return () => { off(); ro.disconnect() }
 }
