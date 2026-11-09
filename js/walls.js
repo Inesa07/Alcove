@@ -180,21 +180,32 @@ function magicTop() {
       <path d="${arch}" fill="url(#winglow)" opacity=".5" transform="translate(0 ${flip ? 0 : 0})" style="mix-blend-mode:screen"/>
     </g>`
   }
-  // a long banner on a pole, with folds, a gold border, fringe and tassels
-  const banner = (x, a, b, d, len = 220) => {
-    const w = 60, l = x - w / 2
+  // a long house banner: heavy cloth with folds and weave, an embroidered gold border,
+  // the house's first letter, its name on a ribbon, a swallowtail end with fringe and tassels
+  const banner = (x, name, a, b, ink, d) => {
+    const w = 86, l = x - w / 2, len = 262, cut = 26
+    const outline = `M${l} 26 H${l + w} V${len} L${x} ${len - cut} L${l} ${len}z`
     let fringe = ''
-    for (let i = 0; i <= 16; i++) { const fx = l + (i / 16) * w; fringe += `<path d="M${fx.toFixed(1)} ${len - 2} v${(9 + (i % 2) * 3)}" stroke="${b}" stroke-width="1.6"/>` }
-    return `<g class="banner" style="animation-delay:${d}s">
-      <path d="M${l} 22 H${l + w} V${len} H${l}z" fill="${a}"/>
-      <path d="M${l} 22 H${l + w} V${len} H${l}z" fill="url(#folds)"/>
-      <path d="M${l + 6} 30 H${l + w - 6} V${len - 8} H${l + 6}z" fill="none" stroke="${b}" stroke-width="2"/>
-      <path d="M${l + 10} 34 H${l + w - 10} V${len - 12} H${l + 10}z" fill="none" stroke="${b}" stroke-width=".8" opacity=".7"/>
-      <path d="M${x} ${len * 0.42 - 26} l18 26 l-18 26 l-18 -26z" fill="none" stroke="${b}" stroke-width="2"/><path d="M${x} ${len * 0.42 - 14} l9 14 l-9 14 l-9 -14z" fill="${b}" opacity=".85"/>
-      ${fringe}<path d="M${l} ${len} h${w}" stroke="${b}" stroke-width="3"/>
-      <path d="M${l - 12} 22 h${w + 24}" stroke="url(#brass)" stroke-width="7" stroke-linecap="round"/><circle cx="${l - 14}" cy="22" r="6" fill="url(#brass)"/><circle cx="${l + w + 14}" cy="22" r="6" fill="url(#brass)"/>
-      <path d="M${l - 2} 22 q-6 30 -2 52" stroke="${b}" stroke-width="1.4" fill="none"/><path d="M${l - 6} 74 l4 -6 l4 6 v10 h-8z" fill="${b}"/>
-      <path d="M${l + w + 2} 22 q6 30 2 52" stroke="${b}" stroke-width="1.4" fill="none"/><path d="M${l + w - 2} 74 l4 -6 l4 6 v10 h-8z" fill="${b}"/>
+    for (let i = 0; i <= 20; i++) { const t = i / 20, fx = l + t * w, fy = t < 0.5 ? len - t * 2 * cut : len - (1 - t) * 2 * cut; fringe += `<path d="M${fx.toFixed(1)} ${(fy - 1).toFixed(1)} l0 ${(8 + (i % 3) * 2)}" stroke="${b}" stroke-width="1.5" stroke-linecap="round"/>` }
+    return `<g class="banner" style="animation-delay:-${d}s">
+      <path d="${outline}" fill="#000" opacity=".35" transform="translate(6 8)" filter="url(#bshadow)"/>
+      <path d="${outline}" fill="${a}"/>
+      <path d="${outline}" fill="url(#folds)"/>
+      <path d="${outline}" filter="url(#weave)" opacity=".5"/>
+      <path d="M${l + 7} 34 H${l + w - 7} V${len - 9} L${x} ${len - cut - 7} L${l + 7} ${len - 9}z" fill="none" stroke="${b}" stroke-width="2.4"/>
+      <path d="M${l + 12} 39 H${l + w - 12} V${len - 17} L${x} ${len - cut - 12} L${l + 12} ${len - 17}z" fill="none" stroke="${b}" stroke-width=".8" stroke-dasharray="3 2" opacity=".85"/>
+      <text x="${x}" y="128" text-anchor="middle" font-family="'Cinzel Decorative', Georgia, serif" font-weight="700" font-size="58" fill="${b}" stroke="${ink}" stroke-width=".8" paint-order="stroke">${name[0]}</text>
+      <path d="M${x - 22} 142 h44 M${x - 14} 147 h28" stroke="${b}" stroke-width="1.4" opacity=".8"/>
+      <g transform="translate(${x} 176)">
+        <path d="M-50 -9 l8 9 l-8 9 h12 v-18z M50 -9 l-8 9 l8 9 h-12 v-18z" fill="${b}" opacity=".75"/>
+        <rect x="-43" y="-12" width="86" height="24" rx="2" fill="url(#ribbon${name[0]})"/>
+        <text y="4" text-anchor="middle" font-family="'Cinzel', 'Cinzel Decorative', Georgia, serif" font-weight="700" font-size="${name.length > 9 ? 10.5 : 11.5}" letter-spacing=".3" fill="${ink}">${name.toUpperCase()}</text>
+      </g>
+      <defs><linearGradient id="ribbon${name[0]}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${b}"/><stop offset=".45" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="${b}"/><stop offset="1" stop-color="${b}" stop-opacity=".8"/></linearGradient></defs>
+      ${fringe}
+      <path d="M${l - 14} 26 h${w + 28}" stroke="url(#brass)" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="${l - 16}" cy="26" r="7.5" fill="url(#brass)"/><circle cx="${l + w + 16}" cy="26" r="7.5" fill="url(#brass)"/>
+      ${[-1, 1].map((sd) => { const tx = sd < 0 ? l - 4 : l + w + 4; return `<path d="M${tx} 28 q${sd * 6} 34 ${sd * 2} 64" stroke="${b}" stroke-width="1.6" fill="none"/><path d="M${tx + sd * 2 - 5} 92 q5 -8 10 0 l2 18 h-14z" fill="${b}"/><path d="M${tx + sd * 2 - 6} 110 h12" stroke="${b}" stroke-width="2"/>` }).join('')}
     </g>`
   }
   // a floating candle: wax with drips, a flame with a blue heart, and a warm halo
@@ -221,15 +232,17 @@ function magicTop() {
       <linearGradient id="moonlit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A5DA8"/><stop offset="1" stop-color="#1B2148"/></linearGradient>
       <linearGradient id="glassshine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></linearGradient>
       <linearGradient id="stoneedge" x1="0" x2="1"><stop offset="0" stop-color="#4a4238"/><stop offset=".5" stop-color="#7d7160"/><stop offset="1" stop-color="#3d362e"/></linearGradient>
+      <filter id="weave" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.4 .25" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 -.15"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+      <filter id="bshadow"><feGaussianBlur stdDeviation="5"/></filter>
       <radialGradient id="winglow" cx=".5" cy=".6" r=".6"><stop offset="0" stop-color="#8FA8FF" stop-opacity=".35"/><stop offset="1" stop-color="#8FA8FF" stop-opacity="0"/></radialGradient>
     </defs>
     <rect width="${W}" height="${H}" fill="url(#sky)"/>
     <rect width="${W}" height="250" filter="url(#clouds)" opacity=".75"/>
     ${stars}
     ${win(70, 0)}${win(930, 1)}
-    ${banner(170, '#6E1423', '#D4A84A', 0)}${banner(246, '#B8892A', '#2A2016', 2.1, 200)}${banner(754, '#1B2E5E', '#B98A5E', 0.9, 200)}${banner(830, '#173F2A', '#C9CED6', 1.4)}
+    ${banner(196, 'Gryffindor', '#7A0A12', '#D9AE3F', '#3a0306', 0)}${banner(300, 'Hufflepuff', '#D6A62A', '#2B231D', '#F6E7B8', 2.1)}${banner(700, 'Ravenclaw', '#13224F', '#B38552', '#0a1230', 0.9)}${banner(804, 'Slytherin', '#18452B', '#C4CAD2', '#0b2215', 1.4)}
     <ellipse cx="500" cy="150" rx="330" ry="130" fill="url(#halo)" opacity=".45"/>
-    ${cs.map(([x, y, h, sc], i) => candle(Math.round(300 + (x - 205) * 0.66), y, h, sc, (i * 0.7) % 5)).join('')}
+    ${cs.map(([x, y, h, sc], i) => candle(Math.round(372 + (x - 205) * 0.42), y, h, sc, (i * 0.7) % 5)).join('')}
     ${sparks}
   </svg>
   <p class="magic-title">Spells &amp; Reminders</p>`

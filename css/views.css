@@ -1317,3 +1317,8 @@ html[data-theme="light"] .wall-pop { background: #fff; border-color: rgba(42,38,
 @media (max-width: 720px) { .magic-top { height: 260px; margin-bottom: -60px; } .board[data-wall="magic"] .pad::after { display: none; } }
 @media (prefers-reduced-motion: reduce) { .magic-top .candle, .magic-top .flame, .magic-top .banner, .magic-top .tw, .magic-top .spark { animation: none; } }
 .board[data-wall="magic"] .note-card, .board[data-wall="gothic"] .note-card, .board[data-wall="regency"] .note-card, .board[data-wall="paris"] .note-card { border-top: 0; }
+/* candlelight breathes a little over the whole hall */
+.board[data-wall="magic"]::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: inherit;
+  background: radial-gradient(ellipse 60% 35% at 50% 18%, rgba(255, 190, 100, .14), transparent 70%); animation: candlelight 3.2s ease-in-out infinite; }
+@keyframes candlelight { 0%, 100% { opacity: 1 } 30% { opacity: .75 } 55% { opacity: .95 } 75% { opacity: .7 } }
+@media (prefers-reduced-motion: reduce) { .board[data-wall="magic"]::after { animation: none; } }
