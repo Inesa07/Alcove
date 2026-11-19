@@ -3,6 +3,7 @@
 import { getState, subscribe, add, update, remove, restore, setField, NOTE_COLORS } from '../store.js'
 import { WALLS, wallId, wallTop, spell, drawString } from '../walls.js'
 import { $, esc, toast } from '../ui.js'
+import { POSTCARDS, postcardArt } from '../life.js'
 
 // kinds of paper a note can be
 const KINDS = [['sticky', 'Sticky note'], ['polaroid', 'Polaroid'], ['card', 'Index card'], ['torn', 'Torn paper']]
@@ -57,13 +58,14 @@ export function mount(el) {
     if (!shown.length) { wall.innerHTML = `<p class="muted">No notes with “${esc(query)}”.</p>`; lastKey = ''; return }
     const html = shown.map((n) => {
       const h = hash(n.id)
-      const kind = n.from ? 'letter' : n.kind || KINDS[h % KINDS.length][0]
-      const hold = n.from ? 'seal' : ['pin', 'tape', 'pin', 'clip'][(h >> 3) % 4]
+      const kind = n.card ? 'postcard' : n.from ? 'letter' : n.kind || KINDS[h % KINDS.length][0]
+      const hold = n.card ? 'tape' : n.from ? 'seal' : ['pin', 'tape', 'pin', 'clip'][(h >> 3) % 4]
       const tilt = ((h % 9) - 4) * 0.7
       return `
       <article class="note note-${kind} hold-${hold} ${n.id === justPinned ? 'just-pinned' : ''}" style="--c:${n.color};--tilt:${tilt}deg;--tape:${['#F7CFD9cc', '#CFE4F5cc', '#FBE7A6cc', '#D8EBD9cc'][h % 4]}" data-note="${n.id}">
         <span class="hold" aria-hidden="true"></span>
         ${kind === 'polaroid' ? `<span class="pola-photo" aria-hidden="true" style="--h:${h % 360}"></span>` : ''}
+        ${kind === 'postcard' ? `<span class="pc-front" aria-hidden="true">${postcardArt(n.card)}<em>${esc(POSTCARDS[n.card] || '')}</em></span><span class="pc-stamp" aria-hidden="true">${postcardArt(n.card)}</span>` : ''}
         <div class="note-text" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note"></div>
         <footer>
           <span>${n.from ? `<b class="note-from">from ${esc(n.from)}</b> · ` : ''}${esc(new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span>

@@ -2,11 +2,12 @@ import * as db from '../db.js'
 // "My room": the room fills the page. Objects open their pages,
 // one input sorts what you write, and "Decorate" lets you change the room piece by piece.
 
-import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS, setField } from '../store.js'
+import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS, setField, setDiaryBook } from '../store.js'
 import { drawRoom, roomTheme, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, stylesFor, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
 import { $, esc, toast, moodFace } from '../ui.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
+import { musicPlaying, openMusic, letterState, tapLetters, letterReminder, onThisDay, snowNow, noticeSnow, petAgeDays, petAgeText, moodWeek, openFocus, openVision, roomStory } from '../life.js'
 
 // Normal mode: objects open pages.
 const PAGES = { bed: ['diary', 'Diary'], shelf: ['books', 'Books'], board: ['notes', 'Notes'], desk: ['calendar', 'Calendar'] }
@@ -65,7 +66,7 @@ export function mount(el) {
 
   // the weather outside, when you turned it on
   let weather = null
-  const getWeather = () => currentWeather().then((w) => { weather = w; renderRoom(); renderTop() })
+  const getWeather = () => currentWeather().then((w) => { weather = w; noticeSnow(w); renderRoom(); renderTop() })
   getWeather()
 
   /* ---------- the room ---------- */
@@ -95,14 +96,10 @@ export function mount(el) {
     if (ids.some((id) => covers.get(id))) renderRoom()
   })()
 
-  function renderRoom() {
-    const box = $('#room', el)
-    if (!box) return // the page was closed
-    const s = getState()
-    const today = todayISO()
-    // books you are reading now come first, so they stand with their covers out on the shelf
-    const list = [...s.books].sort((a, b) => ((b.status === 'reading') - (a.status === 'reading')) || (b.createdAt || 0) - (a.createdAt || 0))
-    const { svg, spots, shapes, bookSpots } = drawRoom({
+  // everything the room needs to draw itself (also used for the picture for stories)
+  function roomOpts(s = getState(), today = todayISO(), list = null) {
+    list = list || [...s.books].sort((a, b) => ((b.status === 'reading') - (a.status === 'reading')) || (b.createdAt || 0) - (a.createdAt || 0))
+    return {
       windowPhoto,
       gifts: s.gifts || [],
       memories: (s.diaryBook.hearts || []).length,
@@ -118,7 +115,22 @@ export function mount(el) {
       diaryToday: s.diaryDays.includes(today),
       leaves: 3 + streak(),
       selected: decorating ? part : null,
-    })
+      music: musicPlaying(),
+      firstSnow: snowNow(),
+      letters: letterState(),
+      mood: moodWeek(),
+      petAge: petAgeDays(),
+    }
+  }
+
+  function renderRoom() {
+    const box = $('#room', el)
+    if (!box) return // the page was closed
+    const s = getState()
+    const today = todayISO()
+    // books you are reading now come first, so they stand with their covers out on the shelf
+    const list = [...s.books].sort((a, b) => ((b.status === 'reading') - (a.status === 'reading')) || (b.createdAt || 0) - (a.createdAt || 0))
+    const { svg, spots, shapes, bookSpots } = drawRoom(roomOpts(s, today, list))
 
     let overlay
     if (decorating) {
@@ -146,6 +158,13 @@ export function mount(el) {
     }
     if (!decorating && spots.gifts) overlay += spots.gifts.map((b, i) => { const g = s.gifts.slice(-3)[i]; return `<button class="pet-spot gift-spot" data-gift="${esc(g.id)}" style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%" aria-label="${esc(GIFTS[g.kind] || 'A gift')} from ${esc(g.from)}"></button>` }).join('')
     if (!decorating && spots.jar) overlay += `<button class="pet-spot jar-spot" data-jar style="left:${spots.jar.l}%;top:${spots.jar.t}%;width:${spots.jar.w}%;height:${spots.jar.h}%" aria-label="Mood jar: how are you today?"></button>`
+    if (!decorating) {
+      const btn = (b, attr, label, cls = '') => b ? `<button class="pet-spot ${cls}" ${attr} style="left:${b.l}%;top:${b.t}%;width:${b.w}%;height:${b.h}%" aria-label="${label}"></button>` : ''
+      overlay += btn(spots.player, 'data-player', musicPlaying() ? 'Your music: change or stop it' : 'Record player: play your own music', 'player-spot')
+      const L = letterState()
+      overlay += btn(spots.letter, 'data-letter', L.ready ? 'A letter from your past self is ready' : 'Letters to future you', L.ready ? 'letter-spot ready' : 'letter-spot')
+      if (room().art === 'vision') overlay += btn(spots.art, 'data-vision', 'Open your vision board', 'vision-spot')
+    }
     if (!decorating && spots.pet) {
       const pn = room().petName || (room().pet === 'dog' ? 'your dog' : 'your cat')
       overlay += `<button class="pet-spot" data-pet style="left:${spots.pet.l}%;top:${spots.pet.t}%;width:${spots.pet.w}%;height:${spots.pet.h}%" aria-label="Pet ${esc(pn)}"></button>`
@@ -173,6 +192,13 @@ export function mount(el) {
       : `<button class="decorate-btn" data-amb aria-expanded="${!$('#amb', el).hidden}" aria-label="Weather and sounds">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-8A5.5 5.5 0 0 1 17 9.5a3.5 3.5 0 0 1 .5 7"/>${playing() ? '<path d="M12 13v7M12 13l3-1"/>' : ''}</svg>
           <span class="amb-label">${weather ? `${weather.temp}°` : playing() ? SOUNDS[playing()] : 'Ambience'}</span>
+        </button>
+        <button class="decorate-btn" data-focus title="Sit at your desk and focus">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 3h4"/></svg>
+          <span class="amb-label">Focus</span>
+        </button>
+        <button class="decorate-btn icon-only" data-story title="A picture of your room for stories" aria-label="Save a picture of your room for stories">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M12 8v6M9.5 11.5L12 14l2.5-2.5"/></svg>
         </button>
         <button class="decorate-btn" data-gallery>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/></svg>
@@ -234,6 +260,11 @@ export function mount(el) {
         <p class="sub">${{ winter: 'A little Christmas tree with gifts', love: 'Heart balloons for Valentine’s', spring: 'A cherry blossom branch', summer: 'Sunflowers in a vase', autumn: 'Pumpkins and autumn leaves' }[seasonOf()]} in your room.</p>
         <button class="ghost-dark small" data-seasonal>${getState().room.seasonal === 'off' ? 'Show it' : 'Hide it'}</button>
       </section>` : ''}
+      <section>
+        <h3>Your music</h3>
+        <p class="sub">${musicPlaying() ? 'Your music is playing on the record player.' : 'Play a song or playlist from Spotify, YouTube, Apple Music or SoundCloud.'}</p>
+        <button class="${musicPlaying() ? 'ghost-dark' : 'primary'} small" data-music>${musicPlaying() ? 'Change the music' : 'Put on a record'}</button>
+      </section>
       <section>
         <h3>Sounds</h3>
         <div class="chips">
@@ -366,6 +397,14 @@ export function mount(el) {
     if (t.closest('[data-gallery]')) return openGallery()
     if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
     if (t.closest('[data-jar]')) return openMoodJar()
+    if (t.closest('[data-player]') || t.closest('[data-music]')) { toggleAmb(false); return openMusic() }
+    if (t.closest('[data-letter]')) return tapLetters()
+    if (t.closest('[data-vision]')) return openVision()
+    if (t.closest('[data-focus]')) return openFocus()
+    if (t.closest('[data-story]')) return roomStory(roomOpts())
+    const otd = t.closest('[data-otd]')
+    if (otd) { if (otd.dataset.otd !== '') setDiaryBook({ spread: Math.floor(Number(otd.dataset.otd) / 2) }); location.hash = otd.dataset.otdGo; return }
+    if (t.closest('[data-otd-x]')) { t.closest('.otd').remove(); try { localStorage.setItem('planner.otd', todayISO()) } catch {} ; return }
     const gf = t.closest('[data-gift]')
     if (gf) return openGift(gf.dataset.gift)
     if (t.closest('[data-amb]')) return toggleAmb()
@@ -393,7 +432,7 @@ export function mount(el) {
         pt.appendChild(h)
         setTimeout(() => h.remove(), 1600)
       }
-      toast(r.pet === 'dog' ? `${name} wags happily` : `${name} purrs`)
+      toast(`${r.pet === 'dog' ? `${name} wags happily` : `${name} purrs`}. ${petAgeText(r.petName || (r.pet === 'dog' ? 'your dog' : 'your cat'), r.pet === 'dog')}`)
       return
     }
     const opt = t.closest('[data-set]')
@@ -407,7 +446,23 @@ export function mount(el) {
   })
 
   render()
+  letterReminder()
+  // a memory from a year, half a year or a month ago
+  let seen = ''
+  try { seen = localStorage.getItem('planner.otd') } catch {}
+  if (seen !== todayISO()) onThisDay().then((m) => {
+    if (!m || !el.isConnected) return
+    const go = m.kind === 'page' ? 'diary' : m.kind === 'note' ? 'notes' : m.kind === 'book' ? 'books' : 'diary'
+    const card = document.createElement('div')
+    card.className = 'otd'
+    card.innerHTML = `<button class="otd-main" data-otd="${m.kind === 'page' ? m.page : ''}" data-otd-go="${go}"><span class="otd-kicker">✦ ${esc(m.label)} today</span>
+      <span class="otd-text">${m.kind === 'page' ? 'You wrote: ' : m.kind === 'note' ? 'You noted: ' : ''}${m.kind === 'page' || m.kind === 'note' ? `“${esc(m.text)}”` : esc(m.text)}</span></button>
+      <button class="otd-x" data-otd-x aria-label="Hide">×</button>`
+    $('.room-stage', el)?.appendChild(card)
+  })
+  const onMusic = () => { renderRoom(); if (!$('#amb', el).hidden) renderAmb(); renderTop() }
+  window.addEventListener('planner:music', onMusic)
   const off = subscribe(renderRoom)
   const tick = setInterval(() => { renderRoom(); getWeather() }, 5 * 60 * 1000)
-  return () => { off(); clearInterval(tick); document.body.classList.remove('decorating') }
+  return () => { off(); clearInterval(tick); window.removeEventListener('planner:music', onMusic); document.body.classList.remove('decorating') }
 }

@@ -81,7 +81,7 @@ export const RUGS = {
 }
 
 export const STYLES = {
-  art: Object.fromEntries(Object.entries({ mountains: 'Mountains', sea: 'Sunset sea', flowers: 'Flowers in a vase', shapes: 'Soft shapes', moon: 'Moon and stars', cat: 'Cat portrait', plants: 'Pressed leaves' })),
+  art: Object.fromEntries(Object.entries({ mountains: 'Mountains', sea: 'Sunset sea', flowers: 'Flowers in a vase', shapes: 'Soft shapes', moon: 'Moon and stars', cat: 'Cat portrait', plants: 'Pressed leaves', vision: 'My vision board' })),
   shelfStyle: { tall: 'Tall bookcase', medium: 'Medium bookcase', low: 'Low shelf' },
   deskStyle: { drawers: 'Desk with drawers', simple: 'Light table', trestle: 'Trestle desk' },
   bedStyle: { classic: 'Classic bed', canopy: 'Canopy bed', cozy: 'Extra cozy bed' },
@@ -139,8 +139,8 @@ export const DEFAULT_ROOM = {
 
 // some rooms call a piece by another name (the seaside "chair" is a hanging egg chair)
 const STYLE_NAMES = {
-  seaside: { chairStyle: { classic: 'Hanging egg chair', swivel: 'Rattan armchair', stool: 'Bean bag' } },
-  pastel: { chairStyle: { classic: 'Cushioned chair', swivel: 'Soft swivel chair', stool: 'Round stool' }, lampStyle: { table: 'Cloud lamp', mushroom: 'Mushroom lamp', globe: 'Glowing globe' } },
+  seaside: { chairStyle: { classic: 'Hanging egg chair', swivel: 'Rattan armchair', stool: 'Bean bag' }, art: { sea: 'No picture', vision: 'My vision board' } },
+  pastel: { art: { flowers: 'No picture', vision: 'My vision board' }, chairStyle: { classic: 'Cushioned chair', swivel: 'Soft swivel chair', stool: 'Round stool' }, lampStyle: { table: 'Cloud lamp', mushroom: 'Mushroom lamp', globe: 'Glowing globe' } },
 }
 export const stylesFor = (theme, key) => STYLE_NAMES[theme]?.[key] || STYLES[key]
 
@@ -625,8 +625,91 @@ function giftsOn(S) {
   })
 }
 
+/* ---------- little things that come and go with your life ---------- */
+
+// a kitten or puppy grows up in your first month together
+export const petStage = (days) => (days == null ? 'grown' : days < 7 ? 'baby' : days < 30 ? 'young' : 'grown')
+const petSize = (days) => ({ baby: 0.72, young: 0.86, grown: 1 }[petStage(days)])
+
+// the room follows how your week felt: a soft candle warmth after hard days, sunshine after good ones
+function moodLight(d, mood, night, W, D, H, T, B) {
+  const c = P(W / 2, D / 2, 2)
+  if (mood < 2.6) {
+    d.raw(`<ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="150" ry="95" fill="#FFC98A" opacity="${night ? 0.16 : 0.1}" pointer-events="none" filter="url(#soft)"/>`)
+  } else if (mood >= 3.8) {
+    d.raw(`<ellipse cx="${f1(c[0])}" cy="${f1(c[1] - 30)}" rx="170" ry="110" fill="#FFF3C4" opacity="${night ? 0.06 : 0.14}" pointer-events="none"/>`)
+    ;[[-60, -40], [40, -70], [90, 10], [-100, 20], [10, 40], [-30, -100]].forEach(([dx, dy], i) => d.raw(`<path class="mood-spark" style="animation-delay:${(i * 0.6).toFixed(1)}s" pointer-events="none" transform="translate(${f1(c[0] + dx)} ${f1(c[1] + dy)})" d="M0,-4 C.6,-1 1,-.6 4,0 C1,.6 .6,1 0,4 C-.6,1 -1,.6 -4,0 C-1,-.6 -.6,-1 0,-4z" fill="#FFE7A0"/>`))
+  }
+}
+
+// where each room keeps them (12 × 12 floor steps; z is the height)
+const LIFE_AT = {
+  cabin: { player: [10.7, 7.0], snow: [9.0, 0.35, 3.25], letter: [3.9, 1.9, 2.52] },
+  observatory: { player: [1.0, 10.9], snow: [7.6, 3.0, 0], letter: [4.6, 1.25, 2.52] },
+  seaside: { player: [8.4, 6.8], snow: [13.3, 6.4, 0.1], letter: [0.75, 2.5, 2.42], vision: [3.95, 4.85, 4.2, 6.0] },
+  pastel: { player: [7.6, 11.2], snow: [9.0, 0.32, 3.05], letter: [1.0, 7.5, 2.52], vision: [1.2, 3.8, 4.5, 6.3] },
+}
+// a little record player on its own stand; notes float up while your music plays
+function turntable(S, x, y) {
+  const { d, spots, music } = S
+  const wood = shade(S.shelfWood, -0.05)
+  d.raw('<g class="part part-player">')
+  const b = P(x, y, 0)
+  d.raw(`<ellipse cx="${f1(b[0])}" cy="${f1(b[1] + 1)}" rx="15" ry="5" fill="#3a2a22" opacity=".16" filter="url(#soft)"/>`)
+  ;[[-0.32, -0.32], [0.32, -0.32], [-0.32, 0.32], [0.32, 0.32]].forEach(([a, c]) => d.box(x + a - 0.05, y + c - 0.05, 0, 0.1, 0.1, 1.05, shade(wood, -0.2)))
+  d.box(x - 0.42, y - 0.42, 1.0, 0.84, 0.84, 0.12, wood)
+  d.box(x - 0.4, y - 0.4, 1.12, 0.8, 0.8, 0.2, ['#E9DCC8', '#CBB9A0', '#B7A388'])
+  const c = P(x, y, 1.33)
+  d.raw(`<g class="${music ? 'record playing' : 'record'}"><ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="8.6" ry="5" fill="#1E1B24"/><ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="6" ry="3.5" fill="none" stroke="#3A3544" stroke-width=".5"/><ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="2.4" ry="1.4" fill="#E98AA0"/></g>`)
+  const arm = P(x + 0.3, y - 0.3, 1.34)
+  d.raw(`<path d="M${f1(arm[0])},${f1(arm[1])} l-4,5 l-1.5,1" stroke="#8C8C96" stroke-width="1.2" fill="none" stroke-linecap="round"/><circle cx="${f1(arm[0])}" cy="${f1(arm[1])}" r="1.4" fill="#8C8C96"/>`)
+  if (music) ;[0, 1, 2].forEach((i) => d.raw(`<text class="note-float" style="animation-delay:${i * 0.9}s" x="${f1(c[0] + 2 + i * 3)}" y="${f1(c[1] - 6)}" font-size="${7 - i}" fill="#B9A3E0">${i % 2 ? '♫' : '♪'}</text>`))
+  spots.player = screenSpot(c[0] - 13, c[1] - 12, 26, 34)
+  d.raw('</g>')
+}
+// the first snow of the winter brings a little snowman until spring
+function snowman(S, x, y, z) {
+  const { d } = S
+  const b = P(x, y, z)
+  d.raw(`<g class="snowman" pointer-events="none"><ellipse cx="${f1(b[0])}" cy="${f1(b[1])}" rx="7" ry="2.2" fill="#000" opacity=".12"/>
+    <circle cx="${f1(b[0])}" cy="${f1(b[1] - 5)}" r="5.4" fill="#FFFFFF" stroke="#DCE6F2" stroke-width=".6"/><circle cx="${f1(b[0])}" cy="${f1(b[1] - 12.5)}" r="3.8" fill="#FFFFFF" stroke="#DCE6F2" stroke-width=".6"/>
+    <path d="M${f1(b[0] - 3.6)},${f1(b[1] - 9.6)} q3.6,2 7.2,0 l.4,1.4 q-4,2 -8,0z" fill="#E0566F"/><path d="M${f1(b[0] + 2.6)},${f1(b[1] - 9.4)} l1.2,3.6" stroke="#E0566F" stroke-width="1.4"/>
+    <circle cx="${f1(b[0] - 1.3)}" cy="${f1(b[1] - 13.2)}" r=".55" fill="#2B2530"/><circle cx="${f1(b[0] + 1.3)}" cy="${f1(b[1] - 13.2)}" r=".55" fill="#2B2530"/><path d="M${f1(b[0])},${f1(b[1] - 12.3)} l3,.6 l-3,.5z" fill="#F08A3C"/>
+    <circle cx="${f1(b[0])}" cy="${f1(b[1] - 6)}" r=".55" fill="#2B2530"/><circle cx="${f1(b[0])}" cy="${f1(b[1] - 4)}" r=".55" fill="#2B2530"/>
+    <path d="M${f1(b[0] - 3.6)},${f1(b[1] - 16)} h7.2 l-1,-1.4 h-5.2z M${f1(b[0] - 2.4)},${f1(b[1] - 17.4)} h4.8 v-3.4 h-4.8z" fill="#3B3646"/></g>`)
+}
+// letters to your future self wait on the desk; one that is ready to open glows
+function letters(S, x, y, z) {
+  const { d, spots, letters: L, glow } = S
+  if (!L || !L.total) return
+  const b = P(x, y, z)
+  d.raw(`<g class="part part-letter${L.ready ? ' ready' : ''}">`)
+  if (L.ready) glow(b[0], b[1] - 3, 16)
+  for (let i = Math.min(L.total, 3) - 1; i >= 0; i--) {
+    const ox = b[0] - 6 + i * 1.6, oy = b[1] - 5 - i * 1.4
+    d.raw(`<g transform="translate(${f1(ox)} ${f1(oy)}) rotate(-12)"><rect width="12" height="8" rx=".8" fill="${i ? '#F3E6D2' : '#FFF9EE'}" stroke="#D9C4A6" stroke-width=".5"/><path d="M0 0 L6 4.6 L12 0" fill="none" stroke="#D9C4A6" stroke-width=".6"/>${i ? '' : `<circle cx="6" cy="4.4" r="1.6" fill="${L.ready ? '#F6C46B' : '#D9637F'}"/>`}</g>`)
+  }
+  spots.letter = screenSpot(b[0] - 9, b[1] - 13, 20, 15)
+  d.raw('</g>')
+}
+function lifeExtras(S) {
+  const cfg = LIFE_AT[roomTheme(S.room.theme)]
+  if (!cfg) return
+  at()
+  if (cfg.vision) {
+    const [u0, u1, z0, z1] = cfg.vision
+    if (S.room.art === 'vision') { S.G('art'); art(S.d, 'vision', 'left', u0, u1, z0, z1, '#D9C2A0'); S.E() }
+    S.spots.art = bounds([[0, u0 - 0.2, z0 - 0.2], [0, u1 + 0.2, z0 - 0.2], [0, u1 + 0.2, z1 + 0.2], [0, u0 - 0.2, z1 + 0.2]], 1)
+  }
+  if (S.snow) snowman(S, ...cfg.snow)
+  letters(S, ...cfg.letter)
+  turntable(S, ...cfg.player)
+  at()
+}
+
 function livePet(S, { bed, floor, sill }) {
   const { d, room, spots, tod } = S
+  lifeExtras(S)
   giftsOn(S)
   if (room.pet !== 'cat' && room.pet !== 'dog') return
   const c = PET_COLORS[room.petColor] || PET_COLORS[room.pet === 'dog' ? 'golden' : 'black']
@@ -635,12 +718,13 @@ function livePet(S, { bed, floor, sill }) {
   d.raw('<g class="pet-g">')
   if (where === 'sill') {
     const at = P(...sill)
-    d.raw(sittingCat(c, at[0], at[1]))
+    d.raw(sittingCat(c, at[0], at[1], S.petSize))
     spots.pet = screenSpot(at[0] - 12, at[1] - 32, 24, 34)
   } else {
     const at = where === 'bed' ? P(...bed) : P(floor[0], floor[1], 0.02)
     if (where === 'floor') d.raw(`<ellipse cx="${at[0].toFixed(1)}" cy="${(at[1] + 1).toFixed(1)}" rx="20" ry="6" fill="#3a2a22" opacity=".18" filter="url(#soft)"/>`)
-    d.raw(pet(room.pet, c, at[0] - 21, at[1] - 21, 0.42))
+    const k = 0.42 * S.petSize
+    d.raw(pet(room.pet, c, at[0] - 50 * k, at[1] - 50 * k, k))
     spots.pet = screenSpot(at[0] - 22, at[1] - 22, 44, 28)
   }
   d.raw('</g>')
@@ -658,9 +742,9 @@ export const PET_COLORS = {
 }
 
 // a cat sitting with its back to us, looking out of the window
-function sittingCat(c, x, y) {
+function sittingCat(c, x, y, size = 1) {
   const id = 'sc' + ++petN
-  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(.36)">
+  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(0.36 * size).toFixed(3)})">
     <defs><radialGradient id="${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="${c.light}"/><stop offset=".6" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></radialGradient></defs>
     <ellipse cx="0" cy="0" rx="26" ry="6" fill="#000" opacity=".25"/>
     <path d="M14,-2 C34,0 38,-14 28,-20" stroke="${c.dark}" stroke-width="7" fill="none" stroke-linecap="round"/>
@@ -917,7 +1001,7 @@ function art(d, kind, side, u0, u1, z0, z1, frame = '#FFFFFF') {
   }
   d.poly(quad(side, Math.min(u0, u1) - 0.2, Math.max(u0, u1) + 0.2, z0 - 0.2, z1 + 0.2, 0.02), shade(frame, -0.08))
   d.poly(quad(side, Math.min(u0, u1) - 0.12, Math.max(u0, u1) + 0.12, z0 - 0.12, z1 + 0.12, 0.025), frame)
-  const bgs = { mountains: '#F3D9CB', sea: '#F7D3C4', flowers: '#F6EFE4', shapes: '#F2E6D8', moon: '#2C3566', cat: '#F4C7CF', plants: '#EEF0E3' }
+  const bgs = { mountains: '#F3D9CB', sea: '#F7D3C4', flowers: '#F6EFE4', shapes: '#F2E6D8', moon: '#2C3566', cat: '#F4C7CF', plants: '#EEF0E3', vision: '#E9D7BE' }
   poly([[0, 0], [1, 0], [1, 1], [0, 1]], bgs[kind] || bgs.mountains, 0)
   if (kind === 'sea') {
     poly([[0, 0], [1, 0], [1, 0.45], [0, 0.45]], '#7FA9C9')
@@ -939,6 +1023,14 @@ function art(d, kind, side, u0, u1, z0, z1, frame = '#FFFFFF') {
     circle(0.55, 0.6, 0.38, '#F3EBD2')
     circle(0.66, 0.67, 0.34, '#2C3566', 3)
     ;[[0.2, 0.3], [0.3, 0.8], [0.8, 0.25], [0.15, 0.6], [0.85, 0.85]].forEach(([u, z]) => circle(u, z, 0.06, '#F3EBD2', 4))
+  } else if (kind === 'vision') {
+    // a little corkboard of dreams: photos, a goal card, a heart and a star
+    ;[[0.06, 0.52, 0.42, 0.92, '#FFFFFF', '#9CC3E0'], [0.5, 0.56, 0.94, 0.94, '#FFFFFF', '#F2B9C6'], [0.1, 0.08, 0.46, 0.44, '#FFFFFF', '#A9D3B5'], [0.54, 0.1, 0.9, 0.46, '#FFF6C9', null]].forEach(([a, b, c, e, paper, pic], i) => {
+      poly([[a, b], [c, b], [c, e], [a, e]], paper, 2 + i)
+      if (pic) poly([[a + 0.04, b + 0.12], [c - 0.04, b + 0.12], [c - 0.04, e - 0.04], [a + 0.04, e - 0.04]], pic, 3 + i)
+      else { ;[0.32, 0.22, 0.14].forEach((z, j) => poly([[a + 0.06, b + z], [c - 0.06 - j * 0.05, b + z], [c - 0.06 - j * 0.05, b + z + 0.03], [a + 0.06, b + z + 0.03]], '#B59A6A', 7)) }
+    })
+    circle(0.27, 0.7, 0.12, '#F6C46B', 8); circle(0.72, 0.28, 0.08, '#E98AA0', 9)
   } else if (kind === 'cat') {
     poly([[0.3, 0.08], [0.7, 0.08], [0.66, 0.55], [0.34, 0.55]], '#3B3646')
     circle(0.5, 0.62, 0.32, '#3B3646', 3)
@@ -1952,7 +2044,7 @@ export function drawRoom(o) {
   d.box(0, 0, 0, W, 0.12, 0.35, [trim, shade(trim, -0.06), shade(trim, -0.08)])
 
   }
-  const S = { d, room, sky, tod, photo: o.windowPhoto, gifts: (o.gifts || []).slice(-3), memories: o.memories || 0, moods: o.moods || [], spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug,
+  const S = { d, room, sky, tod, photo: o.windowPhoto, music: !!o.music, snow: !!o.firstSnow, letters: o.letters || null, petSize: petSize(o.petAge),  gifts: (o.gifts || []).slice(-3), memories: o.memories || 0, moods: o.moods || [], spots, G, E, glow, books, notes, events, diaryToday, leaves, blanket, shelfWood, deskWood, bedWood, rug,
     walls: WALLS[room.wall] || WALLS.lavender, floorPal: FLOORS[room.floor] || FLOORS.oak, chair: (FABRICS[room.chairColor] || FABRICS.lilac).c }
   if (NEW_ROOMS[theme]) NEW_ROOMS[theme](S)
   else if (theme === 'attic') atticScene(S)
@@ -2326,6 +2418,7 @@ export function drawRoom(o) {
     const wl = P(7.8, 2.5, 0)
     d.raw(`<ellipse cx="${wl[0].toFixed(1)}" cy="${wl[1].toFixed(1)}" rx="60" ry="24" fill="#8FB0FF" opacity=".08" pointer-events="none"/>`)
   }
+  if (NEW_ROOMS[theme] && o.mood) moodLight(d, o.mood, sky.lights, W, D, H, T, B)
   const svg = `<svg role="img" aria-label="Your room" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMid meet">${d.out.join('')}</svg>`
   // walls and floor are not boxes, so they get exact outlines (in percent) for clicking
   const outline = (ps) => ps.map((c) => { const [x, y] = P(...c); return `${(((x - VB.x) / VB.w) * 100).toFixed(2)}% ${(((y - VB.y) / VB.h) * 100).toFixed(2)}%` }).join(', ')

@@ -8,17 +8,19 @@ const track = (name, props) => window.dispatchEvent(new CustomEvent('planner:tra
 
 const STEPS = [
   { at: '#room', title: 'This is your room', text: 'Your whole planner lives here. Instead of a menu, you tap things in the room. Let’s see what each one does.' },
-  { at: '#room a[href="#diary"]', title: 'Bed · Diary', text: 'A real little book. Write, draw with the pen, add stickers and photos. Press Keep on a special page to save it in Memories.' },
+  { at: '#room a[href="#diary"]', title: 'Bed · Diary', text: 'A real little book. Write, draw with the pen, add stickers (even your own) and photos. Press Keep on a special page to save it in Memories, or write a letter to future you.' },
   { at: '#room a[href="#books"]', title: 'Bookshelf · Books', text: 'Add the books you read. Track your page, time your reading, rate them and save quotes. They appear on this shelf.' },
   { at: '#room a[href="#notes"]', title: 'Board · Notes', text: 'Quick things to remember, on coloured paper. Friends can leave notes here too.' },
   { at: '#room a[href="#calendar"]', title: 'Desk calendar · Calendar', text: 'Plans by day, week or month. Add a time and you get a reminder.' },
   { at: '#mood-pick', title: 'How do you feel?', text: 'Tap the face that matches your day: from sad (red) to great (green). Your calendar shows the colours of your month.' },
   { at: '#room [data-jar]', title: 'Mood jar', text: 'Every day you pick a mood, a marble of that colour drops into the jar. Tap the jar to see your month.' },
-  { at: '#room [data-pet]', title: 'Your pet', text: 'It moves around the room through the day. Tap it to say hi. You can choose a cat or a dog and give it a name in Decorate.' },
-  { at: '[data-amb]', title: 'Weather and sounds', text: 'Show the real weather outside your window, and play quiet sounds: rain, a fireplace, birds, the sea.' },
+  { at: '#room [data-pet]', title: 'Your pet', text: 'It moves around the room through the day. Tap it to say hi. It grows up with you, from a tiny kitten or puppy. You can choose a cat or a dog and give it a name in Decorate.' },
+  { at: '#room [data-player]', title: 'Record player', text: 'Paste a link from Spotify, YouTube, Apple Music or SoundCloud and your own music plays while you write.' },
+  { at: '[data-amb]', title: 'Weather and sounds', text: 'Show the real weather outside your window, and play quiet sounds: rain, a fireplace, birds, the sea. On the first real snow, a little snowman appears.' },
+  { at: '[data-focus]', title: 'Focus', text: 'Sit down at your desk: the room zooms in, the tea is warm, your pet sleeps next to you, and a timer helps you focus for 25 or 50 minutes.' },
   { at: '[data-gallery]', title: 'Rooms', text: 'Move to a different room: a Nordic cabin, a night observatory, a seaside studio or a pastel room. Each has its own shape and furniture.' },
   { at: '[data-decorate]', title: 'Decorate', text: 'Every piece has 3 styles: the bed, chair, desk, lamp, clock, plant, flowers and wall decorations. Choose a cat or a dog with a name, and even put your own photo in the window.' },
-  { at: '#nav a[href="#friends"]', title: 'Friends', text: 'Share your code with a friend. You can visit each other’s rooms, leave notes and little gifts. Friends never see your diary.' },
+  { at: '#nav a[href="#friends"]', title: 'Friends', text: 'Share your code with a friend. You can visit each other’s rooms, leave notes, postcards and little gifts. Friends never see your diary.' },
   { at: '#nav a[href="#year"]', title: 'Your year', text: 'A small story of your year: days you wrote, books, moods and plans.' },
   { at: '#me-btn, .me-btn', title: 'Your account', text: 'Light or dark look, sign out, and this tour again if you want it. Everything you add is saved and syncs to your other devices.' },
 ]

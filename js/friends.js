@@ -112,7 +112,8 @@ export async function checkInbox() {
     if (fresh.length) setField({ gifts: [...(getState().gifts || []), ...fresh].slice(-3) })
     notes.forEach((n) => {
       if (have.has(n.id)) return
-      add('notes', { text: n.text, color: NOTE_COLORS.includes(n.color) ? n.color : pick(NOTE_COLORS), from: n.from_name || 'A friend', friendNote: n.id, createdAt: new Date(n.created_at).getTime() })
+      const card = (n.color || '').startsWith('card:') ? n.color.slice(5) : null
+      add('notes', { text: n.text, color: NOTE_COLORS.includes(n.color) ? n.color : pick(NOTE_COLORS), from: n.from_name || 'A friend', friendNote: n.id, createdAt: new Date(n.created_at).getTime(), ...(card ? { card } : {}) })
     })
     await c.from('friend_notes').delete().in('id', data.map((n) => n.id))
     if (gifts.length) {
@@ -122,6 +123,8 @@ export async function checkInbox() {
       return
     }
     const names = [...new Set(notes.map((n) => n.from_name || 'A friend'))]
+    const cards = notes.filter((n) => (n.color || '').startsWith('card:'))
+    if (cards.length === notes.length) return toast(`${names.join(' and ')} sent you ${cards.length === 1 ? 'a postcard' : cards.length + ' postcards'}`, { label: 'See', run: () => { location.hash = '#notes' } })
     toast(notes.length === 1 ? `${names[0]} left a note on your board` : `${names.join(' and ')} left ${notes.length} notes on your board`, { label: 'See', run: () => { location.hash = '#notes' } })
   } catch { /* not set up yet, or offline */ } finally { checking = false }
 }

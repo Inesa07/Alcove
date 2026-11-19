@@ -5,6 +5,7 @@ import * as sync from '../sync.js'
 import * as F from '../friends.js'
 import { NOTE_COLORS } from '../store.js'
 import { drawRoom, seasonOf, timeOfDay, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
+import { POSTCARDS, postcardArt } from '../life.js'
 import { $, esc, toast } from '../ui.js'
 
 const petName = (f) => f?.room?.petName || (f?.room?.pet === 'dog' ? 'The dog' : 'The cat')
@@ -20,6 +21,7 @@ export function mount(el) {
   let friends = null
   let noteColor = NOTE_COLORS[0]
   let giftKind = 'flowers'
+  let cardKind = 'sea'
 
   const visiting = () => location.hash.split('/')[1] || ''
 
@@ -95,6 +97,12 @@ export function mount(el) {
             <button class="primary small" type="submit">Leave note</button></div>
             <p class="muted small-note">Only ${name} will read it.</p>
           </form>
+          <form class="fr-card fr-post" id="fr-post">
+            <h3>Send ${name} a postcard</h3>
+            <div class="post-pick" role="radiogroup" aria-label="Postcard">${Object.entries(POSTCARDS).map(([k, label]) => `<button type="button" role="radio" class="post-opt ${k === cardKind ? 'on' : ''}" data-card-kind="${k}" aria-checked="${k === cardKind}" title="${label}">${postcardArt(k)}</button>`).join('')}</div>
+            <textarea id="fr-post-text" rows="3" maxlength="300" placeholder="Wish you were here…" required></textarea>
+            <div class="code-row"><span class="muted small-note">It arrives on ${name}’s notes board with a stamp.</span><button class="primary small" type="submit">Send</button></div>
+          </form>
           <form class="fr-card fr-gift" id="fr-gift">
             <h3>Leave a gift in ${name}’s room</h3>
             <div class="gift-pick" role="radiogroup" aria-label="Gift">${Object.entries(GIFTS).map(([k, label]) => `<button type="button" role="radio" class="gift-opt ${k === giftKind ? 'on' : ''}" data-gift-kind="${k}" aria-checked="${k === giftKind}" title="${label}"><img src="${giftThumb(k)}" alt=""><span>${label.replace(/^an? /i, '')}</span></button>`).join('')}</div>
@@ -118,6 +126,12 @@ export function mount(el) {
     if (t.closest('[data-copy]')) {
       const code = $('.code', el).textContent
       try { await navigator.clipboard.writeText(code); toast('Code copied') } catch { toast('Your code: ' + code) }
+      return
+    }
+    const ck = t.closest('[data-card-kind]')
+    if (ck) {
+      cardKind = ck.dataset.cardKind
+      el.querySelectorAll('[data-card-kind]').forEach((b) => { b.classList.toggle('on', b === ck); b.setAttribute('aria-checked', b === ck) })
       return
     }
     const gk = t.closest('[data-gift-kind]')
@@ -195,6 +209,18 @@ export function mount(el) {
         $('#fr-gift-text', el).value = ''
         toast(`${GIFTS[giftKind]} is waiting in ${friends.find((x) => x.user_id === visiting())?.name || 'your friend'}’s room`)
       } catch (err) { toast('Could not leave the gift: ' + (err.message || 'no connection')) } finally { btn.disabled = false }
+    }
+    if (e.target.id === 'fr-post') {
+      const text = $('#fr-post-text', el).value.trim()
+      if (!text) return
+      const btn = e.target.querySelector('[type=submit]')
+      btn.disabled = true
+      try {
+        await F.leaveNote(visiting(), text, 'card:' + cardKind)
+        window.dispatchEvent(new CustomEvent('planner:track', { detail: { name: 'friend_postcard', props: { kind: cardKind } } }))
+        $('#fr-post-text', el).value = ''
+        toast(`Your postcard is on its way to ${friends.find((x) => x.user_id === visiting())?.name || 'your friend'}`)
+      } catch (err) { toast('Could not send the postcard: ' + (err.message || 'no connection')) } finally { btn.disabled = false }
     }
     if (e.target.id === 'fr-note') {
       const text = $('#fr-text', el).value.trim()

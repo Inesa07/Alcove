@@ -16,7 +16,8 @@ const empty = () => ({
   events: [],     // { id, title, date: 'YYYY-MM-DD', time: 'HH:MM' | '', remind, notified }
   diaryDays: [],  // dates on which something was written or drawn (for the plant)
   diaryBook: { count: 0, spread: 0 }, // how many pages the diary has, and where it is open
-  room: { ...DEFAULT_ROOM },
+  room: { ...DEFAULT_ROOM, petSince: todayISO() },
+  letters: [],    // { id, text, writtenOn, openOn, opened }: letters to your future self
 })
 
 let state = load()
@@ -28,6 +29,7 @@ function load() {
     if (raw) {
       const s = { ...empty(), ...JSON.parse(raw) }
       s.room = upgradeRoom({ ...DEFAULT_ROOM, ...s.room })
+      if (!s.room.petSince) s.room.petSince = longAgo() // your pet was already with you before it could grow
       s.diaryBook = { ...empty().diaryBook, ...s.diaryBook }
       return s
     }
@@ -36,6 +38,8 @@ function load() {
   } catch { /* broken or blocked storage: start fresh */ }
   return empty()
 }
+
+function longAgo() { return todayISO(new Date(Date.now() - 60 * 86400000)) }
 
 // Version 1 had tasks; they become calendar events.
 function migrate(v1) {
@@ -57,6 +61,7 @@ function save(fromCloud = false) {
 export function replaceState(next) {
   state = { ...empty(), ...next }
   state.room = upgradeRoom({ ...DEFAULT_ROOM, ...state.room })
+  if (!state.room.petSince) state.room.petSince = longAgo()
   state.diaryBook = { ...empty().diaryBook, ...state.diaryBook, spread: state.diaryBook?.spread ?? 0 }
   save(true)
 }

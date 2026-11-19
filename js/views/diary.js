@@ -10,6 +10,7 @@ import { STICKERS, sticker } from '../stickers.js'
 import { LAYOUTS, blockHTML, rowsOf, maxRows } from '../templates.js'
 import { chapterHTML, isChapter, PROMPTS } from '../chapters.js'
 import { $, $$, esc, debounce, toast } from '../ui.js'
+import { writeLetter, pageStory } from '../life.js'
 
 const INKS = [['Ink', '#3B3450'], ['Rose', '#D9637F'], ['Blue', '#4F79AC'], ['Green', '#4F8A6D'], ['Honey', '#C9902F'], ['Lilac', '#8E74C4']]
 const SIZES = [['Thin', 3], ['Medium', 6], ['Thick', 12]]
@@ -73,6 +74,7 @@ export async function appendDiaryText(_date, text) {
   }
   const used = page.items.filter((i) => i.type === 'text').length
   page.items.push({ id: uid(), type: 'text', x: 8, y: 8 + used * 13, w: 84, rot: 0, text, color: INKS[0][1], fs: 5.6 })
+  if (!page.writtenOn) page.writtenOn = todayISO()
   await savePage(n, page)
   markDiaryDay(todayISO(), true)
 }
@@ -95,6 +97,8 @@ export function mount(el) {
         <div class="diary-actions">
           <button class="decorate-btn" data-memories><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>Memories</span><b class="mem-count" id="d-mem-count"></b></button>
           <button class="decorate-btn" data-search><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>Search</span></button>
+          <button class="decorate-btn" data-letter-new title="Write a letter that opens one day in the future"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6.5L20.5 7"/></svg><span>Letter to future me</span></button>
+          <button class="decorate-btn" data-story title="A picture of these pages for stories"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M12 8v6M9.5 11.5L12 14l2.5-2.5"/></svg><span>For stories</span></button>
           <button class="decorate-btn" data-pdf><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2.5 2.5L15 14M12.5 10v6.5"/></svg><span>Save as PDF</span></button>
         </div>
       </header>
@@ -178,6 +182,8 @@ export function mount(el) {
   const flushSave = debounce(() => {
     const list = [...pendingSave]
     pendingSave.clear()
+    // the day a page was first written on, for "on this day"
+    list.forEach(([, p]) => { if (hasContent(p) && !p.writtenOn) p.writtenOn = todayISO() })
     // a neighbour read ahead of time may now be old
     list.forEach(([n, p]) => savePage(n, p).then(() => ahead.delete(Math.floor(n / 2))))
     if (list.some(([, p]) => hasContent(p))) { markDiaryDay(todayISO(), true); if (list.some(([n]) => n === nextFree)) findNextFree() }
@@ -192,7 +198,7 @@ export function mount(el) {
     const sel = selected === it.id ? ' selected' : ''
     let inner = ''
     if (it.type === 'text') inner = `<span class="grip" data-grip aria-hidden="true"></span><div class="text" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Text on page" style="color:${it.color};--fs:${it.fs || 5.6}"></div>`
-    if (it.type === 'sticker') inner = sticker(it.sticker)
+    if (it.type === 'sticker') inner = it.src ? `<img class="my-sticker" src="${it.src}" alt="Sticker" draggable="false">` : sticker(it.sticker)
     if (it.type === 'photo') inner = `<figure class="polaroid"><img src="${it.src}" alt="Photo" style="aspect-ratio:${1 / (it.ratio || 1)}"><span class="tape" aria-hidden="true"></span></figure>`
     return `<div class="item item-${it.type}${sel}" data-id="${it.id}" style="${style}">
       ${inner}
@@ -439,6 +445,67 @@ export function mount(el) {
     addItem(side, { type: 'text', x: 8, y: Math.min(8 + used * 13, 84), w: 84, text: '', color, fs: 5.6 })
   }
 
+  // your own stickers: made from a picture or drawn by you, kept in IndexedDB
+  let mine = []
+  db.get('mystickers').then((v) => { mine = v || [] })
+  const keepSticker = async (src) => { mine = [{ id: uid(), src }, ...mine].slice(0, 40); await db.set('mystickers', mine); return mine[0] }
+  const addMySticker = (src) => addItem(emptierSide(), { type: 'sticker', src, x: 20 + Math.random() * 50, y: 20 + Math.random() * 55, w: 20, rot: tilt() * 2 })
+  function drawSticker() {
+    const d = document.createElement('dialog')
+    d.className = 'sheet-dialog draw-sticker'
+    const COLS = ['#2A2638', '#E98AA0', '#F2B544', '#8FC6A9', '#7FA3C8', '#8E74C4', '#FFFFFF']
+    d.innerHTML = `<div class="book-form"><h3>Draw a sticker</h3>
+      <canvas width="600" height="600" class="ds-canvas" aria-label="Draw here"></canvas>
+      <div class="ds-row">${COLS.map((c, i) => `<button class="ink ${i ? '' : 'on'}" data-ds-ink="${c}" style="--ink:${c}" aria-label="Colour"></button>`).join('')}<span class="grow"></span><button class="ghost small" data-ds-clear>Clear</button></div>
+      <div class="bf-actions"><span class="grow"></span><button class="ghost" data-ds-cancel>Cancel</button><button class="primary" data-ds-save>Make a sticker</button></div></div>`
+    document.body.appendChild(d)
+    const cv = $('canvas', d), ctx = cv.getContext('2d')
+    let ink = COLS[0], last = null, drew = false
+    ctx.lineCap = ctx.lineJoin = 'round'; ctx.lineWidth = 16
+    const pt = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * (cv.width / r.width), (e.clientY - r.top) * (cv.height / r.height)] }
+    cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); last = pt(e); ctx.strokeStyle = ink; ctx.beginPath(); ctx.arc(last[0], last[1], 8, 0, 7); ctx.fillStyle = ink; ctx.fill(); drew = true })
+    cv.addEventListener('pointermove', (e) => { if (!last) return; const p = pt(e); ctx.beginPath(); ctx.moveTo(...last); ctx.lineTo(...p); ctx.stroke(); last = p })
+    cv.addEventListener('pointerup', () => { last = null })
+    d.addEventListener('close', () => d.remove())
+    d.addEventListener('click', async (e) => {
+      const c = e.target.closest('[data-ds-ink]')
+      if (c) { ink = c.dataset.dsInk; $$('[data-ds-ink]', d).forEach((b) => b.classList.toggle('on', b === c)) }
+      if (e.target.closest('[data-ds-clear]')) { ctx.clearRect(0, 0, 600, 600); drew = false }
+      if (e.target.closest('[data-ds-cancel]') || e.target === d) d.close()
+      if (e.target.closest('[data-ds-save]')) {
+        if (!drew) return toast('Draw something first')
+        const m = await keepSticker(trimCanvas(cv))
+        d.close(); closePop(); addMySticker(m.src)
+      }
+    })
+    d.showModal()
+  }
+  // cuts the empty space around a drawing
+  function trimCanvas(cv) {
+    const { width: w, height: h } = cv
+    const px = cv.getContext('2d').getImageData(0, 0, w, h).data
+    let x0 = w, y0 = h, x1 = 0, y1 = 0
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (px[(y * w + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y }
+    const pad = 14
+    x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w, x1 + pad); y1 = Math.min(h, y1 + pad)
+    const out = document.createElement('canvas'); out.width = x1 - x0; out.height = y1 - y0
+    out.getContext('2d').drawImage(cv, x0, y0, out.width, out.height, 0, 0, out.width, out.height)
+    return out.toDataURL('image/png')
+  }
+  // a picture becomes a round-cornered sticker (PNG keeps its transparent parts)
+  async function stickerFromFile(f) {
+    const url = URL.createObjectURL(f)
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('This picture cannot be opened')); i.src = url })
+      const k = Math.min(1, 360 / Math.max(img.width, img.height))
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k)
+      const ctx = c.getContext('2d')
+      if (f.type !== 'image/png' && f.type !== 'image/webp' && f.type !== 'image/gif') { ctx.beginPath(); ctx.roundRect(0, 0, c.width, c.height, Math.min(c.width, c.height) * 0.14); ctx.clip() }
+      ctx.drawImage(img, 0, 0, c.width, c.height)
+      return c.toDataURL('image/png')
+    } finally { URL.revokeObjectURL(url) }
+  }
+
   const addSticker = (name) => addItem(emptierSide(), { type: 'sticker', sticker: name, x: 20 + Math.random() * 50, y: 20 + Math.random() * 55, w: 18, rot: tilt() * 2 })
 
   async function addPhoto(file) {
@@ -519,7 +586,11 @@ export function mount(el) {
         <div class="idea-card"><span aria-hidden="true">✦</span><p>${esc(q)}</p></div>
         <div class="idea-actions"><button class="ghost small" data-idea-next>Another idea</button><button class="primary small" data-idea-use>Write about it</button></div>`
     } else if (kind === 'stickers') {
-      pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>`
+      pop.innerHTML = `<p class="pop-title">Stickers</p><div class="sticker-grid">${Object.keys(STICKERS).map((n) => `<button data-sticker="${n}" aria-label="${n} sticker" title="${n}">${sticker(n)}</button>`).join('')}</div>
+        <p class="pop-title">My own stickers</p>
+        <div class="sticker-grid mine">${mine.map((m) => `<span class="my-st"><button data-my-sticker="${m.id}" aria-label="Your sticker"><img src="${m.src}" alt=""></button><button class="my-st-x" data-my-sticker-del="${m.id}" aria-label="Delete this sticker">×</button></span>`).join('')}
+          <label class="st-add" title="Make a sticker from a picture"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span>Picture</span><input type="file" accept="image/*" class="sr-only" data-my-sticker-file></label>
+          <button class="st-add" data-draw-sticker title="Draw your own sticker"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg><span>Draw</span></button></div>`
     } else {
       side = layoutSide
       const page = pages[side]
@@ -776,6 +847,8 @@ export function mount(el) {
     if (t.closest('[data-search]')) return openSearch()
     if (t.closest('[data-memories]')) return openMemories()
     if (t.closest('[data-pdf]')) return savePDF()
+    if (t.closest('[data-letter-new]')) return writeLetter()
+    if (t.closest('[data-story]')) { selected = null; render(); return pageStory(pageEls.filter((_, i) => !isEmpty(pages[i])).length ? pageEls.filter((_, i) => !isEmpty(pages[i])) : pageEls, `Pages ${num(0) + 1}–${num(1) + 1} · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`) }
     const turnBtn = t.closest('[data-turn]')
     if (turnBtn) return turn(Number(turnBtn.dataset.turn))
     const toolBtn = t.closest('[data-tool]')
@@ -787,6 +860,11 @@ export function mount(el) {
     if (ps) { popover = null; return openPop('layout', Number(ps.dataset.pickSide)) }
     const st = t.closest('[data-sticker]')
     if (st) { closePop(); return addSticker(st.dataset.sticker) }
+    const ms = t.closest('[data-my-sticker]')
+    if (ms) { const m = mine.find((x) => x.id === ms.dataset.mySticker); closePop(); return m && addMySticker(m.src) }
+    const msd = t.closest('[data-my-sticker-del]')
+    if (msd) { mine = mine.filter((x) => x.id !== msd.dataset.myStickerDel); db.set('mystickers', mine); popover = null; return openPop('stickers') }
+    if (t.closest('[data-draw-sticker]')) return drawSticker()
     const lay = t.closest('[data-layout]')
     if (lay) { const side = Number(lay.dataset.side); setLayout(side, lay.dataset.layout); popover = null; return openPop('layout', side) }
     const tint = t.closest('[data-tint]')
@@ -862,6 +940,14 @@ export function mount(el) {
   }
   $('#d-goto', el).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); goTo() } })
   $('#d-goto', el).addEventListener('change', goTo)
+
+  el.addEventListener('change', async (e) => {
+    if (!e.target.matches('[data-my-sticker-file]')) return
+    const f = e.target.files[0]
+    e.target.value = ''
+    if (!f) return
+    try { const m = await keepSticker(await stickerFromFile(f)); closePop(); addMySticker(m.src); toast('Your sticker is saved in “My own stickers”') } catch (err) { toast(err.message) }
+  })
 
   $('#d-photo', el).addEventListener('change', (e) => {
     const f = e.target.files[0]
