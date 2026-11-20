@@ -6,6 +6,7 @@ import * as F from '../friends.js'
 import { NOTE_COLORS } from '../store.js'
 import { drawRoom, seasonOf, timeOfDay, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
 import { POSTCARDS, postcardArt } from '../life.js'
+import { kitPending, kitLoad } from '../kit.js'
 import { $, esc, toast } from '../ui.js'
 
 const petName = (f) => f?.room?.petName || (f?.room?.pet === 'dog' ? 'The dog' : 'The cat')
@@ -237,6 +238,10 @@ export function mount(el) {
 
   const onHash = () => { if (location.hash.startsWith('#friends') && friends) F.getMyProfile().then(render) }
   window.addEventListener('hashchange', onHash)
+  // real furniture is drawn a moment after the room: draw the room again when it is ready
+  const onKit = () => { if (el.isConnected && friends) onHash() }
+  window.addEventListener('planner:kit', onKit)
+  const kitTick = setInterval(() => { if (kitPending()) kitLoad() }, 400)
   load()
-  return () => window.removeEventListener('hashchange', onHash)
+  return () => { window.removeEventListener('hashchange', onHash); window.removeEventListener('planner:kit', onKit); clearInterval(kitTick) }
 }

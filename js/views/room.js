@@ -5,6 +5,7 @@ import * as db from '../db.js'
 import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS, COVER_COLORS, setMood, MOODS, setField, setDiaryBook } from '../store.js'
 import { drawRoom, roomTheme, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, stylesFor, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
 import { $, esc, toast, moodFace } from '../ui.js'
+import { kitPending, kitLoad } from '../kit.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
 import { musicPlaying, openMusic, letterState, tapLetters, letterReminder, onThisDay, snowNow, noticeSnow, petAgeDays, petAgeText, moodWeek, openFocus, openVision, roomStory } from '../life.js'
@@ -126,6 +127,7 @@ export function mount(el) {
   function renderRoom() {
     const box = $('#room', el)
     if (!box) return // the page was closed
+    queueMicrotask(() => { if (kitPending()) kitLoad().then(() => { if (el.isConnected) renderRoom() }) })
     const s = getState()
     const today = todayISO()
     // books you are reading now come first, so they stand with their covers out on the shelf
@@ -186,7 +188,7 @@ export function mount(el) {
   /* ---------- top bar ---------- */
 
   function renderTop() {
-    $('#room-hint', el).textContent = decorating ? 'Tap anything in the room: the bed, lamp, clock, plant, flowers, walls… Each has 3 styles' : 'Tap something in your room'
+    $('#room-hint', el).textContent = decorating ? 'Tap anything in the room: the bed, lamp, clock, plant, flowers, walls… Each has its own styles' : 'Tap something in your room'
     $('#room-actions', el).innerHTML = decorating
       ? `<button class="ghost-dark" data-gallery>Change room</button><button class="ghost-dark" data-cancel>Cancel</button><button class="primary" data-save>Save</button>`
       : `<button class="decorate-btn" data-amb aria-expanded="${!$('#amb', el).hidden}" aria-label="Weather and sounds">
@@ -344,9 +346,16 @@ export function mount(el) {
   /* ---------- choosing a whole room ---------- */
 
   const looks = {}
-  const lookOf = (id) => looks[id] || (looks[id] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
-    drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id, v: 2 }, tod: 'day', books: 8, notes: 3, events: 1, leaves: 7 }).svg
-      .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')))
+  const lookOf = (id) => {
+    if (looks[id]) return looks[id]
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      drawRoom({ room: { ...DEFAULT_ROOM, ...THEME_PRESETS[id], theme: id, v: 2 }, tod: 'day', books: 8, notes: 3, events: 1, leaves: 7 }).svg
+        .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))
+    // keep the picture only once its furniture is drawn; then show the rooms again
+    if (kitPending()) kitLoad().then(() => { const g = $('#gallery', el); if (g && !g.hidden) openGallery() })
+    else looks[id] = url
+    return url
+  }
 
   function openGallery() {
     const g = $('#gallery', el)

@@ -5,6 +5,7 @@
 import * as sync from './sync.js'
 import { OWNER_EMAIL as OWNER } from './config.js'
 import { getState, setName } from './store.js'
+import { kitPending, kitLoad } from './kit.js'
 import { drawRoom, DEFAULT_ROOM } from './room.js'
 import { $, esc, toast, themeMode, setTheme } from './ui.js'
 import { maybeOnboard } from './onboarding.js'
@@ -183,6 +184,7 @@ export async function setupAccount() {
   const { svg } = drawRoom({ room: DEFAULT_ROOM, books: 6, notes: 4, events: 1, leaves: 6 })
   gate.innerHTML = `<div class="auth-art" aria-hidden="true">${svg}</div><div class="auth-card"></div>`
   document.body.append(gate)
+  if (kitPending()) kitLoad().then(() => { gate.querySelector('.auth-art').innerHTML = drawRoom({ room: DEFAULT_ROOM, books: 6, notes: 4, events: 1, leaves: 6 }).svg })
   gate.addEventListener('submit', (e) => { e.preventDefault(); submit(e.target) })
   gate.addEventListener('click', (e) => {
     const m = e.target.closest('[data-mode]')

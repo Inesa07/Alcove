@@ -2,6 +2,8 @@
 // can change colour and style. A point (x, y, z) in the room becomes a point on screen
 // with P(): x goes to the right wall, y towards you along the left wall, z is height.
 
+import { kitSprite } from './kit.js'
+
 let K = 17 // how big one step of the room is on screen; the new, bigger rooms use a smaller one
 const OX = 195, OY = 268
 const COS = Math.cos(Math.PI / 6)
@@ -82,10 +84,10 @@ export const RUGS = {
 
 export const STYLES = {
   art: Object.fromEntries(Object.entries({ mountains: 'Mountains', sea: 'Sunset sea', flowers: 'Flowers in a vase', shapes: 'Soft shapes', moon: 'Moon and stars', cat: 'Cat portrait', plants: 'Pressed leaves', vision: 'My vision board' })),
-  shelfStyle: { tall: 'Tall bookcase', medium: 'Medium bookcase', low: 'Low shelf' },
+  shelfStyle: { tall: 'Open bookcase', medium: 'Closed bookcase', wide: 'Wide bookcase', low: 'Low shelf' },
   deskStyle: { drawers: 'Desk with drawers', simple: 'Light table', trestle: 'Trestle desk' },
-  bedStyle: { classic: 'Classic bed', canopy: 'Canopy bed', cozy: 'Extra cozy bed' },
-  chairStyle: { classic: 'Wooden chair', swivel: 'Soft swivel chair', stool: 'Round stool' },
+  bedStyle: { classic: 'Double bed', single: 'Single bed', bunk: 'Bunk bed', canopy: 'Canopy bed', cozy: 'Extra cozy bed' },
+  chairStyle: { swivel: 'Office chair', classic: 'Wooden chair', cushion: 'Chair with a cushion', modern: 'Modern chair', stool: 'Bar stool' },
   lampStyle: { table: 'Table lamp', mushroom: 'Mushroom lamp', globe: 'Glowing globe' },
   plantStyle: { leafy: 'Leafy plant', round: 'Round leaves', cactus: 'Cactus' },
   vase: { tulips: 'Tulips', lavender: 'Lavender', sunflowers: 'Sunflowers', none: 'No vase' },
@@ -644,10 +646,10 @@ function moodLight(d, mood, night, W, D, H, T, B) {
 
 // where each room keeps them (12 × 12 floor steps; z is the height)
 const LIFE_AT = {
-  cabin: { player: [10.7, 7.0], snow: [9.0, 0.35, 3.25], letter: [3.9, 1.9, 2.52] },
-  observatory: { player: [1.0, 10.9], snow: [7.6, 3.0, 0], letter: [4.6, 1.25, 2.52] },
-  seaside: { player: [8.4, 6.8], snow: [13.3, 6.4, 0.1], letter: [0.75, 2.5, 2.42], vision: [3.95, 4.85, 4.2, 6.0] },
-  pastel: { player: [7.6, 11.2], snow: [9.0, 0.32, 3.05], letter: [1.0, 7.5, 2.52], vision: [1.2, 3.8, 4.5, 6.3] },
+  cabin: { player: [11.2, 6.6], snow: [10.0, 0.35, 3.25], letter: [4.5, 1.1, 1.7] },
+  observatory: { player: [0.7, 11.2], snow: [7.6, 3.0, 0], letter: [3.4, 1.1, 1.7] },
+  seaside: { player: [2.6, 10.9], snow: [13.3, 6.4, 0.1], letter: [0.6, 2.3, 1.8], vision: [3.95, 4.85, 4.2, 6.0] },
+  pastel: { player: [7.95, 5.05], snow: [9.0, 0.32, 3.05], letter: [0.6, 11.0, 1.8], vision: [1.2, 3.8, 4.5, 6.3] },
 }
 // a little record player on its own stand; notes float up while your music plays
 function turntable(S, x, y) {
@@ -656,12 +658,12 @@ function turntable(S, x, y) {
   d.raw('<g class="part part-player">')
   const b = P(x, y, 0)
   d.raw(`<ellipse cx="${f1(b[0])}" cy="${f1(b[1] + 1)}" rx="15" ry="5" fill="#3a2a22" opacity=".16" filter="url(#soft)"/>`)
-  ;[[-0.32, -0.32], [0.32, -0.32], [-0.32, 0.32], [0.32, 0.32]].forEach(([a, c]) => d.box(x + a - 0.05, y + c - 0.05, 0, 0.1, 0.1, 1.05, shade(wood, -0.2)))
-  d.box(x - 0.42, y - 0.42, 1.0, 0.84, 0.84, 0.12, wood)
-  d.box(x - 0.4, y - 0.4, 1.12, 0.8, 0.8, 0.2, ['#E9DCC8', '#CBB9A0', '#B7A388'])
-  const c = P(x, y, 1.33)
+  // a little cabinet with the player on top
+  kit(d, 'cabinetBed', x - 0.6, y - 0.49, 0, 0, woodOf(wood))
+  d.box(x - 0.4, y - 0.4, 1.01, 0.8, 0.8, 0.2, ['#E9DCC8', '#CBB9A0', '#B7A388'])
+  const c = P(x, y, 1.22)
   d.raw(`<g class="${music ? 'record playing' : 'record'}"><ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="8.6" ry="5" fill="#1E1B24"/><ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="6" ry="3.5" fill="none" stroke="#3A3544" stroke-width=".5"/><ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="2.4" ry="1.4" fill="#E98AA0"/></g>`)
-  const arm = P(x + 0.3, y - 0.3, 1.34)
+  const arm = P(x + 0.3, y - 0.3, 1.23)
   d.raw(`<path d="M${f1(arm[0])},${f1(arm[1])} l-4,5 l-1.5,1" stroke="#8C8C96" stroke-width="1.2" fill="none" stroke-linecap="round"/><circle cx="${f1(arm[0])}" cy="${f1(arm[1])}" r="1.4" fill="#8C8C96"/>`)
   if (music) ;[0, 1, 2].forEach((i) => d.raw(`<text class="note-float" style="animation-delay:${i * 0.9}s" x="${f1(c[0] + 2 + i * 3)}" y="${f1(c[1] - 6)}" font-size="${7 - i}" fill="#B9A3E0">${i % 2 ? '♫' : '♪'}</text>`))
   spots.player = screenSpot(c[0] - 13, c[1] - 12, 26, 34)
@@ -2561,43 +2563,20 @@ function cabinScene(S) {
   d.box(6.4, 0, 3.15, 3.0, 0.4, 0.1, ['#FFFFFF', '#EEE6DA', '#E2D8C8'])
   E()
 
-  nightstand(d, 5.0, 0.15, S.bedWood, sky.lights, glow, '#F2E6D4', room.lampStyle)
-  spots.lamp = lampSpot(5.45, 0.6, 1.45)
-  // the bed under the window, the head against the wall
-  G('bed')
-  const bw = S.bedWood
-  d.shadow(5.9, 0.2, 9.9, 5.4, 0.18)
-  d.box(6.0, 0.15, 0, 3.7, 0.35, 2.7, [shade(bw, 0.2), bw, shade(bw, -0.12)])
-  for (let x = 6.4; x < 9.6; x += 0.45) d.line([[x, 0.51, 0.9], [x, 0.51, 2.5]], shade(bw, -0.16), 0.8)
-  d.box(6.0, 0.5, 0, 3.7, 4.8, 0.75, [shade(bw, 0.2), bw, shade(bw, -0.12)])
-  soft(d, 6.05, 0.55, 0.75, 3.6, 4.7, 0.6, ['#FFFFFF', '#F3EEE6', '#E6DED2'], 0.3)
-  const mt = 1.35
-  soft(d, 6.25, 0.7, mt, 1.55, 0.9, 0.5, ['#FFFFFF', '#F5F0E9', '#E7E0D5'], 0.38, 2)
-  soft(d, 7.95, 0.7, mt, 1.55, 0.9, 0.5, ['#FFFFFF', '#F5F0E9', '#E7E0D5'], 0.38, 2)
-  duvet(d, 6.0, 1.7, 9.68, 5.27, mt + 0.08, 0.7, S.blanket)
-  // a red knitted throw across the foot of the bed
-  d.poly([[6.0, 3.7, mt + 0.1], [9.68, 3.7, mt + 0.1], [9.68, 4.7, mt + 0.1], [6.0, 4.7, mt + 0.1]], '#C9564F')
-  d.poly([[9.7, 3.7, mt + 0.1], [9.7, 4.7, mt + 0.1], [9.7, 4.7, mt - 0.7], [9.7, 3.7, mt - 0.7]], '#A84540')
-  for (let x = 6.2; x < 9.6; x += 0.35) d.line([[x, 3.75, mt + 0.11], [x + 0.15, 4.65, mt + 0.11]], '#F5E6D8', 0.8, ' opacity=".7"')
-  if (room.bedStyle === 'cozy') cozyBed(d, 6.0, 0.2, 9.68, 5.27, mt + 0.1, 'y')
-  openDiary(d, 7.0, 2.2, mt + 0.12, diaryToday)
-  if (room.bedStyle === 'canopy') canopy(d, 6.0, 0.25, 9.7, 5.3, 0, 5.4, bw)
-  spots.bed = bounds([[5.9, 0.2, 0], [9.9, 0.2, 0], [9.9, 5.4, 0], [5.9, 5.4, 0], [6.0, 0.2, 2.8]], 0)
-  E()
-
   at(0, 0)
-  // a tall bookcase in the corner
+  // a bookcase in the corner
   G('shelf')
-  spots.shelf = bookcase(d, { y0: 0.3, len: 3.0, depth: 1.0, ...shelfSize(room), wood: S.shelfWood, books })
+  const shf = kShelf(S, 0.02, 0.3, 3)
+  spots.shelf = shf.spot
   E()
   at(0.8, 0)
-  // a writing desk on the right wall with a pinboard above it
+  // a writing desk on the back wall with a pinboard above it
   G('desk')
-  styledDesk(d, { x0: 2.2, x1: 4.9, depth: 1.7, top: 2.5, wood: S.deskWood, style: room.deskStyle })
-  calendarFront(d, 2.5, 3.2, 1.25, 2.5, 0.85, events)
-  spots.desk = bounds([[2.4, 1.0, 2.5], [3.4, 1.0, 2.5], [3.4, 1.3, 3.4], [2.4, 1.3, 3.4]], 3)
-  mug(d, 3.8, 1.0, 2.5, '#C9564F', !lit)
-  deskLamp(d, 4.3, 0.4, 2.5, lit, glow, '#2F3A44')
+  const dsk = kDesk(S, 1.4, 0.02, 0), top = dsk.top
+  calendarFront(d, 2.0, 2.7, 0.9, top, 0.85, events)
+  spots.desk = bounds([[1.9, 0.7, top], [2.9, 0.7, top], [2.9, 1.0, top + 0.9], [1.9, 1.0, top + 0.9]], 3)
+  mug(d, 3.4, 1.0, top, '#C9564F', !lit)
+  deskLamp(d, 4.1, 0.45, top, lit, glow, '#2F3A44')
   E()
   G('board')
   d.box(2.3, 0, 3.6, 2.5, 0.1, 1.7, ['#BC9A6E', '#C9A77A', '#AE8D62'])
@@ -2608,8 +2587,29 @@ function cabinScene(S) {
   spots.board = bounds([[2.3, 0, 3.6], [4.8, 0, 3.6], [4.8, 0, 5.3], [2.3, 0, 5.3]], 2)
   E()
   G('chair')
-  spots.chair = deskChair(d, 3.6, 2.4, { color: S.chair, wood: shade(S.deskWood, -0.15), style: room.chairStyle })
+  spots.chair = kChair(S, 2.9, dsk.d + 0.55, 2)
   E()
+  at(0, 0)
+  const ns = kNightstand(S, 5.75, 0.1, 0, '#F2E6D4')
+  spots.lamp = lampSpot(ns.x, ns.y, ns.z)
+  // the bed under the window, the head against the wall
+  G('bed')
+  const bx = 7.1
+  const bd = kBed(S, bx, 0.02, 0, 0)
+  const mt = bd.mt
+  if (bd.m !== 'bedBunk') {
+    // a red knitted throw across the foot of the bed
+    const x0 = bx + 0.1, x1 = bx + bd.w - 0.1, y0 = bd.d - 1.35, y1 = bd.d - 0.4
+    d.poly([[x0, y0, mt + 0.1], [x1, y0, mt + 0.1], [x1, y1, mt + 0.1], [x0, y1, mt + 0.1]], '#C9564F')
+    d.poly([[x1 + 0.02, y0, mt + 0.1], [x1 + 0.02, y1, mt + 0.1], [x1 + 0.02, y1, mt - 0.6], [x1 + 0.02, y0, mt - 0.6]], '#A84540')
+    for (let x = x0 + 0.2; x < x1 - 0.1; x += 0.35) d.line([[x, y0 + 0.05, mt + 0.11], [x + 0.15, y1 - 0.05, mt + 0.11]], '#F5E6D8', 0.8, ' opacity=".7"')
+  }
+  if (room.bedStyle === 'cozy') cozyBed(d, bx + 0.1, 1.3, bx + bd.w - 0.1, bd.d - 0.2, mt + 0.1, 'y')
+  openDiary(d, bx + 1.0, 2.0, mt + 0.12, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, bx, 0.1, bx + bd.w, bd.d, 0, 5.4, S.bedWood)
+  spots.bed = bounds([[bx, 0, 0], [bx + bd.w, 0, 0], [bx + bd.w, bd.d, 0], [bx, bd.d, 0], [bx, 0.2, 2.8]], 0)
+  E()
+
 
 
   at(0, 1)
@@ -2649,16 +2649,11 @@ function cabinScene(S) {
   if (S.rug) d.raw(`<path d="M${f(rc[0] - 40)},${f(rc[1])} q6,-14 22,-17 q10,-6 24,-2 q18,2 30,12 q4,8 -8,14 q-14,10 -34,9 q-22,0 -30,-6 q-8,-4 -4,-10z" fill="${S.rug}"/><path d="M${f(rc[0] - 30)},${f(rc[1] - 2)} q10,-6 20,-4 M${f(rc[0])},${f(rc[1] - 8)} q12,2 18,8 M${f(rc[0] - 10)},${f(rc[1] + 6)} q12,2 24,-2" stroke="${shade(S.rug || '#FFFFFF', -0.06)}" stroke-width="1.2" fill="none" opacity="${S.rug ? 1 : 0}"/>`)
   E()
   at(0, 1.9)
-  soft(d, 0.1, 7.3, 0, 1.9, 2.1, 1.1, ['#7C8F7A', '#6F826D', '#5F715E'], 0.3)
-  soft(d, 0.0, 7.2, 1.1, 0.55, 2.3, 1.9, ['#869985', '#7C8F7A', '#6A7D69'], 0.3)
-  soft(d, 0.3, 7.15, 1.1, 1.7, 0.4, 0.9, ['#869985', '#7C8F7A', '#6A7D69'], 0.2)
-  soft(d, 0.3, 9.15, 1.1, 1.7, 0.4, 0.9, ['#869985', '#7C8F7A', '#6A7D69'], 0.2)
-  soft(d, 0.6, 7.6, 1.1, 1.3, 1.5, 0.35, ['#91A390', '#869985', '#73866F'], 0.3, 1)
-  d.poly([[0.55, 8.6, 3.0], [0.55, 9.5, 3.0], [1.9, 9.5, 1.1], [1.9, 9.5, 0.4], [1.9, 8.7, 0.4], [1.9, 8.6, 1.5]], '#E8DCC8', ' opacity=".95"')
-  // a floor lamp next to the armchair
-  const fl = P(1.0, 9.85, 0)
-  d.raw(`<path d="M${f(fl[0])},${f(fl[1])} V${f(fl[1] - 70)}" stroke="#2F3A44" stroke-width="1.6"/><path d="M${f(fl[0] - 9)},${f(fl[1] - 70)} h18 l-4,-12 h-10z" fill="${lit ? '#FDEBC4' : '#F3EADB'}"/>`)
-  if (lit) glow(fl[0], fl[1] - 64, 40)
+  // an armchair by the fire and a floor lamp next to it
+  d.shadow(0, 6.9, 2.1, 9.3, 0.16)
+  kit(d, 'loungeChair', 0.1, 7.0, 0, 3, { carpet: '#7C8F7A', ...woodOf(shade(S.shelfWood, -0.1)) })
+  kit(d, 'lampRoundFloor', 0.15, 9.3, 0, 3, { metal: '#2F3A44', lamp: lit ? '#FDEBC4' : '#F3EADB' })
+  if (lit) { const fl = P(0.5, 9.6, 3.6); glow(fl[0], fl[1], 40) }
   at(1.8, 1.8)
   plant(d, 9.6, 9.6, leaves, room.plantStyle)
   spots.plant = bounds([[9.1, 9.1, 0], [10.1, 10.1, 0], [9.1, 10.1, 4.5], [10.1, 9.1, 4.5]], 2)
@@ -2677,7 +2672,7 @@ function cabinScene(S) {
   d.raw(`<rect x="${f(lt[0] - 4)}" y="${f(lt[1] - 14)}" width="8" height="12" rx="1.5" fill="#2F3A44"/><rect x="${f(lt[0] - 2.6)}" y="${f(lt[1] - 12)}" width="5.2" height="8" rx="1" fill="${sky.lights ? '#FFE3A8' : '#F3EADB'}"/><path d="M${f(lt[0] - 2)},${f(lt[1] - 14)} q2,-4 4,0" stroke="#2F3A44" stroke-width="1" fill="none"/>`)
   if (sky.lights) glow(lt[0], lt[1] - 8, 16)
   at(0, 0)
-  extras(S, { clock: { side: 'right', u: 7.0, z: 4.7 }, vase: { x: 0.5, y: 1.7, z: shelfSize(room).h }, deco: { side: 'right', u0: 0.4, u1: 8.2, top: () => 5.95 } })
+  extras(S, { clock: { side: 'right', u: 7.0, z: 4.7 }, vase: { x: 0.5, y: 1.6, z: shf.h }, deco: { side: 'right', u0: 0.4, u1: 8.2, top: () => 5.95 } })
   livePet(S, { bed: [10.6, 2.9, mt + 0.15], floor: [6.0, 8.1], sill: [9.4, 0.25, 3.25] })
 }
 
@@ -2734,33 +2729,33 @@ function observatoryScene(S) {
   E()
   // a bookcase with a globe on top
   G('shelf')
-  const sh = shelfSize(room)
-  spots.shelf = bookcase(d, { y0: 0.4, len: 3.0, depth: 1.1, ...sh, wood: S.shelfWood, books })
-  const gb = P(0.55, 1.9, sh.h + 0.15)
+  const sh = kShelf(S, 0.02, 0.6, 3)
+  spots.shelf = sh.spot
+  const gb = P(0.55, 1.05, sh.h + 0.05)
   d.raw(`<path d="M${f(gb[0])},${f(gb[1])} v-4" stroke="#C9A55A" stroke-width="1.4"/><circle cx="${f(gb[0])}" cy="${f(gb[1] - 12)}" r="8" fill="#5F86B3"/><path d="M${f(gb[0] - 5)},${f(gb[1] - 16)} q3,2 2,6 q4,1 6,-2 M${f(gb[0] + 1)},${f(gb[1] - 7)} q3,-2 5,0" fill="#7FB08A" stroke="#7FB08A"/><path d="M${f(gb[0] - 9)},${f(gb[1] - 12)} a9,9 0 0 0 18,0" stroke="#C9A55A" stroke-width="1" fill="none"/>`)
-  moodJar(S, 0.55, 2.95, sh.h + 0.02)
+  moodJar(S, 0.55, 1.95, sh.h + 0.02)
   E()
 
   at(1.2, 0)
   // a desk on the right wall with a glowing moon lamp and star charts
   G('desk')
-  styledDesk(d, { x0: 2.9, x1: 5.7, depth: 1.8, top: 2.5, wood: S.deskWood, style: room.deskStyle })
-  calendarFront(d, 4.2, 4.9, 1.3, 2.5, 0.85, events)
-  spots.desk = bounds([[4.1, 1.1, 2.5], [5.1, 1.1, 2.5], [5.1, 1.4, 3.4], [4.1, 1.4, 3.4]], 3)
-  d.poly([[3.1, 0.3, 2.51], [4.0, 0.3, 2.51], [4.0, 1.3, 2.51], [3.1, 1.3, 2.51]], '#E9DFC6')
-  d.line([[3.3, 0.6, 2.52], [3.6, 0.9, 2.52], [3.8, 0.5, 2.52]], '#5F86B3', 0.8)
-  const ml = P(5.35, 0.6, 2.5)
+  const dsk = kDesk(S, 2.4, 0.02, 0), top = dsk.top
+  calendarFront(d, 4.0, 4.7, 0.95, top, 0.85, events)
+  spots.desk = bounds([[3.9, 0.75, top], [4.9, 0.75, top], [4.9, 1.05, top + 0.9], [3.9, 1.05, top + 0.9]], 3)
+  d.poly([[2.8, 0.3, top + 0.01], [3.7, 0.3, top + 0.01], [3.7, 1.3, top + 0.01], [2.8, 1.3, top + 0.01]], '#E9DFC6')
+  d.line([[3.0, 0.6, top + 0.02], [3.3, 0.9, top + 0.02], [3.5, 0.5, top + 0.02]], '#5F86B3', 0.8)
+  const ml = P(5.2, 0.6, top)
   d.raw(`<circle cx="${f(ml[0])}" cy="${f(ml[1] - 8)}" r="8" fill="#FFF0C4"/><circle cx="${f(ml[0] + 2)}" cy="${f(ml[1] - 10)}" r="1.4" fill="#EADBA6"/><rect x="${f(ml[0] - 3)}" y="${f(ml[1] - 1)}" width="6" height="2" fill="#C9A55A"/>`)
   glow(ml[0], ml[1] - 8, 40)
   E()
 
   G('chair')
-  spots.chair = deskChair(d, 4.3, 2.5, { color: S.chair, wood: shade(S.deskWood, -0.1), style: room.chairStyle })
+  spots.chair = kChair(S, 4.0, dsk.d + 0.55, 2)
   E()
 
   at(0, 0.8)
-  nightstand(d, 0.12, 4.55, S.bedWood, sky.lights, glow, '#FFF0C4', room.lampStyle)
-  spots.lamp = lampSpot(0.6, 5.0, 1.45)
+  const ns = kNightstand(S, 0.05, 4.0, 3, '#FFF0C4')
+  spots.lamp = lampSpot(ns.x, ns.y, ns.z)
   at(2.2, 0)
   // the telescope on its tripod, looking at the moon
   const tb = P(7.9, 3.4, 0), tt = P(7.9, 3.4, 2.6)
@@ -2771,13 +2766,14 @@ function observatoryScene(S) {
   at(0, 1.0)
   // a daybed along the left wall with a star blanket
   G('bed')
-  const mt = bedHeadLeft(d, { y0: 5.6, y1: 8.9, len: 4.4, base: 0.7, mattressZ: 1.45, blanket: S.blanket, wood: S.bedWood, head: shade(S.bedWood, 0.12) })
-  if (room.bedStyle === 'cozy') cozyBed(d, 0.3, 5.6, 4.7, 8.9, mt, 'x')
-  for (let i = 0; i < 16; i++) { const p = P(1.9 + (i % 4) * 0.7, 5.9 + Math.floor(i / 4) * 0.75 + (i % 3) * 0.08, mt + 0.02); d.raw(`<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".8" fill="#FFE9A8"/>`) }
-  soft(d, 1.25, 7.0, mt, 0.5, 0.8, 0.5, ['#F2D27A', '#E9C46A', '#D6B058'], 0.25, 1)
-  openDiary(d, 2.3, 6.0, mt + 0.03, diaryToday)
-  if (room.bedStyle === 'canopy') canopy(d, 0.4, 5.65, 4.7, 8.85, 0, 5.6, S.bedWood)
-  spots.bed = bounds([[0, 5.4, 0], [5.0, 5.4, 0], [5.0, 9.2, 0], [0, 9.2, 0], [0, 5.6, 3.3]], 0)
+  const by = 5.1
+  const bd = kBed(S, 0.02, by, 0, 3)
+  const mt = bd.mt
+  if (room.bedStyle === 'cozy') cozyBed(d, 1.2, by + 0.2, bd.w - 0.1, by + bd.d - 0.2, mt + 0.05, 'x')
+  if (bd.m !== 'bedBunk') for (let i = 0; i < 16; i++) { const p = P(1.9 + (i % 4) * 0.75, by + 0.4 + Math.floor(i / 4) * (bd.d - 0.8) / 4 + (i % 3) * 0.08, mt + 0.02); d.raw(`<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".8" fill="#FFE9A8"/>`) }
+  openDiary(d, 2.4, by + bd.d / 2 - 0.6, mt + 0.03, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, 0.1, by, bd.w, by + bd.d, 0, 5.6, S.bedWood)
+  spots.bed = bounds([[0, by, 0], [bd.w, by, 0], [bd.w, by + bd.d, 0], [0, by + bd.d, 0], [0, by + 0.2, 3.3]], 0)
   E()
   G('art'); art(d, room.art || 'moon', 'left', 5.6, 8.8, 4.0, 6.0, '#C9A55A'); spots.art = bounds([[0, 5.4, 3.8], [0, 9.0, 3.8], [0, 9.0, 6.2], [0, 5.4, 6.2]], 1); E()
 
@@ -2802,7 +2798,7 @@ function observatoryScene(S) {
   // a bedside table with a moon lamp, a stack of books by the telescope
   ;[['#8FB7E0', 0.2], ['#E9C46A', 0.16], ['#E9A8B4', 0.18]].reduce((z, [c, h]) => { d.box(5.0, 9.0, z, 0.85, 0.6, h, c); return z + h }, 0)
   at(0, 0)
-  extras(S, { clock: { side: 'right', u: 2.0, z: 6.4 }, vase: { x: 3.5, y: 1.45, z: 2.5, at: [1.2, 0] }, deco: { side: 'left', u0: 3.8, u1: 11.6, top: () => 9.4 } })
+  extras(S, { clock: { side: 'right', u: 2.0, z: 6.4 }, vase: { x: 2.4, y: 1.25, z: KIT[KIT_DESK[room.deskStyle] || 'desk'][1] * KIT_S, at: [1.2, 0] }, deco: { side: 'left', u0: 3.8, u1: 11.6, top: () => 9.4 } })
   livePet(S, { bed: [3.6, 9.0, mt + 0.05], floor: [7.8, 8.0], sill: null })
 }
 
@@ -2868,10 +2864,10 @@ function seasideScene(S) {
   at(0, 0)
   // low shelves with books and shells along the left wall
   G('shelf')
-  const sh = shelfSize(room)
-  spots.shelf = bookcase(d, { y0: 0.5, len: 3.2, depth: 1.2, ...sh, wood: S.shelfWood, books })
-  ;[[0.5, 1.1, '#F4D7C8'], [0.5, 2.3, '#FFFFFF']].forEach(([x, y, c]) => { const p = P(x, y, 3.32); d.raw(`<path d="M${f(p[0] - 5)},${f(p[1])} q5,-9 10,0 z" fill="${c}"/><path d="M${f(p[0] - 3)},${f(p[1])} l3,-6 l3,6" stroke="#D9B8A6" stroke-width=".5" fill="none"/>`) })
-  moodJar(S, 0.6, 3.2, sh.h + 0.12)
+  const sh = kShelf(S, 0.02, 0.5, 3)
+  spots.shelf = sh.spot
+  ;[[0.5, 1.1, '#F4D7C8'], [0.5, 2.3, '#FFFFFF']].forEach(([x, y, c]) => { const p = P(x, y, sh.h + 0.02); d.raw(`<path d="M${f(p[0] - 5)},${f(p[1])} q5,-9 10,0 z" fill="${c}"/><path d="M${f(p[0] - 3)},${f(p[1])} l3,-6 l3,6" stroke="#D9B8A6" stroke-width=".5" fill="none"/>`) })
+  moodJar(S, 0.6, 1.8, sh.h + 0.02)
   E()
   // a calendar on the wall, and a driftwood string with photos above the bed
   G('desk')
@@ -2895,18 +2891,19 @@ function seasideScene(S) {
   spots.board = bounds([[0, 4.6, 5.2], [0, 9.4, 5.2], [0, 9.4, 6.8], [0, 4.6, 6.8]], 2)
   E()
   at(0, 0.6)
-  nightstand(d, 0.12, 3.95, S.bedWood, sky.lights, glow, '#F4D7C8', room.lampStyle)
-  spots.lamp = lampSpot(0.6, 4.4, 1.45)
+  const ns = kNightstand(S, 0.05, 3.6, 3, '#F4D7C8')
+  spots.lamp = lampSpot(ns.x, ns.y, ns.z)
   at(0, 0.8)
   // the bed: white linen with a blue striped throw
   G('bed')
-  const mt = bedHeadLeft(d, { y0: 5.0, y1: 8.5, len: 4.4, base: 0.55, mattressZ: 1.35, blanket: S.blanket, wood: S.bedWood, head: shade(S.bedWood, 0.25) })
-  if (room.bedStyle === 'cozy') cozyBed(d, 0.3, 5.0, 4.7, 8.5, mt, 'x')
-  for (let x = 3.0; x < 4.6; x += 0.32) d.poly([[x, 5.03, mt + 0.02], [x + 0.14, 5.03, mt + 0.02], [x + 0.14, 8.47, mt + 0.02], [x, 8.47, mt + 0.02]], '#4F86B8', ' opacity=".8"')
-  soft(d, 1.25, 6.4, mt, 0.5, 0.8, 0.5, ['#A9C9EA', '#8FB7E0', '#7BA3CD'], 0.25, 1)
-  openDiary(d, 1.9, 5.3, mt + 0.03, diaryToday)
-  if (room.bedStyle === 'canopy') canopy(d, 0.4, 5.05, 4.7, 8.45, 0, 5.6, S.bedWood)
-  spots.bed = bounds([[0, 4.8, 0], [5.0, 4.8, 0], [5.0, 8.8, 0], [0, 8.8, 0], [0, 5.0, 3.2]], 0)
+  const by = 4.75
+  const bd = kBed(S, 0.02, by, 0, 3)
+  const mt = bd.mt
+  if (room.bedStyle === 'cozy') cozyBed(d, 1.2, by + 0.2, bd.w - 0.1, by + bd.d - 0.2, mt + 0.05, 'x')
+  if (bd.m !== 'bedBunk') for (let x = bd.w - 1.7; x < bd.w - 0.2; x += 0.32) d.poly([[x, by + 0.12, mt + 0.04], [x + 0.14, by + 0.12, mt + 0.04], [x + 0.14, by + bd.d - 0.12, mt + 0.04], [x, by + bd.d - 0.12, mt + 0.04]], '#4F86B8', ' opacity=".8"')
+  openDiary(d, 2.0, by + bd.d / 2 - 0.6, mt + 0.05, diaryToday)
+  if (room.bedStyle === 'canopy') canopy(d, 0.1, by, bd.w, by + bd.d, 0, 5.6, S.bedWood)
+  spots.bed = bounds([[0, by, 0], [bd.w, by, 0], [bd.w, by + bd.d, 0], [0, by + bd.d, 0], [0, by + 0.2, 3.2]], 0)
   E()
   at(0, 1.9)
   // a surfboard leaning on the wall by the door
@@ -2945,7 +2942,7 @@ function seasideScene(S) {
   at(1.2, 1.9)
   ;[[4.4, 9.4], [4.95, 9.55]].forEach(([x, y], i) => { const b2 = P(x, y, 0); d.raw(`<rect x="${f(b2[0] - 3.5)}" y="${f(b2[1] - 11 + i * 3)}" width="7" height="${10 - i * 3}" rx="1.5" fill="#FFFFFF" stroke="#C9A27A" stroke-width=".8"/><circle cx="${f(b2[0])}" cy="${f(b2[1] - 6 + i * 2)}" r="1.6" fill="#F6C46B"/>`); if (sky.lights) glow(b2[0], b2[1] - 6, 12) })
   at(0, 0)
-  extras(S, { clock: { side: 'left', u: 4.3, z: 6.9 }, vase: { x: 0.6, y: 1.6, z: shelfSize(room).h }, deco: { side: 'left', u0: 5.8, u1: 11.6, top: () => 8.2 } })
+  extras(S, { clock: { side: 'left', u: 4.3, z: 6.9 }, vase: { x: 0.6, y: 1.1, z: KIT[KIT_SHELF[room.shelfStyle] || 'bookcaseOpen'][1] * KIT_S }, deco: { side: 'left', u0: 5.8, u1: 11.6, top: () => 8.2 } })
   livePet(S, { bed: [3.6, 8.4, mt + 0.05], floor: [8.4, 8.4], sill: null })
 }
 
@@ -2980,22 +2977,21 @@ function pastelScene(S) {
   E()
 
   at(0, 0)
-  // a floor bed on the platform, with plush toys and a cloud pillow
+  // a bed on the platform, with plush toys and the open diary
   G('bed')
   const z0 = ph
-  d.shadow(0.2, 0.2, 5.0, 4.0, 0.1)
-  soft(d, 0.3, 0.3, z0, 4.4, 3.6, 0.55, ['#FFFFFF', '#F6F0F4', '#ECE4EC'], 0.35)
-  const mt = z0 + 0.55
-  soft(d, 0.5, 0.45, mt, 1.6, 1.0, 0.5, ['#FFFFFF', '#F8F2F6', '#ECE4EC'], 0.42, 2)
-  soft(d, 2.3, 0.45, mt, 1.6, 1.0, 0.5, ['#FFFFFF', '#F8F2F6', '#ECE4EC'], 0.42, 2)
-  duvet(d, 0.3, 1.6, 4.7, 3.88, mt + 0.06, 0.45, S.blanket)
-  if (room.bedStyle === 'cozy') cozyBed(d, 0.3, 0.3, 4.7, 3.88, mt + 0.08, 'y')
-  for (let i = 0; i < 10; i++) { const p = P(0.7 + (i % 5) * 0.8, 2.1 + Math.floor(i / 5) * 0.9, mt + 0.07); d.raw(`<circle cx="${f(p[0])}" cy="${f(p[1])}" r="1.2" fill="#FFFFFF" opacity=".8"/>`) }
-  plush(d, 4.1, 0.9, mt + 0.1, '#F2B5C6')
-  plush(d, 3.5, 0.6, mt + 0.1, '#B9A3E0')
-  openDiary(d, 1.2, 2.3, mt + 0.08, diaryToday)
-  if (room.bedStyle === 'canopy') canopy(d, 0.35, 0.35, 4.7, 3.9, ph, ph + 4.4, S.bedWood === WOODS.white.c ? '#E9DFF2' : S.bedWood)
-  spots.bed = bounds([[0.2, 0.2, 0], [5.0, 0.2, 0], [5.0, 4.2, 0], [0.2, 4.2, 0], [0.3, 0.3, 2.5]], 0)
+  const bedM = KIT_BED[room.bedStyle] || 'bedDouble'
+  d.shadow(0.1, 0.1, 5.1, 4.3, 0.1)
+  const bd = kit(d, bedM, 0.1, 0.0, z0, 3, { wood: pw, woodDark: shade(pw, -0.06), carpet: S.blanket, carpetWhite: '#FFFFFF' })
+  const mt = z0 + (bedM === 'bedBunk' ? 0.5 : 1.05)
+  if (room.bedStyle === 'cozy') cozyBed(d, 0.6, 0.3, bd.w - 0.2, bd.d - 0.2, mt + 0.08, 'y')
+  if (bedM !== 'bedBunk') {
+    plush(d, 1.0 + bd.w * 0.55, 0.7, mt + 0.1, '#F2B5C6')
+    plush(d, 0.4 + bd.w * 0.55, 0.5, mt + 0.1, '#B9A3E0')
+    openDiary(d, 1.6, bd.d * 0.55, mt + 0.08, diaryToday)
+  }
+  if (room.bedStyle === 'canopy') canopy(d, 0.2, 0.1, 0.1 + bd.w, bd.d, ph, ph + 4.4, S.bedWood === WOODS.white.c ? '#E9DFF2' : S.bedWood)
+  spots.bed = bounds([[0.1, 0, 0], [0.1 + bd.w, 0, 0], [0.1 + bd.w, bd.d, 0], [0.1, bd.d, 0], [0.2, 0.2, 2.5]], 0)
   E()
   at(1.6, 0)
   // a little low table on the platform with a lamp shaped like a cloud
@@ -3007,24 +3003,17 @@ function pastelScene(S) {
   at(0, 0.8)
   // a desk setup along the left wall: monitor, keyboard, calendar, a cloud mirror above
   G('desk')
-  const dx = 1.9, dy0 = 5.0, dy1 = 8.4, top = 2.5
-  d.shadow(0, dy0 - 0.1, dx + 0.3, dy1 + 0.2, 0.14)
-  if (room.deskStyle === 'trestle') {
-    ;[dy0 + 0.35, dy1 - 0.35].forEach((y) => { d.line([[0.2, y, 0], [dx - 0.2, y, top - 0.15]], shade(S.deskWood, -0.12), 3); d.line([[dx - 0.2, y, 0], [0.2, y, top - 0.15]], shade(S.deskWood, -0.12), 3) })
-  } else {
-    ;[[0.15, dy0 + 0.1], [dx - 0.25, dy0 + 0.1], [0.15, dy1 - 0.25], [dx - 0.25, dy1 - 0.25]].forEach(([x, y]) => d.box(x, y, 0, 0.12, 0.12, top - 0.15, S.deskWood))
-    if (room.deskStyle === 'drawers') {
-      d.box(0.1, dy1 - 1.4, 0, dx - 0.2, 1.3, top - 0.15, [shade(S.deskWood, 0.08), S.deskWood, shade(S.deskWood, -0.08)])
-      ;[0.4, 1.1, 1.75].forEach((z) => { const k = P(dx - 0.09, dy1 - 0.75, z); d.raw(`<ellipse cx="${f(k[0])}" cy="${f(k[1])}" rx="1.6" ry="1" fill="${shade(S.deskWood, -0.3)}"/>`) })
-    }
-  }
-  d.box(0, dy0, top - 0.15, dx, dy1 - dy0, 0.15, [shade(S.deskWood, 0.08), S.deskWood, shade(S.deskWood, -0.08)])
-  d.box(0.3, 6.0, top, 0.2, 1.6, 1.2, ['#3A3350', '#2E2840', '#25202F'])
-  d.poly([[0.51, 6.08, top + 0.1], [0.51, 7.52, top + 0.1], [0.51, 7.52, top + 1.1], [0.51, 6.08, top + 1.1]], lit ? '#B9A3E0' : '#D7E6F5')
-  d.box(0.9, 6.2, top, 0.6, 1.2, 0.06, '#F2EEF6')
-  deskCalendar(d, 1.5, 5.25, 5.85, top, 0.85, events)
-  spots.desk = bounds([[1.2, 5.2, top], [1.6, 5.9, top], [1.6, 5.9, top + 1.0], [1.2, 5.2, top + 1.0]], 3)
-  moodJar(S, 1.2, 7.95, top)
+  const deskM = KIT_DESK[room.deskStyle] || 'desk'
+  const dy0 = 5.0
+  d.shadow(0, dy0 - 0.1, 2.3, dy0 + 3.6, 0.14)
+  const dk = kit(d, deskM, 0.05, dy0, 0, 3, { wood: S.deskWood, woodDark: shade(S.deskWood, -0.05), metal: '#E3D6E6' })
+  const dx = dk.w, dy1 = dy0 + dk.d, top = dk.h
+  d.box(0.25, dy0 + 1.0, top, 0.2, 1.5, 1.1, ['#3A3350', '#2E2840', '#25202F'])
+  d.poly([[0.46, dy0 + 1.08, top + 0.1], [0.46, dy0 + 2.42, top + 0.1], [0.46, dy0 + 2.42, top + 1.0], [0.46, dy0 + 1.08, top + 1.0]], lit ? '#B9A3E0' : '#D7E6F5')
+  d.box(0.75, dy0 + 1.15, top, 0.55, 1.2, 0.06, '#F2EEF6')
+  deskCalendar(d, Math.min(1.4, dx - 0.35), dy0 + 0.2, dy0 + 0.8, top, 0.85, events)
+  spots.desk = bounds([[1.0, dy0 + 0.15, top], [1.4, dy0 + 0.85, top], [1.4, dy0 + 0.85, top + 1.0], [1.0, dy0 + 0.15, top + 1.0]], 3)
+  moodJar(S, Math.min(1.1, dx - 0.4), dy1 - 0.45, top)
   E()
   at(0, 1.2)
   G('board')
@@ -3039,29 +3028,23 @@ function pastelScene(S) {
   E()
   at(0, 0.8)
   G('chair')
-  const ch = P(2.7, 6.7, 0)
-  d.raw(`<ellipse cx="${f(ch[0])}" cy="${f(ch[1] + 1)}" rx="14" ry="5" fill="#000" opacity=".12" filter="url(#soft)"/>`)
-  const cc = [shade(S.chair, 0.1), S.chair, shade(S.chair, -0.08)]
-  if (room.chairStyle === 'stool') {
-    ;[[-0.35, -0.35], [0.35, -0.35], [-0.35, 0.35], [0.35, 0.35]].forEach(([a, b2]) => d.line([[2.7 + a * 0.4, 6.7 + b2 * 0.4, 1.2], [2.7 + a, 6.7 + b2, 0]], '#E3D6E6', 2))
-    d.cylinder(2.7, 6.7, 1.2, 0.6, 0.32, S.chair)
-  } else if (room.chairStyle === 'classic') {
-    ;[[2.15, 6.15], [3.15, 6.15], [2.15, 7.15], [3.15, 7.15]].forEach(([x, y]) => d.box(x, y, 0, 0.12, 0.12, 1.2, shade(S.deskWood, -0.1)))
-    soft(d, 2.1, 6.1, 1.2, 1.3, 1.3, 0.35, cc, 0.5, 1)
-    soft(d, 3.25, 6.0, 1.3, 0.4, 1.5, 1.6, cc, 0.25)
-  } else {
-    d.cylinder(2.7, 6.7, 0.2, 0.07, 1.0, '#E3D6E6')
-    soft(d, 2.1, 6.1, 1.2, 1.3, 1.3, 0.35, cc, 0.5, 1)
-    soft(d, 3.25, 6.0, 1.3, 0.4, 1.5, 1.6, cc, 0.25)
-  }
+  const chM = KIT_CHAIR[room.chairStyle] || 'chairDesk'
+  const [cw, , cd] = KIT[chM]
+  const cx0 = dx + 0.35, cy0 = dy0 + 1.75 - cd * KIT_S / 2
+  const ch = P(cx0 + cw * KIT_S / 2, cy0 + cd * KIT_S / 2, 0)
+  d.raw(`<ellipse cx="${f(ch[0])}" cy="${f(ch[1] + 1)}" rx="12" ry="4.5" fill="#000" opacity=".12" filter="url(#soft)"/>`)
+  kit(d, chM, cx0, cy0, 0, 1, { wood: S.deskWood, carpet: S.chair, metal: '#D9CFE0' })
   spots.chair = screenSpot(ch[0] - 16, ch[1] - 40, 34, 44)
   E()
   at(0, 1.9)
   // a white cube shelf by the door, full of books and toys
   G('shelf')
-  const sh = shelfSize(room)
-  spots.shelf = bookcase(d, { y0: 8.6, len: 1.3, depth: 1.1, ...sh, wood: S.shelfWood, books, plushTop: false })
-  plush(d, 0.55, 9.25, sh.h + 0.12, '#A7D3C0')
+  const shM = KIT_SHELF[room.shelfStyle] || 'bookcaseOpen'
+  d.shadow(0, 8.4, 1.4, 8.6 + KIT[shM][0] * KIT_S, 0.16)
+  const sf = kit(d, shM, 0.02, 8.5, 0, 3, { wood: S.shelfWood, woodDark: shade(S.shelfWood, -0.06) })
+  if (shM === 'bookcaseOpen' || shM === 'bookcaseOpenLow') shelfBooks(d, 0.1, 8.65, sf.d - 0.3, shM === 'bookcaseOpen' ? [0.1, 1.32, 2.55] : [0.1], Math.min(books, 12))
+  plush(d, 0.55, 8.5 + sf.d / 2, sf.h + 0.05, '#A7D3C0')
+  spots.shelf = bounds([[0, 8.5, 0], [sf.w, 8.5, 0], [sf.w, 8.5 + sf.d, 0], [0, 8.5 + sf.d, 0], [0, 8.5, sf.h], [sf.w, 8.5 + sf.d, sf.h]], 2)
   E()
   at(1.0, 1.4)
   // a fluffy cloud rug and a bean bag
@@ -3090,6 +3073,122 @@ function pastelScene(S) {
   extras(S, { clock: { side: 'right', u: 5.0, z: 8.0 }, vase: { x: 0.75, y: 5.45, z: 2.5, at: [0, 0.8] }, deco: { side: 'left', u0: 0.4, u1: 11.6, top: () => 8.0 } })
   livePet(S, { bed: [3.3, 2.9, mt + 0.1], floor: [7.1, 8.5], sill: [9.3, 0.3, 3.05] })
 }
+
+
+/* ---------- real furniture from the Kenney Furniture Kit ---------- */
+// Sizes of the models (width, height, depth in the kit's own steps), so the room
+// knows the space a piece takes even before its picture is ready.
+const KIT = {
+  bedDouble: [0.96, 0.38, 1.13], bedSingle: [0.57, 0.38, 1.13], bedBunk: [0.57, 0.85, 1.09],
+  cabinetBedDrawer: [0.27, 0.26, 0.22], cabinetBed: [0.27, 0.23, 0.22], sideTable: [0.53, 0.38, 0.22], sideTableDrawers: [0.53, 0.38, 0.22],
+  desk: [0.73, 0.38, 0.39], deskCorner: [0.97, 0.38, 0.97], table: [0.84, 0.33, 0.45], tableCross: [0.85, 0.35, 0.45],
+  chairDesk: [0.33, 0.61, 0.31], chair: [0.2, 0.47, 0.2], chairCushion: [0.2, 0.46, 0.2], chairRounded: [0.2, 0.45, 0.2], chairModernCushion: [0.2, 0.46, 0.2], stoolBar: [0.27, 0.43, 0.23],
+  bookcaseOpen: [0.4, 0.88, 0.25], bookcaseOpenLow: [0.4, 0.4, 0.25], bookcaseClosed: [0.4, 0.85, 0.25], bookcaseClosedWide: [0.8, 0.79, 0.25],
+  loungeChair: [0.49, 0.46, 0.41], loungeChairRelax: [0.49, 0.63, 0.67], loungeDesignChair: [0.73, 0.4, 0.41], loungeSofa: [0.98, 0.46, 0.41], loungeDesignSofa: [1.12, 0.4, 0.41],
+  tableCoffee: [0.66, 0.23, 0.4], tableRound: [0.69, 0.37, 0.8], pottedPlant: [0.22, 0.65, 0.24], lampRoundFloor: [0.16, 0.86, 0.18], lampRoundTable: [0.16, 0.31, 0.18], lampSquareTable: [0.12, 0.29, 0.12], lampSquareFloor: [0.12, 0.86, 0.12],
+}
+// Every model faces +y when rot is 0; rot 1 faces -x, rot 2 faces -y (the back wall), rot 3 faces +x.
+// Puts a piece with its footprint corner at (x, y) on height z, turned by rot quarter turns.
+// Returns the space it takes: { w (along x), d (along y), h }.
+function kit(d, name, x, y, z, rot, colors, s = KIT_S) {
+  const [a, h, b] = KIT[name] || [1, 1, 1]
+  const w = (rot % 2 ? b : a) * s, dep = (rot % 2 ? a : b) * s
+  const sp = kitSprite(name, rot, colors, s)
+  if (sp) {
+    const o = P(x, y, z), c = K / Math.sqrt(2 / 3)
+    d.raw(`<image href="${sp.url}" x="${f(o[0] - sp.l * c)}" y="${f(o[1] - sp.t * c)}" width="${f(sp.w * c)}" height="${f(sp.h * c)}" preserveAspectRatio="none"/>`)
+  }
+  return { w: sp ? sp.fw : w, d: sp ? sp.fd : dep, h: sp ? sp.fh : h * s }
+}
+const KIT_S = 4.4
+
+// ---- the pieces every room uses, so they look and work the same everywhere ----
+const woodOf = (c) => ({ wood: c, woodDark: shade(c, -0.07) })
+// a bed with its footprint corner at (x, y); returns its size and the mattress height
+function kBed(S, x, y, z, rot) {
+  const { d, room } = S
+  const m = KIT_BED[room.bedStyle] || 'bedDouble'
+  const [a, , b] = KIT[m], w = (rot % 2 ? b : a) * KIT_S, dp = (rot % 2 ? a : b) * KIT_S
+  if (!z) d.shadow(x - 0.1, y - 0.1, x + w + 0.15, y + dp + 0.15, 0.16)
+  const r = kit(d, m, x, y, z, rot, { ...woodOf(S.bedWood), carpet: S.blanket, carpetWhite: '#FFFFFF' })
+  return { ...r, m, mt: z + (m === 'bedBunk' ? 3.2 : 1.05) }
+}
+// a bedside cabinet with a lamp on it; returns where the lamp is
+function kNightstand(S, x, y, rot, lampColor) {
+  const { d, room, sky, glow } = S
+  const m = 'cabinetBedDrawer'
+  const [a, h, b] = KIT[m], w = (rot % 2 ? b : a) * KIT_S, dp = (rot % 2 ? a : b) * KIT_S, top = h * KIT_S
+  d.shadow(x - 0.1, y - 0.1, x + w + 0.1, y + dp + 0.1, 0.14)
+  kit(d, m, x, y, 0, rot, woodOf(S.bedWood))
+  const lx = x + w / 2, ly = y + dp / 2
+  if (room.lampStyle === 'table') {
+    kit(d, 'lampRoundTable', lx - 0.35, ly - 0.4, top, rot, { metal: lampColor, lamp: sky.lights ? '#FFF1C9' : '#F6EEDD' })
+    const g = P(lx, ly, top + 1.0)
+    if (sky.lights) glow(g[0], g[1], 30)
+  } else smallLamp(d, lx, ly, top, room.lampStyle, sky.lights, glow, lampColor)
+  return { x: lx, y: ly, z: top, w, d: dp }
+}
+// a desk; returns its size and the height of the top
+function kDesk(S, x, y, rot) {
+  const { d, room } = S
+  const m = KIT_DESK[room.deskStyle] || 'desk'
+  const [a, , b] = KIT[m], w = (rot % 2 ? b : a) * KIT_S, dp = (rot % 2 ? a : b) * KIT_S
+  d.shadow(x - 0.1, y - 0.1, x + w + 0.15, y + dp + 0.15, 0.14)
+  const r = kit(d, m, x, y, 0, rot, { ...woodOf(S.deskWood), metal: '#D9D2C8' })
+  return { ...r, top: r.h }
+}
+// a chair centred at (cx, cy) that looks the way rot says (2: at a desk on the back wall, 1: at a desk on the left wall)
+function kChair(S, cx, cy, rot) {
+  const { d, room } = S
+  const m = KIT_CHAIR[room.chairStyle] || 'chairDesk'
+  const [a, h, b] = KIT[m], w = (rot % 2 ? b : a) * KIT_S, dp = (rot % 2 ? a : b) * KIT_S
+  const c = P(cx, cy, 0)
+  d.raw(`<ellipse cx="${f(c[0])}" cy="${f(c[1] + 1)}" rx="11" ry="4.2" fill="#000" opacity=".13" filter="url(#soft)"/>`)
+  kit(d, m, cx - w / 2, cy - dp / 2, 0, rot, { ...woodOf(shade(S.deskWood, -0.04)), carpet: S.chair, metal: '#D3CBD8' })
+  return bounds([[cx - w / 2, cy - dp / 2, 0], [cx + w / 2, cy + dp / 2, 0], [cx - w / 2, cy + dp / 2, h * KIT_S], [cx + w / 2, cy - dp / 2, h * KIT_S]], 2)
+}
+// a bookcase against the left wall (rot 3) or the back wall (rot 0), filled with your books
+function kShelf(S, x, y, rot, n = S.books) {
+  const { d, room } = S
+  const m = KIT_SHELF[room.shelfStyle] || 'bookcaseOpen'
+  const [a, h, b] = KIT[m], w = (rot % 2 ? b : a) * KIT_S, dp = (rot % 2 ? a : b) * KIT_S, H = h * KIT_S
+  d.shadow(x - 0.1, y - 0.1, x + w + 0.15, y + dp + 0.15, 0.16)
+  kit(d, m, x, y, 0, rot, woodOf(S.shelfWood))
+  const open = m === 'bookcaseOpen' || m === 'bookcaseOpenLow'
+  if (open) {
+    const levels = m === 'bookcaseOpen' ? [0.17, 1.36, 2.55] : [0.17]
+    let i = 0
+    const inner = rot % 2 ? dp : w
+    levels.forEach((z) => {
+      let u = 0.22
+      while (i < Math.min(n, 14) && u < inner - 0.5) {
+        const bh = 0.66 + ((i * 37) % 5) * 0.07, t = 0.2 + ((i * 13) % 3) * 0.05
+        if (rot % 2) d.box(x + 0.2, y + u, z, w - 0.45, t, bh, SHELF_BOOKS[i % SHELF_BOOKS.length])
+        else d.box(x + u, y + 0.2, z, t, dp - 0.45, bh, SHELF_BOOKS[i % SHELF_BOOKS.length])
+        u += t + 0.03; i++
+      }
+    })
+  }
+  return { w, d: dp, h: H, spot: bounds([[x, y, 0], [x + w, y, 0], [x + w, y + dp, 0], [x, y + dp, 0], [x, y, H], [x + w, y + dp, H]], 2) }
+}
+
+// books standing on the shelves of an open bookcase (along y, against the left wall)
+const SHELF_BOOKS = ['#E98AA0', '#8FB3D9', '#F2C66D', '#9FCBB0', '#B9A3E0', '#E7A27C', '#7E8FC4']
+function shelfBooks(d, x, y0, len, levels, n) {
+  let i = 0
+  levels.forEach((z) => {
+    let y = y0
+    while (i < n && y < y0 + len - 0.35) {
+      const h = 0.62 + ((i * 37) % 5) * 0.06, t = 0.22 + ((i * 13) % 3) * 0.05
+      d.box(x, y, z, 0.75, t, h, SHELF_BOOKS[i % SHELF_BOOKS.length])
+      y += t + 0.03; i++
+    }
+  })
+}
+const KIT_BED = { classic: 'bedDouble', cozy: 'bedDouble', canopy: 'bedDouble', single: 'bedSingle', bunk: 'bedBunk' }
+const KIT_DESK = { drawers: 'desk', simple: 'table', trestle: 'tableCross' }
+const KIT_CHAIR = { swivel: 'chairDesk', classic: 'chair', cushion: 'chairCushion', modern: 'chairModernCushion', stool: 'stoolBar' }
+const KIT_SHELF = { tall: 'bookcaseOpen', medium: 'bookcaseClosed', wide: 'bookcaseClosedWide', low: 'bookcaseOpenLow' }
 
 // the three bookcase sizes in the new rooms
 const SHELF_SIZE = { tall: { h: 5.0, levels: [0.12, 1.35, 2.55, 3.75] }, medium: { h: 3.8, levels: [0.12, 1.25, 2.5] }, low: { h: 2.4, levels: [0.12, 1.25] } }

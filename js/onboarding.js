@@ -2,6 +2,7 @@
 
 import { getState, setName, setRoom, setField, add, pick, COVER_COLORS, todayISO } from './store.js'
 import { drawRoom, THEMES, THEME_PRESETS, DEFAULT_ROOM } from './room.js'
+import { kitPending, kitLoad } from './kit.js'
 import { appendDiaryText } from './views/diary.js'
 import { track } from './analytics.js'
 import { startTour } from './tour.js'
@@ -42,6 +43,7 @@ export function maybeOnboard(nameHint = '') {
       </div>
       <div class="ob-row"><button class="link-btn" data-ob-done>Skip for now</button></div>`
     box.innerHTML = `<div class="ob-card"><div class="ob-dots">${dots}</div>${body}</div>`
+    if (kitPending()) kitLoad().then(() => { if (box.isConnected) paint() })
     box.querySelector('input')?.focus()
   }
 

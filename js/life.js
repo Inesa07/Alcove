@@ -7,6 +7,7 @@ import * as db from './db.js'
 import { getState, setField, setRoom, todayISO, uid, MOODS } from './store.js'
 import { $, esc, toast, addDays, isoToDate, longDate } from './ui.js'
 import { drawRoom, petStage, timeOfDay, PET_COLORS } from './room.js'
+import { kitPending, kitLoad } from './kit.js'
 
 const fmt = (iso) => isoToDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 const track = (name, props) => window.dispatchEvent(new CustomEvent('planner:track', { detail: { name, props } }))
@@ -492,6 +493,8 @@ export async function roomStory(roomOpts) {
     const dark = document.documentElement.dataset.theme !== 'light'
     const s = getState()
     storyFrame(ctx, W, H, dark, s.name ? `${s.name}’s room` : 'My cozy room', longDate(todayISO()))
+    drawRoom(roomOpts)
+    if (kitPending()) await kitLoad()
     const svg = drawRoom(roomOpts).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ')
     const img = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg))
     const w = 1000, h = (img.height / img.width) * w || 1000

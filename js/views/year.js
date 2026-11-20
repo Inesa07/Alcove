@@ -3,6 +3,7 @@
 
 import { getState, MOODS, todayISO } from '../store.js'
 import { drawRoom, THEMES, DEFAULT_ROOM, roomTheme } from '../room.js'
+import { kitPending, kitLoad } from '../kit.js'
 import { $, esc, moodFace, toast } from '../ui.js'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -103,8 +104,7 @@ function cards(t) {
     ${t.busiest >= 0 ? `<p>Your busiest month was <b>${MONTHS[t.busiest]}</b>.</p>` : ''}
     <p>${plural(t.notes, 'note', 'notes')} on your board${t.fromFriends ? `, <b>${t.fromFriends} from friends</b> ♥` : ''}.</p>` })
   list.push({ id: 'word', cls: 'c3', art: 'stars', html: `<p class="yr-kicker">Your year in one word</p><div class="yr-emoji">${p[2]}</div><h2>${p[0]}</h2><p>${p[1]}</p>` })
-  const room = drawRoom({ room: { ...DEFAULT_ROOM, ...t.room }, tod: 'evening', books: Math.max(t.books, 4), notes: 3, events: 1, leaves: 3 + Math.min(t.run, 12) }).svg
-  list.push({ id: 'summary', cls: 'c0', art: 'stars', summary: true, html: `<p class="yr-kicker">${t.year} · ${name ? esc(name) : 'your year'}</p><div class="yr-room">${room}</div>
+  list.push({ id: 'summary', cls: 'c0', art: 'stars', summary: true, html: `<p class="yr-kicker">${t.year} · ${name ? esc(name) : 'your year'}</p><div class="yr-room" data-yr-room></div>
     <div class="yr-sum"><span><b>${t.days}</b>diary days</span><span><b>${t.books}</b>books</span><span><b>${t.events}</b>plans</span><span><b>${t.topMood ? t.topMood.name : '–'}</b>mood</span></div>
     <h2 class="yr-h-small">${p[0]} ${p[2]}</h2><p>See you in ${t.year + 1} in your ${THEMES[roomTheme(t.room.theme)].name.toLowerCase()}.</p>
     <div class="yr-share-row"><button class="yr-save" data-share-all>Share all my cards</button><button class="yr-save ghosty" data-save-img>Save the summary</button></div>` })
@@ -143,7 +143,10 @@ function wrapText(g, text, x, y, maxW, lh, maxLines = 4) {
   g.fillText(line, x, y)
   return y + lh
 }
-const roomImage = (t) => new Promise((ok) => {
+const yrRoom = (t) => drawRoom({ room: { ...DEFAULT_ROOM, ...t.room }, tod: 'evening', books: Math.max(t.books, 4), notes: 3, events: 1, leaves: 3 + Math.min(t.run, 12) }).svg
+const roomImage = (t) => new Promise(async (ok) => {
+  drawRoom({ room: { ...DEFAULT_ROOM, ...t.room }, tod: 'evening', books: 4, notes: 3, events: 1, leaves: 3 })
+  if (kitPending()) await kitLoad()
   const svg = drawRoom({ room: { ...DEFAULT_ROOM, ...t.room }, tod: 'evening', books: Math.max(t.books, 4), notes: 3, events: 1, leaves: 3 + Math.min(t.run, 12) }).svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="780" height="760" ')
   const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null)
   im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
@@ -347,6 +350,8 @@ export function mount(el) {
   function paint() {
     const c = list[i]
     $('#yr-card', el).innerHTML = `<div class="yr-in yr-${c.cls}"><span class="yr-art" aria-hidden="true">${ART[c.art] || ''}</span>${c.html}</div>`
+    const yr = $('[data-yr-room]', el)
+    if (yr) { yr.innerHTML = yrRoom(t); if (kitPending()) kitLoad().then(() => { if (yr.isConnected) yr.innerHTML = yrRoom(t) }) }
     $('.yr-prev', el).hidden = i === 0
     $('.yr-next', el).textContent = i === list.length - 1 ? '↺' : '›'
     left = STAY
