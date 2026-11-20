@@ -4,6 +4,8 @@
 // in the room's own colours, and becomes a small picture that the room places
 // on its floor like any other drawn thing. The pictures are kept, so this happens once.
 
+import * as db from './db.js'
+
 const cache = new Map()   // key → picture and size
 const wanted = new Map()  // key → what to draw
 let three = null
@@ -19,18 +21,38 @@ export function kitSprite(name, rot = 0, colors = {}, s = 4.4) {
 }
 export const kitPending = () => wanted.size > 0
 
+// Pictures drawn before are kept on this device, so the room opens at once next time
+// and three.js is only loaded when something new is needed. They never go to the cloud.
+const STORE = 'kitcache-v1'
+let stored = {}
+const primed = db.get(STORE).then((m) => { stored = m || {}; for (const [k, v] of Object.entries(stored)) if (!cache.has(k)) cache.set(k, v) }).catch(() => {})
+let saveTimer = null
+function keep(k, v) {
+  if (!v) return
+  stored[k] = { ...v, used: Date.now() }
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    const keys = Object.keys(stored).sort((a, b) => stored[b].used - stored[a].used)
+    for (const k2 of keys.slice(120)) delete stored[k2] // keep the newest 120 pieces
+    db.set(STORE, stored, true).catch(() => {})
+  }, 800)
+}
+export const kitPrimed = () => primed
+
 // Draws everything the room asked for. Afterwards the room draws itself again.
 let busy = null
 export function kitLoad() {
   if (busy) return busy
   busy = (async () => {
     try {
-      const t = await setup()
+      await primed
+      for (const k of [...wanted.keys()]) if (cache.has(k)) wanted.delete(k)
+      const t = wanted.size ? await setup() : null
       while (wanted.size) {
         const jobs = [...wanted.entries()]
         wanted.clear()
         const roots = new Map(await Promise.all([...new Set(jobs.map(([, j]) => j.name))].map(async (n) => [n, await model(t, n)])))
-        for (const [k, j] of jobs) cache.set(k, render(t, j, roots.get(j.name)))
+        for (const [k, j] of jobs) { const v = render(t, j, roots.get(j.name)); cache.set(k, v); keep(k, v) }
       }
     } catch (e) {
       console.warn('Furniture could not be drawn', e)

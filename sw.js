@@ -1,9 +1,9 @@
 // Lets the app open without internet once it has been visited.
-const CACHE = 'planner-v70'
+const CACHE = 'planner-v71'
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'css/views.css', 'css/light.css',
   'js/app.js', 'js/store.js', 'js/db.js', 'js/ui.js', 'js/room.js', 'js/classify.js', 'js/reminders.js', 'js/stickers.js', 'js/templates.js', 'js/config.js', 'js/sync.js', 'js/account.js', 'js/bin.js', 'js/analytics.js', 'js/onboarding.js', 'js/views/admin.js', 'js/weather.js', 'js/sounds.js', 'js/friends.js', 'js/views/friends.js', 'js/views/year.js', 'js/tour.js', 'js/chapters.js',
-  'js/views/room.js', 'js/views/diary.js', 'js/views/books.js', 'js/views/notes.js', 'js/walls.js', 'js/views/calendar.js', 'js/life.js', 'js/kit.js', 'js/vendor/three.module.min.js', 'js/vendor/GLTFLoader.js', 'js/vendor/BufferGeometryUtils.js',
+  'js/views/room.js', 'js/views/diary.js', 'js/views/books.js', 'js/views/notes.js', 'js/walls.js', 'js/views/calendar.js', 'js/life.js', 'js/kit.js', 'js/guide.js', 'js/search.js', 'js/habits.js', 'js/push.js', 'js/views/habits.js', 'js/vendor/three.module.min.js', 'js/vendor/GLTFLoader.js', 'js/vendor/BufferGeometryUtils.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ]
 
@@ -35,8 +35,16 @@ self.addEventListener('fetch', (e) => {
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
   e.waitUntil(self.clients.matchAll({ type: 'window' }).then((list) => {
+    const url = (e.notification.data && e.notification.data.url) || './#calendar'
     const open = list.find((c) => 'focus' in c)
-    if (open) { open.navigate('./#calendar'); return open.focus() }
-    return self.clients.openWindow('./#calendar')
+    if (open) { open.navigate(url); return open.focus() }
+    return self.clients.openWindow(url)
   }))
+})
+
+// A reminder pushed by the server while Alcove is closed.
+self.addEventListener('push', (e) => {
+  let d = {}
+  try { d = e.data ? e.data.json() : {} } catch { d = { body: e.data && e.data.text() } }
+  e.waitUntil(self.registration.showNotification(d.title || 'Alcove', { body: d.body || '', tag: d.tag, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './#calendar' } }))
 })

@@ -11,9 +11,12 @@ import { setupAccount } from './account.js'
 import * as adminView from './views/admin.js'
 import * as friendsView from './views/friends.js'
 import * as yearView from './views/year.js'
+import * as habitsView from './views/habits.js'
+import { habits, toggleDay } from './habits.js'
 import { trackView } from './analytics.js'
+import { initSearch } from './search.js'
 
-const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView, friends: friendsView, year: yearView, admin: adminView }
+const VIEWS = { room: roomView, diary: diaryView, books: booksView, notes: notesView, calendar: calendarView, friends: friendsView, year: yearView, habits: habitsView, admin: adminView }
 const GREETING = { morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night' }
 
 let current = null
@@ -35,12 +38,20 @@ function renderSide() {
 
   const mood = (s.moods || {})[today]
   $('#mood-pick').innerHTML = `<span>${mood ? 'Today you feel ' + MOODS[mood - 1].name.toLowerCase() : 'How are you today?'}</span><div>${MOODS.map((m) => `<button class="mood-dot ${mood === m.v ? 'on' : ''}" data-mood="${m.v}" style="--m:${m.c}" aria-pressed="${mood === m.v}" aria-label="${m.name}">${moodFace(m.v, m.c)}<small>${m.name}</small></button>`).join('')}</div>`
+  // today's habits, one tap each
+  const hs = habits()
+  $('#habits-today').hidden = false
+  $('#habits-today').innerHTML = hs.length ? `<span>Habits today · ${hs.filter((h) => h.days[today]).length} of ${hs.length}</span><div>${hs.slice(0, 6).map((h) => `<button class="hb-chip ${h.days[today] ? 'on' : ''}" data-habit="${h.id}" aria-pressed="${!!h.days[today]}" title="${esc(h.name)}" aria-label="${esc(h.name)}" style="--c:${h.color}">${h.icon}</button>`).join('')}<a class="hb-chip more" href="#habits">All ›</a></div>` : '<div><a class="hb-chip more" href="#habits">🌱 Start a habit ›</a></div>'
   const next = upcoming(3)
   $('#side-foot').innerHTML = next.length
     ? `<h3>Coming up</h3><ul>${next.map((e) => `<li><span>${esc(e.title)}</span><em>${esc(dayLabel(e.date))}${e.time ? ', ' + e.time : ''}</em></li>`).join('')}</ul>`
     : `<h3>Coming up</h3><p>Nothing planned. Add something in the calendar and I will remind you.</p>`
 }
 
+$('#habits-today').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-habit]')
+  if (b) toggleDay(b.dataset.habit)
+})
 $('#mood-pick').addEventListener('click', (e) => {
   const b = e.target.closest('[data-mood]')
   if (b) setMood(todayISO(), Number(b.dataset.mood))
@@ -95,5 +106,6 @@ window.addEventListener('planner:synced', () => {
 })
 
 renderSide()
+initSearch()
 setupAccount()
 show()

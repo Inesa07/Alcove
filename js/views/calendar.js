@@ -4,6 +4,7 @@
 import { getState, subscribe, add, update, remove, restore, todayISO, MOODS } from '../store.js'
 import { permission, askPermission } from '../reminders.js'
 import { findTime } from '../classify.js'
+import { takeFind } from '../search.js'
 import { $, esc, addDays, isoToDate, dayLabel, toast } from '../ui.js'
 
 const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -160,6 +161,11 @@ export function mount(el) {
     if (time && remindOn && permission() === 'default') askPermission().then(renderDay)
   })
 
+  // a plan chosen in search: open its day
+  const onFind = () => { const f = takeFind('event'); if (f) { selected = cursor = f.date; render() } }
+  onFind()
+  window.addEventListener('planner:find', onFind)
   render()
-  return subscribe(render)
+  const off = subscribe(render)
+  return () => { off(); window.removeEventListener('planner:find', onFind) }
 }

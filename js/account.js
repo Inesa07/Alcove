@@ -12,6 +12,7 @@ import { maybeOnboard } from './onboarding.js'
 import { track, trackDaily, flush } from './analytics.js'
 import { checkInbox, publishSoon } from './friends.js'
 import { startTour, maybeTour } from './tour.js'
+import { initPush, stopPush } from './push.js'
 
 let gate, mode = 'in', note = '', notice = ''
 
@@ -89,6 +90,7 @@ function closeGate() {
   publishSoon()
   maybeOnboard(n)
   maybeTour()
+  initPush()
 }
 
 const friendly = (e) => {

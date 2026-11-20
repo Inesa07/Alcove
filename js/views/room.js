@@ -6,6 +6,8 @@ import { getState, subscribe, setRoom, add, todayISO, streak, pick, NOTE_COLORS,
 import { drawRoom, roomTheme, seasonOf, timeOfDay, WALLS, FLOORS, WOODS, FABRICS, RUGS, STYLES, stylesFor, PET_COLORS, THEMES, THEME_PRESETS, DEFAULT_ROOM, GIFTS, giftSVG } from '../room.js'
 import { $, esc, toast, moodFace } from '../ui.js'
 import { kitPending, kitLoad } from '../kit.js'
+import { plantGrowth } from '../habits.js'
+import { guideCard, guideClick, guideTip, guideDecorated, newVisit } from '../guide.js'
 import { weatherOn, turnOnWeather, turnOffWeather, currentWeather } from '../weather.js'
 import { SOUNDS, play, stop, playing, getVolume, setVolume } from '../sounds.js'
 import { musicPlaying, openMusic, letterState, tapLetters, letterReminder, onThisDay, snowNow, noticeSnow, petAgeDays, petAgeText, moodWeek, openFocus, openVision, roomStory } from '../life.js'
@@ -114,7 +116,8 @@ export function mount(el) {
       notes: s.notes.length,
       events: s.events.filter((e) => e.date === today).length,
       diaryToday: s.diaryDays.includes(today),
-      leaves: 3 + streak(),
+      leaves: 3 + streak() + plantGrowth().leaves,
+      bloom: plantGrowth().bloom,
       selected: decorating ? part : null,
       music: musicPlaying(),
       firstSnow: snowNow(),
@@ -128,6 +131,8 @@ export function mount(el) {
     const box = $('#room', el)
     if (!box) return // the page was closed
     queueMicrotask(() => { if (kitPending()) kitLoad().then(() => { if (el.isConnected) renderRoom() }) })
+    const stage = $('.room-stage', el)
+    if (stage) { if (decorating) stage.querySelector('.guide')?.remove(); else guideCard(stage) }
     const s = getState()
     const today = todayISO()
     // books you are reading now come first, so they stand with their covers out on the shelf
@@ -166,6 +171,7 @@ export function mount(el) {
       const L = letterState()
       overlay += btn(spots.letter, 'data-letter', L.ready ? 'A letter from your past self is ready' : 'Letters to future you', L.ready ? 'letter-spot ready' : 'letter-spot')
       if (room().art === 'vision') overlay += btn(spots.art, 'data-vision', 'Open your vision board', 'vision-spot')
+      overlay += btn(spots.plant, 'data-habits', 'Your plant: your habits', 'plant-spot')
     }
     if (!decorating && spots.pet) {
       const pn = room().petName || (room().pet === 'dog' ? 'your dog' : 'your cat')
@@ -396,6 +402,7 @@ export function mount(el) {
     if (t.closest('[data-cancel]')) { decorating = false; draft = null; part = null; return render() }
     if (t.closest('[data-save]')) {
       setRoom(draft)
+      guideDecorated()
       decorating = false; draft = null; part = null
       render()
       return toast('Your room is saved')
@@ -405,10 +412,12 @@ export function mount(el) {
     if (t.closest('[data-done]')) { part = null; return render() }
     if (t.closest('[data-gallery]')) return openGallery()
     if (t.closest('[data-window-clear]')) { windowPhoto = null; db.del('dream:window'); renderRoom(); renderPanel(); return }
+    if (guideClick(t)) return
     if (t.closest('[data-jar]')) return openMoodJar()
     if (t.closest('[data-player]') || t.closest('[data-music]')) { toggleAmb(false); return openMusic() }
     if (t.closest('[data-letter]')) return tapLetters()
     if (t.closest('[data-vision]')) return openVision()
+    if (t.closest('[data-habits]')) { location.hash = '#habits'; return }
     if (t.closest('[data-focus]')) return openFocus()
     if (t.closest('[data-story]')) return roomStory(roomOpts())
     const otd = t.closest('[data-otd]')
@@ -455,6 +464,8 @@ export function mount(el) {
   })
 
   render()
+  newVisit()
+  const tipTimer = setTimeout(guideTip, 2200)
   letterReminder()
   // a memory from a year, half a year or a month ago
   let seen = ''
@@ -473,5 +484,5 @@ export function mount(el) {
   window.addEventListener('planner:music', onMusic)
   const off = subscribe(renderRoom)
   const tick = setInterval(() => { renderRoom(); getWeather() }, 5 * 60 * 1000)
-  return () => { off(); clearInterval(tick); window.removeEventListener('planner:music', onMusic); document.body.classList.remove('decorating') }
+  return () => { off(); clearInterval(tick); clearTimeout(tipTimer); document.querySelectorAll('.tip, .tip-ring').forEach((n) => n.remove()); window.removeEventListener('planner:music', onMusic); document.body.classList.remove('decorating') }
 }

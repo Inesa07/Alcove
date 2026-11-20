@@ -5,6 +5,7 @@
 import { getState, subscribe, add, update, remove, restore, pick, uid, COVER_COLORS, todayISO, markDiaryDay, setReadingGoal } from '../store.js'
 import * as db from '../db.js'
 import { appendDiaryText } from './diary.js'
+import { takeFind } from '../search.js'
 import { $, esc, toast, isoToDate } from '../ui.js'
 
 const coverKey = (id) => 'cover:' + id
@@ -380,5 +381,9 @@ export function mount(el) {
 
   render()
   const off = subscribe(render)
-  return () => { off(); clearInterval(tick) }
+  // a book chosen in search: open it
+  const onFind = () => { const f = takeFind('book'); if (f && getState().books.some((b) => b.id === f.id)) openDetail(f.id) }
+  setTimeout(onFind, 100)
+  window.addEventListener('planner:find', onFind)
+  return () => { off(); clearInterval(tick); window.removeEventListener('planner:find', onFind) }
 }

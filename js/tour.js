@@ -19,25 +19,34 @@ const STEPS = [
   { at: '[data-amb]', title: 'Weather and sounds', text: 'Show the real weather outside your window, and play quiet sounds: rain, a fireplace, birds, the sea. On the first real snow, a little snowman appears.' },
   { at: '[data-focus]', title: 'Focus', text: 'Sit down at your desk: the room zooms in, the tea is warm, your pet sleeps next to you, and a timer helps you focus for 25 or 50 minutes.' },
   { at: '[data-gallery]', title: 'Rooms', text: 'Move to a different room: a Nordic cabin, a night observatory, a seaside studio or a pastel room. Each has its own shape and furniture.' },
-  { at: '[data-decorate]', title: 'Decorate', text: 'Every piece has 3 styles: the bed, chair, desk, lamp, clock, plant, flowers and wall decorations. Choose a cat or a dog with a name, and even put your own photo in the window.' },
+  { at: '[data-decorate]', title: 'Decorate', text: 'Choose your own furniture: 5 beds, desks, 5 chairs, bookcases, lamps, clocks, plants and flowers, in your colours. Choose a cat or a dog with a name, and even put your own photo in the window.' },
+  { at: '#habits-today', title: 'Habits', text: 'Small things you want to do every day. Tick them here; your plant in the room grows and blooms when you keep them.' },
+  { at: '.find-btn', title: 'Search', text: 'Find anything you wrote: diary pages, notes, books and quotes, plans. Or press Ctrl + K.' },
   { at: '#nav a[href="#friends"]', title: 'Friends', text: 'Share your code with a friend. You can visit each other’s rooms, leave notes, postcards and little gifts. Friends never see your diary.' },
   { at: '#nav a[href="#year"]', title: 'Your year', text: 'A small story of your year: days you wrote, books, moods and plans.' },
   { at: '#me-btn, .me-btn', title: 'Your account', text: 'Light or dark look, sign out, and this tour again if you want it. Everything you add is saved and syncs to your other devices.' },
+]
+
+// the first time, only three steps: the rest comes step by step as tips in the room
+const SHORT = [
+  { at: '#room', title: 'This is your room', text: 'Your whole planner lives here. Instead of a menu, you tap things in the room.' },
+  { at: '#room a[href="#diary"]', title: 'Bed · Diary', text: 'Tap the bed to open your diary: a real little book to write, draw and add photos.' },
+  { at: '.guide', title: 'Your first steps', text: 'Try these four things. Each time you come back, your room shows you one more thing it can do.' },
 ]
 
 let running = false
 
 export function maybeTour() {
   const s = getState()
-  if (s.onboarded && !s.toured) setTimeout(startTour, 600)
+  if (s.onboarded && !s.toured) setTimeout(() => startTour(s.guide ? 'short' : 'full'), 600)
 }
 
-export function startTour() {
+export function startTour(kind = 'full') {
   if (running) return
   running = true
   if (!location.hash.startsWith('#room') && location.hash !== '') location.hash = '#room'
-  track('tour_started')
-  const steps = () => STEPS.filter((s) => visible(document.querySelector(s.at)))
+  track('tour_started', { kind })
+  const steps = () => (kind === 'short' ? SHORT : STEPS).filter((s) => visible(document.querySelector(s.at)))
   let list = []
   let i = 0
 
@@ -79,7 +88,7 @@ export function startTour() {
   function end(finished) {
     running = false
     setField({ toured: true })
-    track(finished ? 'tour_done' : 'tour_skipped', { step: i + 1 })
+    track(finished ? 'tour_done' : 'tour_skipped', { step: i + 1, kind })
     layer.classList.add('bye')
     window.removeEventListener('resize', place)
     document.removeEventListener('keydown', key)
@@ -107,7 +116,7 @@ export function startTour() {
   // wait until the room is drawn
   let tries = 0
   ;(function wait() {
-    if (document.querySelector('#room svg') || tries++ > 30) { list = steps(); place(); layer.classList.add('on') }
+    if ((document.querySelector('#room svg') && (kind !== 'short' || document.querySelector('.guide'))) || tries++ > 30) { list = steps(); place(); layer.classList.add('on') }
     else setTimeout(wait, 100)
   })()
 }

@@ -13,7 +13,9 @@ export const permission = () => (canNotify() ? Notification.permission : 'unsupp
 
 export async function askPermission() {
   if (!canNotify()) return 'unsupported'
-  return Notification.requestPermission()
+  const r = await Notification.requestPermission()
+  if (r === 'granted') import('./push.js').then((m) => m.initPush())
+  return r
 }
 
 async function show(ev) {

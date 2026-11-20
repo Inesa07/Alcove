@@ -11,6 +11,7 @@ import { LAYOUTS, blockHTML, rowsOf, maxRows } from '../templates.js'
 import { chapterHTML, isChapter, PROMPTS } from '../chapters.js'
 import { $, $$, esc, debounce, toast } from '../ui.js'
 import { writeLetter, pageStory } from '../life.js'
+import { takeFind } from '../search.js'
 
 const INKS = [['Ink', '#3B3450'], ['Rose', '#D9637F'], ['Blue', '#4F79AC'], ['Green', '#4F8A6D'], ['Honey', '#C9902F'], ['Lilac', '#8E74C4']]
 const SIZES = [['Thin', 3], ['Medium', 6], ['Thick', 12]]
@@ -1168,5 +1169,8 @@ export function mount(el) {
     // coming from the chest in the room
     if (location.hash.endsWith('/memories')) { history.replaceState(null, '', '#diary'); openMemories() }
   })
-  return () => { document.removeEventListener('keydown', onKey); trimEnd() }
+  // a page chosen in search: turn to it
+  const onFind = () => { const f = takeFind('page'); if (f) openSpread(Math.floor(f.id / 2)) }
+  window.addEventListener('planner:find', onFind)
+  return () => { document.removeEventListener('keydown', onKey); window.removeEventListener('planner:find', onFind); trimEnd() }
 }

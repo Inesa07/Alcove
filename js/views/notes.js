@@ -4,6 +4,7 @@ import { getState, subscribe, add, update, remove, restore, setField, NOTE_COLOR
 import { WALLS, wallId, wallTop, spell, drawString } from '../walls.js'
 import { $, esc, toast } from '../ui.js'
 import { POSTCARDS, postcardArt } from '../life.js'
+import { takeFind } from '../search.js'
 
 // kinds of paper a note can be
 const KINDS = [['sticky', 'Sticky note'], ['polaroid', 'Polaroid'], ['card', 'Index card'], ['torn', 'Torn paper']]
@@ -163,6 +164,16 @@ export function mount(el) {
   })
 
   render()
+  // a note chosen in search: show it
+  const onFind = () => {
+    const f = takeFind('note')
+    const n = f && el.querySelector(`[data-note="${f.id}"]`)
+    if (!n) return
+    n.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    n.classList.add('found'); setTimeout(() => n.classList.remove('found'), 2600)
+  }
+  setTimeout(onFind, 300)
+  window.addEventListener('planner:find', onFind)
   const off = subscribe(() => { if (!el.contains(document.activeElement) || !document.activeElement.closest('.note-text')) render() })
-  return () => { off(); ro.disconnect(); document.removeEventListener('click', outside); document.removeEventListener('keydown', onKey) }
+  return () => { off(); window.removeEventListener('planner:find', onFind); ro.disconnect(); document.removeEventListener('click', outside); document.removeEventListener('keydown', onKey) }
 }

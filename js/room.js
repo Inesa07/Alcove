@@ -809,7 +809,19 @@ function pet(kind, c, x, y, k) {
 
 /* ---------- a big leafy plant in a ceramic pot ---------- */
 
+// your habits make the plant bloom: a few flowers among the leaves
+let BLOOM = 0
 function plant(d, x, y, leaves, style = 'leafy') {
+  plantBase(d, x, y, leaves, style)
+  if (!BLOOM) return
+  const [px] = P(x, y, 0), ty = P(x, y, 1.25)[1]
+  const at = [[-14, -30], [12, -38], [-4, -52], [18, -24], [-20, -44], [6, -62]]
+  for (let i = 0; i < Math.min(BLOOM, at.length); i++) {
+    const [dx, dy] = at[i], c = ['#F49AB5', '#FFFFFF', '#F6CF5E', '#F49AB5', '#C9B6EE', '#FFFFFF'][i]
+    d.raw(`<g class="bloom" style="animation-delay:${i * 0.3}s" transform="translate(${(px + dx).toFixed(1)} ${(ty + dy).toFixed(1)})">${[0, 72, 144, 216, 288].map((a) => `<ellipse rx="1.6" ry="2.6" cy="-2.2" fill="${c}" transform="rotate(${a})"/>`).join('')}<circle r="1.3" fill="#F2B544"/></g>`)
+  }
+}
+function plantBase(d, x, y, leaves, style = 'leafy') {
   const base = P(x, y, 0)
   d.raw(`<ellipse cx="${base[0].toFixed(1)}" cy="${(base[1] + 1).toFixed(1)}" rx="15" ry="5.5" fill="#3a2a22" opacity=".22" filter="url(#soft)"/>`)
   // pot: a slightly tapered ceramic pot with a rim
@@ -1958,6 +1970,7 @@ export function drawRoom(o) {
   const wall = WALLS[room.wall] || WALLS.lavender
   const floor = FLOORS[room.floor] || FLOORS.oak
   const theme = roomTheme(room.theme)
+  BLOOM = o.bloom || 0
   K = NEW_ROOMS[theme] ? 14.2 : 17 // the new rooms are 12 × 12 steps, so there is space between things
   at()
   const sky = weatherSky(SKIES[tod], o.weather)
